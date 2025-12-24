@@ -8,9 +8,8 @@ Please regularly update this file to record your project progress. You should be
 - you can include details of commits if necessary
 - alternatively, details of any reading you have completed in support of your project
 
-## Week 2 [w/c ...]
--
--
--
+## Week 1 [w/c 8 October]
 
-
+- Intial meetng with project supervisor discussing project title.
+-
+-
