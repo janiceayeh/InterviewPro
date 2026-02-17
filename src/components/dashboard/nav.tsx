@@ -106,12 +106,12 @@ export function DashboardNav() {
                     <p className="text-xs text-muted-foreground">Free Plan</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
+                  {/* <DropdownMenuItem asChild>
                     <Link href="/dashboard/billing" className="flex items-center gap-2">
                       <CreditCard className="size-4" />
                       Plans & Billing
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings" className="flex items-center gap-2">
                       <Settings className="size-4" />

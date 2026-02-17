@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowRight, Clock, Briefcase, Code, Users, Target, Lightbulb } from 'lucide-react'
 
+// defines the available interview categories data 
 const categories = [
   {
     id: 'behavioral',
@@ -46,6 +47,7 @@ const categories = [
   },
 ]
 
+// highlights currently selected category card and navigates user to the selected category page
 export default function MockInterviewPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 

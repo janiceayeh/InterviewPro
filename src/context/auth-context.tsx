@@ -11,24 +11,42 @@ import {
   googleProvider,
   deleteUser,
   type User,
+  db,
 } from '@/lib/firebase'
+import { UserCredential } from 'firebase/auth'
+import { doc, DocumentData, getDoc } from 'firebase/firestore'
 
+// Describes what values and functions the auth context will expose to the app
+// Object type
 interface AuthContextType {
   user: User | null
+  userProfile: DocumentData | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<UserCredential>
   signInWithGoogle: () => Promise<void>
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
 }
-
+// Creates the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Stores auth state and exposes it to children
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<DocumentData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Fetches user profile from Firestore
+  async function getUserProfile(user:User | null ){
+    if (user){
+      const profileDoc = await getDoc(doc(db, "users", user.uid));
+      const profile = profileDoc.data();
+      return profile}
+    
+  }
+
+  // Listens for Firebase Auth session changes. lets the user stay logged in after refresh
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user)
@@ -38,12 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe()
   }, [])
 
+  useEffect(()=>{
+    getUserProfile(user).then((userProfile)=>{
+      setUserProfile(userProfile)
+    })
+  },[user])
+
   const signIn = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password)
   }
 
   const signUp = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password)
+    return await createUserWithEmailAndPassword(auth, email, password)
   }
 
   const signInWithGoogle = async () => {
@@ -64,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        userProfile,
         loading,
         signIn,
         signUp,
@@ -77,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// Reads the context and returns context values
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {

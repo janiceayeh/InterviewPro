@@ -23,11 +23,13 @@ import {
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
+// displays tips with optional search and filter 
 export default function TipsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTip, setSelectedTip] = useState<InterviewTip | null>(null)
 
+  // filters cards based on currently selected tip category and search input
   const filteredTips = interviewTips.filter((tip) => {
     const matchesCategory = selectedCategory === 'all' || tip.category === selectedCategory
     const matchesSearch =
@@ -38,6 +40,7 @@ export default function TipsPage() {
     return matchesCategory && matchesSearch
   })
 
+  // displays full tips guide details for the current tip card selected 
   if (selectedTip) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
@@ -122,7 +125,7 @@ export default function TipsPage() {
             </Card>
           )}
 
-          <Card className="border-primary/20 bg-primary/5">
+          {/* <Card className="border-primary/20 bg-primary/5">
             <CardContent className="py-6">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 text-center sm:text-left">
@@ -141,12 +144,13 @@ export default function TipsPage() {
                 </Link>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </motion.div>
       </div>
     )
   }
 
+  // displays all the tip cards, search and tip categories
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       {/* Header */}
@@ -266,12 +270,12 @@ export default function TipsPage() {
                             Read full guide
                             <ChevronRight className="size-4 ml-1" />
                           </Button>
-                          <Link href={`/dashboard/tips/${tip.id}/chat`}>
+                          {/* <Link href={`/dashboard/tips/${tip.id}/chat`}>
                             <Button variant="ghost" size="sm">
                               <MessageCircle className="size-4 mr-2" />
                               Ask questions
                             </Button>
-                          </Link>
+                          </Link> */}
                         </div>
                       </div>
                     </AccordionContent>
@@ -290,7 +294,7 @@ export default function TipsPage() {
         transition={{ delay: 0.3 }}
         className="mt-12"
       >
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+        {/* <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
           <CardContent className="py-8">
             <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
               <div className="flex items-center justify-center size-14 rounded-2xl bg-primary/10">
@@ -312,7 +316,7 @@ export default function TipsPage() {
               </Link>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </motion.div>
     </div>
   )

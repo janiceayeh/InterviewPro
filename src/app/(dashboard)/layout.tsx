@@ -8,16 +8,18 @@ import { useAuth } from '@/context/auth-context'
 import { DashboardNav } from '@/components/dashboard/nav'
 import { Loader2 } from 'lucide-react'
 
+// ensures only logged in users have access to dashboard pages, all pages in the dashboard route group
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   
   const { user, loading } = useAuth()
   const router = useRouter()
 
+  // navigates back to the login page if the user is not logged in
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
     }
-  }, [user, loading, router])
+  }, [user, loading])
 
   if (loading) {
     return (
@@ -27,6 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     )
   }
 
+  // prevents the brief flashing of dashboard page
   if (!user) {
     return null
   }

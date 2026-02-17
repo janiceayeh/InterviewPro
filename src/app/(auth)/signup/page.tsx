@@ -19,13 +19,20 @@ import {
 } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Loader2, Check } from 'lucide-react'
+import { updateProfile } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
-export default function SignupPage() {
+
+export default function SignupPage() { 
+  // defining states to be used for capturing user signup info
+  const [firstname, setFirstName] = useState('')
+  const [lastname, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signUp, signInWithGoogle } = useAuth()
+  const { signUp, signInWithGoogle } = useAuth() //exposes user signup/signin functions/state for authentication
   const router = useRouter()
 
   const passwordRequirements = [
@@ -37,6 +44,7 @@ export default function SignupPage() {
   const allRequirementsMet = passwordRequirements.every((req) => req.met)
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0
 
+  // handles signup form submission 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -53,7 +61,24 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      await signUp(email, password)
+      // sign up user with createUserWithEmailAndPassword(). this creates a user account in firebase auth. 
+      // firbase defaults to only save email and password
+      const userCredential = await signUp(email, password)
+      const user = userCredential.user 
+
+      // save user meta data in the users document. the user record will hold additional information related to the user
+      // update the Firebase Auth user profile displayName
+      await updateProfile(user, {
+        displayName: `${firstname} ${lastname}`
+      });
+      
+  // create a Firestore document(table) to save extra user info
+  await setDoc(doc(db, "users", user.uid), {
+    firstname,
+    lastname,
+    email,
+    createdAt: new Date()
+  });
       toast.success('Account created successfully!')
       router.push('/dashboard')
     } catch (error: unknown) {
@@ -80,6 +105,7 @@ export default function SignupPage() {
     }
   }
 
+  // from display
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md space-y-8">
@@ -101,6 +127,32 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstname">First Name</Label>
+                <Input
+                  id="firstname"
+                  type="text"
+                  placeholder="Jane"
+                  value={firstname}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastname">Last Name</Label>
+                <Input
+                  id="lastname"
+                  type="text"
+                  placeholder="Doe"
+                  value={lastname}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="h-11"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -126,6 +178,7 @@ export default function SignupPage() {
                   disabled={loading}
                   className="h-11"
                 />
+                {/* Only show requirements after user starts typing */}
                 {password.length > 0 && (
                   <ul className="space-y-1 mt-2">
                     {passwordRequirements.map((req, index) => (
@@ -239,3 +292,44 @@ export default function SignupPage() {
     </div>
   )
 }
+
+
+
+// JUST FOR REFERENCE
+// export default function  SignupPage() {
+//   // let num = 1; // when declared like this, num is not REACTIVE!!!!!!!!!!!!
+
+// // create a reactive variable
+//      const [num, setNum]  = useState(1) // useState is called a hook. A REACTIVE VARIABLE -- Tell React to re-render the DOM when this value changes: useState()
+//   console.log("num..", num)
+
+
+//   function increment(){
+//     console.log("Incrementing value...")
+//     // num = num + 1; // rebinding/reassigning the value directly
+//     setNum(num + 1)
+//   // console.log(`num is now: ${num}`)
+
+//   }
+
+//   function decrement(){
+//     console.log("decrementing value...")
+//     // num = num - 1; // rebinding/reassigning the value directly
+//      setNum(num - 1)
+//     //  console.log(`num is now: ${num}`)
+//   }
+
+
+//   // html event handling - invoke the function
+//   // REact event - don't invoke the function - pass the reference
+//   return (
+//    <div className="flex flex-col justify-center items-center">
+//     <div className="font-semibold text-center text-lg m-5 bg-gray-300 p-6 rounded"> {num} </div>
+//      <div className="flex gap-x-4 mt-10">
+
+//       <Button onClick={increment}>Increment +</Button>
+//       <Button onClick={decrement}>Decrement -</Button>
+//     </div>
+//    </div>
+//   )
+// }

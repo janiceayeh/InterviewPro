@@ -23,16 +23,17 @@ import { Loader2 } from 'lucide-react'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { signIn, signInWithGoogle } = useAuth()
-  const router = useRouter()
+  const [loading, setLoading] = useState(false) // Global loading state to disable inputs/buttons and show progress feedback
+  const { signIn, signInWithGoogle } = useAuth()  // Pull auth methods from auth context
+  const router = useRouter()   // Next.js client-side router for redirecting after sign in
 
+ // Handles email/password login form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      await signIn(email, password)
+      await signIn(email, password) // Attempt to sign in using the provided credentials
       toast.success('Welcome back!')
       router.push('/dashboard')
     } catch (error) {
@@ -42,6 +43,7 @@ export default function LoginPage() {
     }
   }
 
+  // Handles Google OAuth sign-in
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {

@@ -6,6 +6,7 @@ export interface Question {
   tips: string[]
 }
 
+// an object of interview questions grouped by categories
 export const interviewQuestions: Record<string, Question[]> = {
   behavioral: [
     {

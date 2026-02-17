@@ -22,10 +22,12 @@ interface Answer {
   timeSpent: number
 }
 
+// dispalys the questions and provides the text area for the answer with a countdown timer
 export default function InterviewSessionPage() {
+  // Reads category and loads questions
   const params = useParams()
   const router = useRouter()
-  const category = params.category as string
+  const category = params.category as string // category url parameter
 
   const questions = interviewQuestions[category] || []
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -37,8 +39,9 @@ export default function InterviewSessionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const currentQuestion: Question | undefined = questions[currentIndex]
-  const progress = ((currentIndex + 1) / questions.length) * 100
+  const progress = ((currentIndex + 1) / questions.length) * 100 // derived/ computed state
 
+  // handles next question
   const handleNext = useCallback(() => {
     if (!currentQuestion) return
 
@@ -47,7 +50,7 @@ export default function InterviewSessionPage() {
       answer: currentAnswer,
       timeSpent: currentQuestion.timeLimit - timeLeft,
     }
-
+// updates by adding users new answer to current answers list
     const updatedAnswers = [...answers, newAnswer]
     setAnswers(updatedAnswers)
 
@@ -57,7 +60,7 @@ export default function InterviewSessionPage() {
       setTimeLeft(questions[currentIndex + 1].timeLimit)
       setShowTips(false)
     } else {
-      // Save to sessionStorage and navigate to results
+      // saves to sessionStorage and navigate to results
       setIsSubmitting(true)
       sessionStorage.setItem(
         'interviewAnswers',
@@ -71,9 +74,11 @@ export default function InterviewSessionPage() {
     }
   }, [currentQuestion, currentAnswer, timeLeft, answers, currentIndex, questions, category, router])
 
+   
   useEffect(() => {
     if (!isStarted || !currentQuestion || isSubmitting) return
 
+    // handles timer by reducing time left by each second
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -81,12 +86,12 @@ export default function InterviewSessionPage() {
         }
         return prev - 1
       })
-    }, 1000)
+    }, 1000) // in milliseconds
 
     return () => clearInterval(timer)
-  }, [isStarted, currentQuestion, isSubmitting])
+  }, [isStarted, currentQuestion, isSubmitting]) // if any of these values(state) change, run useEffect again
 
-  // Handle auto-advance when time runs out
+  // automatically moves to the next question when the time runs out
   useEffect(() => {
     if (timeLeft === 0 && isStarted && !isSubmitting) {
       handleNext()
@@ -123,6 +128,7 @@ export default function InterviewSessionPage() {
     )
   }
 
+  // instructions page before the interview begins
   if (!isStarted) {
     return (
       <motion.div
@@ -173,6 +179,7 @@ export default function InterviewSessionPage() {
     )
   }
 
+  // display of each interview question for selected category
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Progress Bar */}

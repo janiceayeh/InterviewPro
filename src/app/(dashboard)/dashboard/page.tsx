@@ -60,8 +60,9 @@ const item = {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
-  const firstName = user?.email?.split('@')[0] || 'there'
+  const { user, userProfile } = useAuth()
+  const firstName = userProfile?.firstname || user.displayName.split(' ')[0]
+  
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
