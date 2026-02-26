@@ -1,5 +1,5 @@
-//Firebase setup module. 
-//It initializes Firebase once and then re-exports the Auth and Firestore tools used by the AuthContext and login page.
+// Firebase setup module. 
+// It initializes Firebase once and then re-exports the Auth and Firestore tools used by the AuthContext and login page.
 
 import { initializeApp, getApps } from 'firebase/app'
 import {getFirestore} from 'firebase/firestore'

@@ -104,6 +104,7 @@ export default function InterviewSessionPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  // choose timer text/icon colour based on time remaining percentage
   const getTimeColor = () => {
     if (!currentQuestion) return 'text-foreground'
     const percentage = timeLeft / currentQuestion.timeLimit
@@ -112,6 +113,7 @@ export default function InterviewSessionPage() {
     return 'text-destructive'
   }
 
+  // error ui for invalid category
   if (!currentQuestion || questions.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12 text-center">

@@ -18,6 +18,7 @@ import { doc, DocumentData, getDoc } from 'firebase/firestore'
 
 // Describes what values and functions the auth context will expose to the app
 // Object type
+// User info and methods 
 interface AuthContextType {
   user: User | null
   userProfile: DocumentData | null
@@ -28,10 +29,10 @@ interface AuthContextType {
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
 }
-// Creates the context
+// Creates the context. user info
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Stores auth state and exposes it to children
+// Stores auth state and exposes it to children/page
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<DocumentData | null>(null)
