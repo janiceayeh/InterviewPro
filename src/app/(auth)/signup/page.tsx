@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useAuth } from '@/context/auth-context'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -16,94 +16,97 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { toast } from 'sonner'
-import { Loader2, Check } from 'lucide-react'
-import { updateProfile } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { Loader2, Check } from "lucide-react";
+import { updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-
-export default function SignupPage() { 
+export default function SignupPage() {
   // defining states to be used for capturing user signup info
-  const [firstname, setFirstName] = useState('')
-  const [lastname, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { signUp, signInWithGoogle } = useAuth() //exposes user signup/signin functions/state for authentication
-  const router = useRouter()
+  const [firstname, setFirstName] = useState("");
+  const [lastname, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signUp, signInWithGoogle } = useAuth(); //exposes user signup/signin functions/state for authentication
+  const router = useRouter();
 
   const passwordRequirements = [
-    { label: 'At least 8 characters', met: password.length >= 8 },
-    { label: 'Contains a number', met: /\d/.test(password) },
-    { label: 'Contains uppercase letter', met: /[A-Z]/.test(password) },
-  ]
+    { label: "At least 8 characters", met: password.length >= 8 },
+    { label: "Contains a number", met: /\d/.test(password) },
+    { label: "Contains uppercase letter", met: /[A-Z]/.test(password) },
+  ];
 
-  const allRequirementsMet = passwordRequirements.every((req) => req.met)
-  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0
+  const allRequirementsMet = passwordRequirements.every((req) => req.met);
+  const passwordsMatch =
+    password === confirmPassword && confirmPassword.length > 0;
 
-  // handles signup form submission 
+  // handles signup form submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!allRequirementsMet) {
-      toast.error('Please meet all password requirements')
-      return
+      toast.error("Please meet all password requirements");
+      return;
     }
 
     if (!passwordsMatch) {
-      toast.error('Passwords do not match')
-      return
+      toast.error("Passwords do not match");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      // sign up user with createUserWithEmailAndPassword(). this creates a user account in firebase auth. 
+      // sign up user with createUserWithEmailAndPassword(). this creates a user account in firebase auth.
       // firbase defaults to only save email and password
-      const userCredential = await signUp(email, password)
-      const user = userCredential.user 
+      const userCredential = await signUp(email, password);
+      const user = userCredential.user;
 
       // save user meta data in the users document. the user record will hold additional information related to the user
       // update the Firebase Auth user profile displayName
       await updateProfile(user, {
-        displayName: `${firstname} ${lastname}`
+        displayName: `${firstname} ${lastname}`,
       });
-      
-  // create a Firestore document(table) to save extra user info
-  await setDoc(doc(db, "users", user.uid), {
-    firstname,
-    lastname,
-    email,
-    createdAt: new Date()
-  });
-      toast.success('Account created successfully!')
-      router.push('/dashboard')
+
+      // create a Firestore document(table) to save extra user info
+      await setDoc(doc(db, "users", user.uid), {
+        firstname,
+        lastname,
+        email,
+        createdAt: new Date(),
+      });
+      toast.success("Account created successfully!");
+      router.push("/roles");
     } catch (error: unknown) {
-      if (error instanceof Error && error.message.includes('email-already-in-use')) {
-        toast.error('An account with this email already exists')
+      if (
+        error instanceof Error &&
+        error.message.includes("email-already-in-use")
+      ) {
+        toast.error("An account with this email already exists");
       } else {
-        toast.error('Failed to create account')
+        toast.error("Failed to create account");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      await signInWithGoogle()
-      toast.success('Welcome!')
-      router.push('/dashboard')
+      await signInWithGoogle();
+      toast.success("Welcome!");
+      router.push("/roles");
     } catch (error) {
-      toast.error('Failed to sign in with Google')
+      toast.error("Failed to sign in with Google");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // from display
   return (
@@ -112,15 +115,21 @@ export default function SignupPage() {
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="size-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">IP</span>
+              <span className="text-primary-foreground font-bold text-lg">
+                IP
+              </span>
             </div>
-            <span className="text-2xl font-bold text-foreground">InterviewPro</span>
+            <span className="text-2xl font-bold text-foreground">
+              InterviewPro
+            </span>
           </Link>
         </div>
 
         <Card className="border-0 shadow-xl bg-card">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              Create an account
+            </CardTitle>
             <CardDescription className="text-center">
               Start your journey to interview success
             </CardDescription>
@@ -185,10 +194,12 @@ export default function SignupPage() {
                       <li
                         key={index}
                         className={`flex items-center gap-2 text-xs ${
-                          req.met ? 'text-success' : 'text-muted-foreground'
+                          req.met ? "text-success" : "text-muted-foreground"
                         }`}
                       >
-                        <Check className={`size-3 ${req.met ? 'opacity-100' : 'opacity-30'}`} />
+                        <Check
+                          className={`size-3 ${req.met ? "opacity-100" : "opacity-30"}`}
+                        />
                         {req.label}
                       </li>
                     ))}
@@ -209,9 +220,11 @@ export default function SignupPage() {
                 />
                 {confirmPassword.length > 0 && (
                   <p
-                    className={`text-xs ${passwordsMatch ? 'text-success' : 'text-destructive'}`}
+                    className={`text-xs ${passwordsMatch ? "text-success" : "text-destructive"}`}
                   >
-                    {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                    {passwordsMatch
+                      ? "Passwords match"
+                      : "Passwords do not match"}
                   </p>
                 )}
               </div>
@@ -226,7 +239,7 @@ export default function SignupPage() {
                     Creating account...
                   </>
                 ) : (
-                  'Create account'
+                  "Create account"
                 )}
               </Button>
             </form>
@@ -236,7 +249,9 @@ export default function SignupPage() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with
+                </span>
               </div>
             </div>
 
@@ -270,8 +285,11 @@ export default function SignupPage() {
           </CardContent>
           <CardFooter className="flex justify-center pb-6">
             <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link href="/login" className="text-primary font-medium hover:underline">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="text-primary font-medium hover:underline"
+              >
                 Sign in
               </Link>
             </p>
@@ -279,21 +297,19 @@ export default function SignupPage() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground px-4">
-          By creating an account, you agree to our{' '}
+          By creating an account, you agree to our{" "}
           <Link href="/terms" className="underline hover:text-foreground">
             Terms of Service
-          </Link>{' '}
-          and{' '}
+          </Link>{" "}
+          and{" "}
           <Link href="/privacy" className="underline hover:text-foreground">
             Privacy Policy
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }
-
-
 
 // JUST FOR REFERENCE
 // export default function  SignupPage() {
@@ -302,7 +318,6 @@ export default function SignupPage() {
 // // create a reactive variable
 //      const [num, setNum]  = useState(1) // useState is called a hook. A REACTIVE VARIABLE -- Tell React to re-render the DOM when this value changes: useState()
 //   console.log("num..", num)
-
 
 //   function increment(){
 //     console.log("Incrementing value...")
@@ -318,7 +333,6 @@ export default function SignupPage() {
 //      setNum(num - 1)
 //     //  console.log(`num is now: ${num}`)
 //   }
-
 
 //   // html event handling - invoke the function
 //   // REact event - don't invoke the function - pass the reference

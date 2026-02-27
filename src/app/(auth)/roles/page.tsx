@@ -18,23 +18,28 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { query, getDocs, collection } from "firebase/firestore";
+import { SubmitEventHandler, useEffect, useState } from "react";
+import { query, getDocs, collection, setDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { toast } from "sonner";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
+import PageLoading from "@/components/page-loading";
 
 interface Role {
   category: string;
   roles: string[]; //array of string type
 }
 
-// handle get fields loading state
-//handle save role
-
-// fetch and display roles from database
 export default function RolesPage() {
   const [field, setField] = useState<string>("");
   const [role, setRole] = useState<string>("");
   const [roleObjects, setRoleObjects] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+
+  const { user } = useAuth();
+  const router = useRouter();
 
   const fields = roleObjects.map((roleObject) => roleObject.category);
 
@@ -54,16 +59,52 @@ export default function RolesPage() {
     return roles;
   }
 
+  async function saveRole(field: string, role: string) {
+    return setDoc(doc(db, "users", user.uid), { role, field }, { merge: true });
+  }
+
   useEffect(() => {
     async function handleGetRoles() {
-      const roles = await getRoles();
-      setRoleObjects(roles);
+      try {
+        setLoadingRoles(true);
+        const roles = await getRoles();
+        setRoleObjects(roles);
+        setLoadingRoles(false);
+      } catch (error) {
+        toast.error("Failed to fetch roles. Try again");
+        setLoadingRoles(false);
+      }
     }
     handleGetRoles();
   }, []);
 
-  function handleSubmit() {}
-  const loading = false;
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    const isValid = validateFormData(field, role);
+    if (isValid) {
+      try {
+        setLoadingSubmit(true);
+        await saveRole(field, role);
+        setLoadingSubmit(false);
+        toast.success("Role saved successfully");
+        router.push("/dashboard");
+      } catch (error) {
+        toast.error("Failed to save role. Try again");
+        setLoadingSubmit(false);
+      }
+    } else {
+      toast.error("Please select an option for both fields");
+    }
+  };
+
+  function validateFormData(field: string, role: string): boolean {
+    return Boolean(field && role);
+  }
+
+  if (loadingRoles) {
+    return <PageLoading />;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
@@ -134,8 +175,12 @@ export default function RolesPage() {
                 </Combobox>
               </div>
 
-              <Button type="submit" className="w-full h-11" disabled={loading}>
-                {loading ? (
+              <Button
+                type="submit"
+                className="w-full h-11"
+                disabled={loadingSubmit}
+              >
+                {loadingSubmit ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
