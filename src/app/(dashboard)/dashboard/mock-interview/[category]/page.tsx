@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Progress } from '@/components/ui/progress'
-import { interviewQuestions, type Question } from '@/lib/interview-questions'
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { interviewQuestions } from "@/lib/interview-questions";
 import {
   Clock,
   ArrowRight,
@@ -14,107 +14,183 @@ import {
   AlertCircle,
   ChevronLeft,
   Loader2,
-} from 'lucide-react'
+} from "lucide-react";
+import { GetInterviewQuestions, Question } from "@/lib/types";
+import { useAuth } from "@/context/auth-context";
+
+import {
+  collection,
+  doc,
+  documentId,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  setDoc,
+  startAfter,
+  where,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS } from "@/lib/constants";
+import { toast } from "sonner";
+import PageLoading from "@/components/page-loading";
 
 interface Answer {
-  questionId: string
-  answer: string
-  timeSpent: number
+  questionId: string;
+  answer: string;
+  timeSpent: number;
 }
 
 // dispalys the questions and provides the text area for the answer with a countdown timer
 export default function InterviewSessionPage() {
   // Reads category and loads questions
-  const params = useParams()
-  const router = useRouter()
-  const category = params.category as string // category url parameter
+  const params = useParams();
+  const router = useRouter();
+  const { userProfile, loading: userProfileLoading, user } = useAuth();
+  const category = params.category as string; // category url parameter
 
-  const questions = interviewQuestions[category] || []
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers] = useState<Answer[]>([])
-  const [currentAnswer, setCurrentAnswer] = useState('')
-  const [timeLeft, setTimeLeft] = useState(questions[0]?.timeLimit || 120)
-  const [isStarted, setIsStarted] = useState(false)
-  const [showTips, setShowTips] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [currentAnswer, setCurrentAnswer] = useState("");
+  const [timeLeft, setTimeLeft] = useState(questions[0]?.timeLimit || 120);
+  const [isStarted, setIsStarted] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentQuestion: Question | undefined = questions[currentIndex]
-  const progress = ((currentIndex + 1) / questions.length) * 100 // derived/ computed state
+  const currentQuestion: Question | undefined = questions[currentIndex];
+  const progress = ((currentIndex + 1) / questions.length) * 100; // derived/ computed state
+
+  async function questionsGetUnanswered(
+    userLastAnsweredQuestionId: string | undefined,
+  ) {
+    const questionsSnapshot = await getDocs(
+      query(
+        collection(db, COLLECTIONS.interviewQuestions),
+        ...[
+          where("category", "==", category),
+          orderBy(documentId()),
+          ...(userLastAnsweredQuestionId
+            ? [startAfter(userLastAnsweredQuestionId)]
+            : []),
+          limit(5),
+        ],
+      ),
+    );
+
+    return questionsSnapshot.docs.map((doc) => doc.data()) as Question[];
+  }
 
   // handles next question
   const handleNext = useCallback(() => {
-    if (!currentQuestion) return
+    if (!currentQuestion) return;
 
     const newAnswer: Answer = {
       questionId: currentQuestion.id,
       answer: currentAnswer,
       timeSpent: currentQuestion.timeLimit - timeLeft,
-    }
-// updates by adding users new answer to current answers list
-    const updatedAnswers = [...answers, newAnswer]
-    setAnswers(updatedAnswers)
+    };
+    // updates by adding users new answer to current answers list
+    const updatedAnswers = [...answers, newAnswer];
+    setAnswers(updatedAnswers);
 
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex((prev) => prev + 1)
-      setCurrentAnswer('')
-      setTimeLeft(questions[currentIndex + 1].timeLimit)
-      setShowTips(false)
+      setCurrentIndex((prev) => prev + 1);
+      setCurrentAnswer("");
+      setTimeLeft(questions[currentIndex + 1].timeLimit);
+      setShowTips(false);
     } else {
       // saves to sessionStorage and navigate to results
-      setIsSubmitting(true)
+      setIsSubmitting(true);
       sessionStorage.setItem(
-        'interviewAnswers',
+        "interviewAnswers",
         JSON.stringify({
           category,
           answers: updatedAnswers,
           questions,
-        })
-      )
-      router.push(`/dashboard/mock-interview/${category}/results`)
+        }),
+      );
+      router.push(`/dashboard/mock-interview/${category}/results`);
     }
-  }, [currentQuestion, currentAnswer, timeLeft, answers, currentIndex, questions, category, router])
+  }, [
+    currentQuestion,
+    currentAnswer,
+    timeLeft,
+    answers,
+    currentIndex,
+    questions,
+    category,
+    router,
+  ]);
 
-   
   useEffect(() => {
-    if (!isStarted || !currentQuestion || isSubmitting) return
+    if (!isStarted || !currentQuestion || isSubmitting) return;
 
     // handles timer by reducing time left by each second
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          return 0
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000) // in milliseconds
+        return prev - 1;
+      });
+    }, 1000); // in milliseconds
 
-    return () => clearInterval(timer)
-  }, [isStarted, currentQuestion, isSubmitting]) // if any of these values(state) change, run useEffect again
+    return () => clearInterval(timer);
+  }, [isStarted, currentQuestion, isSubmitting]); // if any of these values(state) change, run useEffect again
 
   // automatically moves to the next question when the time runs out
   useEffect(() => {
     if (timeLeft === 0 && isStarted && !isSubmitting) {
-      handleNext()
+      handleNext();
     }
-  }, [timeLeft, isStarted, isSubmitting, handleNext])
+  }, [timeLeft, isStarted, isSubmitting, handleNext]);
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   // choose timer text/icon colour based on time remaining percentage
   const getTimeColor = () => {
-    if (!currentQuestion) return 'text-foreground'
-    const percentage = timeLeft / currentQuestion.timeLimit
-    if (percentage > 0.5) return 'text-success'
-    if (percentage > 0.25) return 'text-warning'
-    return 'text-destructive'
+    if (!currentQuestion) return "text-foreground";
+    const percentage = timeLeft / currentQuestion.timeLimit;
+    if (percentage > 0.5) return "text-success";
+    if (percentage > 0.25) return "text-warning";
+    return "text-destructive";
+  };
+
+  // instructions page before the interview begins
+
+  //N.B: Remember to update the userProfile record's lastAnsweredQuestionId field of the current user to the ID of the last question they answered.
+
+  // fetch interview questions from the COLLECTIONS.interviewQuesions collection
+  useEffect(() => {
+    if (userProfile && !isStarted) {
+      setQuestionsLoading(true);
+      (async () => {
+        try {
+          const questions = await questionsGetUnanswered(
+            userProfile.lastAnsweredQuestionId,
+          );
+          setQuestions(questions);
+        } catch (error) {
+          toast.error("Failed to fetch questions. Try again");
+        } finally {
+          setQuestionsLoading(false);
+        }
+      })();
+    }
+  }, [userProfile]);
+
+  if (questionsLoading || userProfileLoading) {
+    return <PageLoading />;
   }
 
   // error ui for invalid category
-  if (!currentQuestion || questions.length === 0) {
+  if ((!questionsLoading && !currentQuestion) || questions.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12 text-center">
         <AlertCircle className="size-12 mx-auto text-muted-foreground mb-4" />
@@ -122,15 +198,14 @@ export default function InterviewSessionPage() {
         <p className="text-muted-foreground mb-6">
           The interview category you selected does not exist.
         </p>
-        <Button onClick={() => router.push('/dashboard/mock-interview')}>
+        <Button onClick={() => router.push("/dashboard/mock-interview")}>
           <ChevronLeft className="size-4 mr-2" />
           Back to Categories
         </Button>
       </div>
-    )
+    );
   }
 
-  // instructions page before the interview begins
   if (!isStarted) {
     return (
       <motion.div
@@ -142,10 +217,13 @@ export default function InterviewSessionPage() {
           <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-primary/10 mb-6">
             <Clock className="size-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-4">Ready to Begin?</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-4">
+            Ready to Begin?
+          </h1>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-            You will answer {questions.length} questions in the {category} category. Each question
-            has a timer. When time runs out, you will automatically move to the next question.
+            You will answer {questions.length} questions in the {category}{" "}
+            category. Each question has a timer. When time runs out, you will
+            automatically move to the next question.
           </p>
 
           <div className="rounded-xl border border-border bg-card p-6 mb-8">
@@ -161,13 +239,18 @@ export default function InterviewSessionPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary">•</span>
-                {"Don't worry if time runs out - partial answers are still evaluated"}
+                {
+                  "Don't worry if time runs out - partial answers are still evaluated"
+                }
               </li>
             </ul>
           </div>
 
           <div className="flex items-center justify-center gap-4">
-            <Button variant="outline" onClick={() => router.push('/dashboard/mock-interview')}>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/dashboard/mock-interview")}
+            >
               <ChevronLeft className="size-4 mr-2" />
               Go Back
             </Button>
@@ -178,7 +261,7 @@ export default function InterviewSessionPage() {
           </div>
         </div>
       </motion.div>
-    )
+    );
   }
 
   // display of each interview question for selected category
@@ -190,7 +273,9 @@ export default function InterviewSessionPage() {
           <span className="text-muted-foreground">
             Question {currentIndex + 1} of {questions.length}
           </span>
-          <span className="text-muted-foreground capitalize">{category} Interview</span>
+          <span className="text-muted-foreground capitalize">
+            {category} Interview
+          </span>
         </div>
         <Progress value={progress} className="h-2" />
       </div>
@@ -207,11 +292,15 @@ export default function InterviewSessionPage() {
           <div className="flex items-center justify-center mb-8">
             <div
               className={`flex items-center gap-2 px-6 py-3 rounded-full border ${
-                timeLeft < 30 ? 'border-destructive/50 bg-destructive/5' : 'border-border bg-card'
+                timeLeft < 30
+                  ? "border-destructive/50 bg-destructive/5"
+                  : "border-border bg-card"
               }`}
             >
               <Clock className={`size-5 ${getTimeColor()}`} />
-              <span className={`text-2xl font-mono font-bold ${getTimeColor()}`}>
+              <span
+                className={`text-2xl font-mono font-bold ${getTimeColor()}`}
+              >
                 {formatTime(timeLeft)}
               </span>
             </div>
@@ -231,14 +320,14 @@ export default function InterviewSessionPage() {
             className="flex items-center gap-2 text-sm text-primary mb-4 hover:underline"
           >
             <Lightbulb className="size-4" />
-            {showTips ? 'Hide tips' : 'Show tips'}
+            {showTips ? "Hide tips" : "Show tips"}
           </button>
 
           <AnimatePresence>
             {showTips && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4"
               >
@@ -259,15 +348,15 @@ export default function InterviewSessionPage() {
             value={currentAnswer}
             onChange={(e) => setCurrentAnswer(e.target.value)}
             placeholder="Type your answer here..."
-            className="min-h-[200px] text-base resize-none mb-6"
+            className="min-h-50 text-base resize-none mb-6"
           />
 
           {/* Actions */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               {currentAnswer.length > 0
-                ? `${currentAnswer.split(' ').filter(Boolean).length} words`
-                : 'Start typing your answer'}
+                ? `${currentAnswer.split(" ").filter(Boolean).length} words`
+                : "Start typing your answer"}
             </p>
             <Button onClick={handleNext} disabled={isSubmitting}>
               {isSubmitting ? (
@@ -291,5 +380,5 @@ export default function InterviewSessionPage() {
         </motion.div>
       </AnimatePresence>
     </div>
-  )
+  );
 }

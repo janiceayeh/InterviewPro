@@ -1,48 +1,56 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useAuth } from '@/context/auth-context'
-import { motion } from 'framer-motion'
-import { Mic, MessageSquare, Lightbulb, ArrowRight, Sparkles, Clock, Target } from 'lucide-react'
+import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
+import { motion } from "framer-motion";
+import {
+  Mic,
+  MessageSquare,
+  Lightbulb,
+  ArrowRight,
+  Sparkles,
+  Clock,
+  Target,
+} from "lucide-react";
 
 const features = [
   {
-    title: 'Mock Interview Prep',
+    title: "Mock Interview Prep",
     description:
-      'Practice with timed interview questions and get AI-powered feedback on your responses.',
+      "Practice with timed interview questions and get AI-powered feedback on your responses.",
     icon: Mic,
-    href: '/dashboard/mock-interview',
-    gradient: 'from-primary to-accent',
-    stats: [
-      { label: 'Questions', value: '50+' },
-      { label: 'Categories', value: '8' },
-    ],
+    href: "/dashboard/mock-interview",
+    gradient: "from-primary to-accent",
+    // stats: [
+    //   { label: 'Questions', value: '50+' },
+    //   { label: 'Categories', value: '8' },
+    // ],
   },
   {
-    title: 'Interview Copilot',
+    title: "Interview Copilot",
     description:
-      'Chat with our AI interviewer for real-time practice and personalized recommendations.',
+      "Chat with our AI interviewer for real-time practice and personalized recommendations.",
     icon: MessageSquare,
-    href: '/dashboard/copilot',
-    gradient: 'from-accent to-chart-3',
-    stats: [
-      { label: 'Real-time', value: 'AI' },
-      { label: 'Feedback', value: 'Instant' },
-    ],
+    href: "/dashboard/copilot",
+    gradient: "from-accent to-chart-3",
+    // stats: [
+    //   { label: 'Real-time', value: 'AI' },
+    //   { label: 'Feedback', value: 'Instant' },
+    // ],
   },
   {
-    title: 'Interview Tips',
+    title: "Interview Tips",
     description:
-      'Access curated tips from industry experts and ask questions to deepen your understanding.',
+      "Access curated tips from industry experts and ask questions to deepen your understanding.",
     icon: Lightbulb,
-    href: '/dashboard/tips',
-    gradient: 'from-chart-3 to-chart-5',
-    stats: [
-      { label: 'Tips', value: '100+' },
-      { label: 'Topics', value: '15' },
-    ],
+    href: "/dashboard/tips",
+    gradient: "from-chart-3 to-chart-5",
+    // stats: [
+    //   { label: 'Tips', value: '100+' },
+    //   { label: 'Topics', value: '15' },
+    // ],
   },
-]
+];
 
 const container = {
   hidden: { opacity: 0 },
@@ -52,17 +60,16 @@ const container = {
       staggerChildren: 0.1,
     },
   },
-}
+};
 
 const item = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 },
-}
+};
 
 export default function DashboardPage() {
-  const { user, userProfile } = useAuth()
-  const firstName = userProfile?.firstname || user.displayName.split(' ')[0]
-  
+  const { user, userProfile } = useAuth();
+  const firstName = userProfile?.firstname || user.displayName.split(" ")[0];
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -80,8 +87,8 @@ export default function DashboardPage() {
           Hello, {firstName}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl">
-          Choose how you want to prepare for your next interview. Each tool is designed to help you
-          succeed.
+          Choose how you want to prepare for your next interview. Each tool is
+          designed to help you succeed.
         </p>
       </motion.div>
 
@@ -93,7 +100,7 @@ export default function DashboardPage() {
         className="grid gap-6 md:grid-cols-3"
       >
         {features.map((feature) => {
-          const Icon = feature.icon
+          const Icon = feature.icon;
           return (
             <motion.div key={feature.title} variants={item}>
               <Link href={feature.href} className="block group h-full">
@@ -111,17 +118,21 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Content */}
-                  <h2 className="text-xl font-semibold text-foreground mb-3">{feature.title}</h2>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">{feature.description}</p>
+                  <h2 className="text-xl font-semibold text-foreground mb-3">
+                    {feature.title}
+                  </h2>
+                  <p className="text-muted-foreground mb-6 leading-relaxed">
+                    {feature.description}
+                  </p>
 
                   {/* Stats */}
                   <div className="flex gap-6 mb-6">
-                    {feature.stats.map((stat) => (
+                    {/* {feature.stats.map((stat) => (
                       <div key={stat.label}>
                         <div className="text-lg font-bold text-foreground">{stat.value}</div>
                         <div className="text-xs text-muted-foreground">{stat.label}</div>
                       </div>
-                    ))}
+                    ))} */}
                   </div>
 
                   {/* CTA */}
@@ -132,7 +143,7 @@ export default function DashboardPage() {
                 </div>
               </Link>
             </motion.div>
-          )
+          );
         })}
       </motion.div>
 
@@ -149,7 +160,9 @@ export default function DashboardPage() {
           </div>
           <div>
             <div className="text-2xl font-bold text-foreground">0</div>
-            <div className="text-sm text-muted-foreground">Interviews Completed</div>
+            <div className="text-sm text-muted-foreground">
+              Interviews Completed
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-6">
@@ -172,5 +185,5 @@ export default function DashboardPage() {
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

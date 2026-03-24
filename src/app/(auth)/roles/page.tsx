@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import PageLoading from "@/components/page-loading";
+import { COLLECTIONS } from "@/lib/constants";
 
 interface Role {
   category: string;
@@ -54,13 +55,19 @@ export default function RolesPage() {
   }
 
   async function getRoles() {
-    const rolesSnapshot = await getDocs(query(collection(db, "roles")));
+    const rolesSnapshot = await getDocs(
+      query(collection(db, COLLECTIONS.roles)),
+    );
     const roles = rolesSnapshot.docs.map((doc) => doc.data()) as Role[];
     return roles;
   }
 
   async function saveRole(field: string, role: string) {
-    return setDoc(doc(db, "users", user.uid), { role, field }, { merge: true });
+    return setDoc(
+      doc(db, COLLECTIONS.users, user.uid),
+      { role, field },
+      { merge: true },
+    );
   }
 
   useEffect(() => {
