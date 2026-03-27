@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { interviewQuestions } from "@/lib/interview-questions";
 import {
   Clock,
   ArrowRight,
@@ -15,13 +14,22 @@ import {
   ChevronLeft,
   Loader2,
 } from "lucide-react";
-import { GetInterviewQuestions, Question } from "@/lib/types";
+import {
+  InterviewAnswer,
+  InterviewSession,
+  Question,
+  UserProfile,
+} from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 
 import {
+  addDoc,
   collection,
   doc,
+  DocumentData,
   documentId,
+  DocumentSnapshot,
+  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -41,13 +49,14 @@ interface Answer {
   timeSpent: number;
 }
 
-// dispalys the questions and provides the text area for the answer with a countdown timer
+// displays the questions and provides the text area for the answer with a countdown timer
 export default function InterviewSessionPage() {
   // Reads category and loads questions
   const params = useParams();
   const router = useRouter();
   const { userProfile, loading: userProfileLoading, user } = useAuth();
   const category = params.category as string; // category url parameter
+  const interviewSessionId = params.session_id as string;
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState<boolean>(false);
@@ -58,6 +67,10 @@ export default function InterviewSessionPage() {
   const [isStarted, setIsStarted] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentAnswerSaving, setCurrentAnswerSaving] = useState(false);
+  const [interviewMetadataSaving, setInterviewMetadataSaving] = useState(false);
+  const [interviewSessionTotalTimeSpent, setInterviewSessionTotalTimeSpent] =
+    useState(0);
 
   const currentQuestion: Question | undefined = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100; // derived/ computed state
@@ -74,16 +87,81 @@ export default function InterviewSessionPage() {
           ...(userLastAnsweredQuestionId
             ? [startAfter(userLastAnsweredQuestionId)]
             : []),
-          limit(5),
+          limit(2), // TODO: change me to the desired number of questions for each session.
         ],
       ),
     );
 
-    return questionsSnapshot.docs.map((doc) => doc.data()) as Question[];
+    return questionsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Question[];
+  }
+
+  async function saveAnswer({
+    timeSpentOnQuestion,
+  }: {
+    timeSpentOnQuestion: number;
+  }) {
+    try {
+      setCurrentAnswerSaving(true);
+      const newAnswer = await addDoc(
+        collection(db, COLLECTIONS.interviewAnswers),
+        {
+          answer: currentAnswer,
+          interviewCategory: category,
+          questionId: currentQuestion.id,
+          userId: user?.uid,
+          timeSpent: timeSpentOnQuestion,
+          interviewSessionId: interviewSessionId,
+        } satisfies Omit<InterviewAnswer, "id">,
+      );
+
+      return newAnswer;
+    } catch (error) {
+      toast.error("Failed to save answer.");
+    } finally {
+      setCurrentAnswerSaving(false);
+    }
+  }
+
+  async function saveInterviewMetaData({
+    lastAnsweredQuestionId,
+  }: {
+    lastAnsweredQuestionId: string;
+  }) {
+    try {
+      setInterviewMetadataSaving(true);
+
+      const interviewSessionsCompleted = userProfile?.interviewSessionsCompleted
+        ? (userProfile.interviewSessionsCompleted ?? 0) + 1
+        : 1;
+
+      const totalPractiseTime = userProfile?.totalPractiseTime
+        ? (userProfile.totalPractiseTime ?? 0) + interviewSessionTotalTimeSpent
+        : interviewSessionTotalTimeSpent;
+
+      // update user profile with metadata
+      setDoc(doc(db, COLLECTIONS.users, user.uid), {
+        lastAnsweredQuestionId: lastAnsweredQuestionId,
+        interviewSessionsCompleted: interviewSessionsCompleted,
+        totalPractiseTime: totalPractiseTime,
+      } satisfies Partial<UserProfile>);
+
+      // set total time spent on iterview session
+      setDoc(doc(db, COLLECTIONS.interviewSessions, interviewSessionId), {
+        totalTimeSpent: interviewSessionTotalTimeSpent,
+      } satisfies Partial<InterviewSession>);
+      return "ok";
+    } catch (error) {
+      toast.error("Failed to save interview metadata");
+    } finally {
+      setInterviewMetadataSaving(false);
+    }
   }
 
   // handles next question
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     if (!currentQuestion) return;
 
     const newAnswer: Answer = {
@@ -95,23 +173,29 @@ export default function InterviewSessionPage() {
     const updatedAnswers = [...answers, newAnswer];
     setAnswers(updatedAnswers);
 
+    // Save answer to interview-answers collection
+    const timeSpentOnQuestion = (currentQuestion.timeLimit || 120) - timeLeft;
+    setInterviewSessionTotalTimeSpent((t) => t + timeSpentOnQuestion);
+    await saveAnswer({ timeSpentOnQuestion });
+
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setCurrentAnswer("");
       setTimeLeft(questions[currentIndex + 1].timeLimit);
       setShowTips(false);
     } else {
-      // saves to sessionStorage and navigate to results
+      // saves to database and navigate to results
       setIsSubmitting(true);
-      sessionStorage.setItem(
-        "interviewAnswers",
-        JSON.stringify({
-          category,
-          answers: updatedAnswers,
-          questions,
-        }),
+
+      // Save interview metadata to database
+      const lastAnsweredQuestionId = questions[questions.length - 1].id;
+      await saveInterviewMetaData({ lastAnsweredQuestionId });
+
+      //TODO:
+      //3. Send Question and responses to AI for grading and results
+      router.push(
+        `/dashboard/mock-interview/${category}/${interviewSessionId}/results`,
       );
-      router.push(`/dashboard/mock-interview/${category}/results`);
     }
   }, [
     currentQuestion,
@@ -162,10 +246,6 @@ export default function InterviewSessionPage() {
     return "text-destructive";
   };
 
-  // instructions page before the interview begins
-
-  //N.B: Remember to update the userProfile record's lastAnsweredQuestionId field of the current user to the ID of the last question they answered.
-
   // fetch interview questions from the COLLECTIONS.interviewQuesions collection
   useEffect(() => {
     if (userProfile && !isStarted) {
@@ -194,9 +274,10 @@ export default function InterviewSessionPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12 text-center">
         <AlertCircle className="size-12 mx-auto text-muted-foreground mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Category Not Found</h1>
+        <h1 className="text-2xl font-bold mb-2">No questions available</h1>
         <p className="text-muted-foreground mb-6">
-          The interview category you selected does not exist.
+          There are no questions available for the selected category. Check
+          again soon.
         </p>
         <Button onClick={() => router.push("/dashboard/mock-interview")}>
           <ChevronLeft className="size-4 mr-2" />
@@ -206,6 +287,7 @@ export default function InterviewSessionPage() {
     );
   }
 
+  // instructions page before the interview begins
   if (!isStarted) {
     return (
       <motion.div
@@ -359,7 +441,9 @@ export default function InterviewSessionPage() {
                 : "Start typing your answer"}
             </p>
             <Button onClick={handleNext} disabled={isSubmitting}>
-              {isSubmitting ? (
+              {isSubmitting ||
+              currentAnswerSaving ||
+              interviewMetadataSaving ? (
                 <>
                   <Loader2 className="size-4 mr-2 animate-spin" />
                   Processing...
@@ -381,4 +465,9 @@ export default function InterviewSessionPage() {
       </AnimatePresence>
     </div>
   );
+}
+function startAfterDocument(
+  lastDocSnap: DocumentSnapshot<DocumentData, DocumentData>,
+): import("@firebase/firestore").QueryConstraint {
+  throw new Error("Function not implemented.");
 }

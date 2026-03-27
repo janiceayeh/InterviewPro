@@ -20,6 +20,15 @@ import {
   Target,
   Lightbulb,
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS } from "@/lib/constants";
+import { useAuth } from "@/context/auth-context";
+import { InterviewSession } from "@/lib/types";
+import { addDoc, collection, setDoc } from "firebase/firestore";
+import PageLoading from "@/components/page-loading";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 // defines the available interview categories data
 const categories = [
@@ -68,6 +77,48 @@ const categories = [
 // highlights currently selected category card and navigates user to the selected category page
 export default function MockInterviewPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { user, loading } = useAuth();
+  const [interviewSessionLoading, setInterviewSessionLoading] = useState(false);
+  const router = useRouter();
+
+  async function createInterviewSession() {
+    // This creates a new interview session
+    // Add a new document with a generated id.
+
+    if (user?.uid) {
+      const newInterviewSession = await addDoc(
+        collection(db, COLLECTIONS.interviewSessions),
+        {
+          userId: user.uid,
+          totalScore: 0,
+          totalTimeSpent: 0,
+          interviewCategory: selectedCategory,
+        } satisfies Omit<InterviewSession, "id">,
+      );
+
+      return newInterviewSession;
+    }
+  }
+
+  async function handleCreateNewInterviewSession() {
+    try {
+      setInterviewSessionLoading(true);
+      const newInterviewSession = await createInterviewSession();
+      if (newInterviewSession) {
+        router.push(
+          `/dashboard/mock-interview/${selectedCategory}/${newInterviewSession.id}`,
+        );
+      }
+    } catch (error) {
+      toast.error("Failed to create new interview session. Try again.");
+    } finally {
+      setInterviewSessionLoading(false);
+    }
+  }
+
+  if (loading) {
+    return <PageLoading />;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -168,19 +219,20 @@ export default function MockInterviewPage() {
         transition={{ delay: 0.5 }}
         className="mt-8 flex justify-center"
       >
-        <Link
-          href={
-            selectedCategory
-              ? `/dashboard/mock-interview/${selectedCategory}`
-              : "#"
-          }
-          className={!selectedCategory ? "pointer-events-none" : ""}
+        <Button
+          size="lg"
+          disabled={!selectedCategory}
+          className="h-12 px-8"
+          onClick={() => {
+            if (selectedCategory) {
+              handleCreateNewInterviewSession();
+            }
+          }}
         >
-          <Button size="lg" disabled={!selectedCategory} className="h-12 px-8">
-            Start Interview
-            <ArrowRight className="ml-2 size-4" />
-          </Button>
-        </Link>
+          {interviewSessionLoading && <Spinner data-icon="inline-start" />}
+          Start Interview
+          <ArrowRight className="ml-2 size-4" />
+        </Button>
       </motion.div>
 
       {/* Instructions */}
