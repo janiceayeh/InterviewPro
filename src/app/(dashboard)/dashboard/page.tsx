@@ -12,6 +12,16 @@ import {
   Clock,
   Target,
 } from "lucide-react";
+import PageLoading from "@/components/page-loading";
+
+function secondsToHMS(seconds: number) {
+  const sign = seconds < 0 ? -1 : 1;
+  seconds = Math.abs(Math.floor(seconds));
+  const h = Math.floor(seconds / 3600) * sign;
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return { hours: h, minutes: m, seconds: s };
+}
 
 const features = [
   {
@@ -68,9 +78,17 @@ const item = {
 };
 
 export default function DashboardPage() {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const firstName = userProfile?.firstname || user.displayName.split(" ")[0];
 
+  const practiseTime = secondsToHMS(userProfile?.totalPractiseTime ?? 0);
+
+  //TODO:
+  // 1. Display average scores
+
+  if (loading) {
+    return <PageLoading />;
+  }
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Header */}
@@ -159,7 +177,9 @@ export default function DashboardPage() {
             <Target className="size-6 text-primary" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-foreground">0</div>
+            <div className="text-2xl font-bold text-foreground">
+              {userProfile.interviewSessionsCompleted}
+            </div>
             <div className="text-sm text-muted-foreground">
               Interviews Completed
             </div>
@@ -170,7 +190,10 @@ export default function DashboardPage() {
             <Clock className="size-6 text-accent" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-foreground">0h</div>
+            <div className="text-2xl font-bold text-foreground">
+              {practiseTime.hours}h:{practiseTime.minutes}m:
+              {practiseTime.seconds}s
+            </div>
             <div className="text-sm text-muted-foreground">Practice Time</div>
           </div>
         </div>
