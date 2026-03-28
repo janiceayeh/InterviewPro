@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface UserProfile {
   createdAt: string;
   email: string;
@@ -16,6 +18,7 @@ export interface Question {
   category: string;
   timeLimit: number; // in seconds
   tips: string[];
+  createdAt: Timestamp;
 }
 
 export interface InterviewAnswer {
@@ -26,6 +29,7 @@ export interface InterviewAnswer {
   interviewCategory: string;
   timeSpent: number; // time spent on the question in seconds to calculate progress,
   interviewSessionId: string;
+  createdAt: Timestamp;
 }
 
 export interface InterviewSession {
@@ -34,4 +38,6 @@ export interface InterviewSession {
   totalScore: number | undefined;
   totalTimeSpent: number; // total time spent on the interview session.
   interviewCategory: string;
+  createdAt: Timestamp;
+  isCompleted: boolean;
 }

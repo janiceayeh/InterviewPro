@@ -13,6 +13,9 @@ import {
   Target,
 } from "lucide-react";
 import PageLoading from "@/components/page-loading";
+import { routes } from "@/lib/routes";
+import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 function secondsToHMS(seconds: number) {
   const sign = seconds < 0 ? -1 : 1;
@@ -29,7 +32,7 @@ const features = [
     description:
       "Practice with timed interview questions and get AI-powered feedback on your responses.",
     icon: Mic,
-    href: "/dashboard/mock-interview",
+    href: routes.mockInterview(),
     gradient: "from-primary to-accent",
     // stats: [
     //   { label: 'Questions', value: '50+' },
@@ -41,7 +44,7 @@ const features = [
     description:
       "Chat with our AI interviewer for real-time practice and personalized recommendations.",
     icon: MessageSquare,
-    href: "/dashboard/copilot",
+    href: routes.copilot(),
     gradient: "from-accent to-chart-3",
     // stats: [
     //   { label: 'Real-time', value: 'AI' },
@@ -53,7 +56,7 @@ const features = [
     description:
       "Access curated tips from industry experts and ask questions to deepen your understanding.",
     icon: Lightbulb,
-    href: "/dashboard/tips",
+    href: routes.tips(),
     gradient: "from-chart-3 to-chart-5",
     // stats: [
     //   { label: 'Tips', value: '100+' },
@@ -78,7 +81,7 @@ const item = {
 };
 
 export default function DashboardPage() {
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading: userLoading, getUserProfile } = useAuth();
   const firstName = userProfile?.firstname || user.displayName.split(" ")[0];
 
   const practiseTime = secondsToHMS(userProfile?.totalPractiseTime ?? 0);
@@ -86,7 +89,11 @@ export default function DashboardPage() {
   //TODO:
   // 1. Display average scores
 
-  if (loading) {
+  useEffect(() => {
+    if (!userLoading) getUserProfile();
+  }, [userLoading]);
+
+  if (userLoading) {
     return <PageLoading />;
   }
   return (
@@ -178,7 +185,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <div className="text-2xl font-bold text-foreground">
-              {userProfile.interviewSessionsCompleted}
+              {userProfile?.interviewSessionsCompleted ?? 0}
             </div>
             <div className="text-sm text-muted-foreground">
               Interviews Completed
@@ -207,6 +214,15 @@ export default function DashboardPage() {
           </div>
         </div>
       </motion.div>
+
+      <div className="flex justify-center mt-5">
+        <Link href={routes.mockInterviewHistory()}>
+          <Button variant="default" size="lg" className="h-12 px-8">
+            View Mock Interview History
+            <ArrowRight className="ml-2 size-4" />
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

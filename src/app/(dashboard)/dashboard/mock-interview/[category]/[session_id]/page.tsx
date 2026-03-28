@@ -34,14 +34,18 @@ import {
   limit,
   orderBy,
   query,
-  setDoc,
+  serverTimestamp,
+  updateDoc,
   startAfter,
+  Timestamp,
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/lib/constants";
 import { toast } from "sonner";
 import PageLoading from "@/components/page-loading";
+import { routes } from "@/lib/routes";
+import ErrorAlert from "@/components/error-alert/ErrorAlert";
 
 interface Answer {
   questionId: string;
@@ -71,6 +75,11 @@ export default function InterviewSessionPage() {
   const [interviewMetadataSaving, setInterviewMetadataSaving] = useState(false);
   const [interviewSessionTotalTimeSpent, setInterviewSessionTotalTimeSpent] =
     useState(0);
+  const [interviewSessionLoading, setInterviewSessionLoading] = useState(false);
+  const [interviewSession, setInterviewSession] = useState<
+    InterviewSession | undefined
+  >();
+  const [error, setError] = useState<string | undefined>();
 
   const currentQuestion: Question | undefined = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100; // derived/ computed state
@@ -105,19 +114,23 @@ export default function InterviewSessionPage() {
   }) {
     try {
       setCurrentAnswerSaving(true);
-      const newAnswer = await addDoc(
-        collection(db, COLLECTIONS.interviewAnswers),
-        {
-          answer: currentAnswer,
-          interviewCategory: category,
-          questionId: currentQuestion.id,
-          userId: user?.uid,
-          timeSpent: timeSpentOnQuestion,
-          interviewSessionId: interviewSessionId,
-        } satisfies Omit<InterviewAnswer, "id">,
-      );
-
-      return newAnswer;
+      if (interviewSession) {
+        const newAnswer = await addDoc(
+          collection(db, COLLECTIONS.interviewAnswers),
+          {
+            answer: currentAnswer,
+            interviewCategory: category,
+            questionId: currentQuestion.id,
+            userId: user?.uid,
+            timeSpent: timeSpentOnQuestion,
+            interviewSessionId: interviewSessionId,
+            createdAt: serverTimestamp() as Timestamp,
+          } satisfies Omit<InterviewAnswer, "id">,
+        );
+        return newAnswer;
+      } else {
+        setError("Cannot save answer: No interview session found.");
+      }
     } catch (error) {
       toast.error("Failed to save answer.");
     } finally {
@@ -142,21 +155,35 @@ export default function InterviewSessionPage() {
         : interviewSessionTotalTimeSpent;
 
       // update user profile with metadata
-      setDoc(doc(db, COLLECTIONS.users, user.uid), {
+      updateDoc(doc(db, COLLECTIONS.users, user.uid), {
         lastAnsweredQuestionId: lastAnsweredQuestionId,
         interviewSessionsCompleted: interviewSessionsCompleted,
         totalPractiseTime: totalPractiseTime,
       } satisfies Partial<UserProfile>);
 
-      // set total time spent on iterview session
-      setDoc(doc(db, COLLECTIONS.interviewSessions, interviewSessionId), {
-        totalTimeSpent: interviewSessionTotalTimeSpent,
-      } satisfies Partial<InterviewSession>);
       return "ok";
     } catch (error) {
       toast.error("Failed to save interview metadata");
     } finally {
       setInterviewMetadataSaving(false);
+    }
+  }
+
+  async function updateInterviewSession({ timeSpent }: { timeSpent: number }) {
+    try {
+      setInterviewSessionLoading(true);
+      return updateDoc(
+        doc(db, COLLECTIONS.interviewSessions, interviewSessionId),
+        {
+          totalTimeSpent: timeSpent,
+          isCompleted: true,
+        } satisfies Partial<InterviewSession>,
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create new interview session. Try again.");
+    } finally {
+      setInterviewSessionLoading(false);
     }
   }
 
@@ -187,6 +214,11 @@ export default function InterviewSessionPage() {
       // saves to database and navigate to results
       setIsSubmitting(true);
 
+      // create interview session
+      await updateInterviewSession({
+        timeSpent: interviewSessionTotalTimeSpent,
+      });
+
       // Save interview metadata to database
       const lastAnsweredQuestionId = questions[questions.length - 1].id;
       await saveInterviewMetaData({ lastAnsweredQuestionId });
@@ -194,7 +226,10 @@ export default function InterviewSessionPage() {
       //TODO:
       //3. Send Question and responses to AI for grading and results
       router.push(
-        `/dashboard/mock-interview/${category}/${interviewSessionId}/results`,
+        routes.mockInterviewResults({
+          category,
+          interviewSessionId,
+        }),
       );
     }
   }, [
@@ -257,6 +292,7 @@ export default function InterviewSessionPage() {
           );
           setQuestions(questions);
         } catch (error) {
+          console.error(error);
           toast.error("Failed to fetch questions. Try again");
         } finally {
           setQuestionsLoading(false);
@@ -265,7 +301,31 @@ export default function InterviewSessionPage() {
     }
   }, [userProfile]);
 
-  if (questionsLoading || userProfileLoading) {
+  // get inteview session from database to ensure it exists
+  useEffect(() => {
+    async function getInterviewSession() {
+      try {
+        setInterviewSessionLoading(true);
+        const interviewSessionDoc = await getDoc(
+          doc(db, COLLECTIONS.interviewSessions, interviewSessionId),
+        );
+        const interviewSession = interviewSessionDoc.data() as InterviewSession;
+        setInterviewSession(interviewSession);
+      } catch (error) {
+        const errorMessage = "Failed to load interview";
+        setError(errorMessage);
+        toast.error(errorMessage);
+        console.error(error);
+      } finally {
+        setInterviewSessionLoading(false);
+      }
+    }
+    if (interviewSessionId) {
+      getInterviewSession();
+    }
+  }, [interviewSessionId]);
+
+  if (questionsLoading || userProfileLoading || interviewSessionLoading) {
     return <PageLoading />;
   }
 
@@ -279,7 +339,7 @@ export default function InterviewSessionPage() {
           There are no questions available for the selected category. Check
           again soon.
         </p>
-        <Button onClick={() => router.push("/dashboard/mock-interview")}>
+        <Button onClick={() => router.push(routes.mockInterview())}>
           <ChevronLeft className="size-4 mr-2" />
           Back to Categories
         </Button>
@@ -331,7 +391,7 @@ export default function InterviewSessionPage() {
           <div className="flex items-center justify-center gap-4">
             <Button
               variant="outline"
-              onClick={() => router.push("/dashboard/mock-interview")}
+              onClick={() => router.push(routes.mockInterview())}
             >
               <ChevronLeft className="size-4 mr-2" />
               Go Back
@@ -349,6 +409,8 @@ export default function InterviewSessionPage() {
   // display of each interview question for selected category
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
+      {error && <ErrorAlert errorMessage={error} />}
+
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between text-sm mb-2">

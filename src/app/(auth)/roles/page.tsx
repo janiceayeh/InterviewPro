@@ -26,6 +26,7 @@ import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import PageLoading from "@/components/page-loading";
 import { COLLECTIONS } from "@/lib/constants";
+import { routes } from "@/lib/routes";
 
 interface Role {
   category: string;
@@ -94,7 +95,7 @@ export default function RolesPage() {
         await saveRole(field, role);
         setLoadingSubmit(false);
         toast.success("Role saved successfully");
-        router.push("/dashboard");
+        router.push(routes.dashboard());
       } catch (error) {
         toast.error("Failed to save role. Try again");
         setLoadingSubmit(false);
@@ -116,7 +117,7 @@ export default function RolesPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
+          <Link href={routes.home()} className="inline-flex items-center gap-2">
             <div className="size-10 rounded-xl bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">
                 IP

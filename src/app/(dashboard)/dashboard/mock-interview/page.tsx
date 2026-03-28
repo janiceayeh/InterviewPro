@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,11 +23,17 @@ import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/lib/constants";
 import { useAuth } from "@/context/auth-context";
 import { InterviewSession } from "@/lib/types";
-import { addDoc, collection, setDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
 import PageLoading from "@/components/page-loading";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { routes } from "@/lib/routes";
 
 // defines the available interview categories data
 const categories = [
@@ -77,14 +82,12 @@ const categories = [
 // highlights currently selected category card and navigates user to the selected category page
 export default function MockInterviewPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { user, loading } = useAuth();
+  const { user, loading: userLoading } = useAuth();
   const [interviewSessionLoading, setInterviewSessionLoading] = useState(false);
   const router = useRouter();
 
   async function createInterviewSession() {
     // This creates a new interview session
-    // Add a new document with a generated id.
-
     if (user?.uid) {
       const newInterviewSession = await addDoc(
         collection(db, COLLECTIONS.interviewSessions),
@@ -93,6 +96,8 @@ export default function MockInterviewPage() {
           totalScore: 0,
           totalTimeSpent: 0,
           interviewCategory: selectedCategory,
+          createdAt: serverTimestamp() as Timestamp,
+          isCompleted: false,
         } satisfies Omit<InterviewSession, "id">,
       );
 
@@ -106,7 +111,10 @@ export default function MockInterviewPage() {
       const newInterviewSession = await createInterviewSession();
       if (newInterviewSession) {
         router.push(
-          `/dashboard/mock-interview/${selectedCategory}/${newInterviewSession.id}`,
+          routes.mockInterviewSession({
+            category: selectedCategory,
+            interviewSessionId: newInterviewSession.id,
+          }),
         );
       }
     } catch (error) {
@@ -116,7 +124,7 @@ export default function MockInterviewPage() {
     }
   }
 
-  if (loading) {
+  if (userLoading) {
     return <PageLoading />;
   }
 
@@ -217,7 +225,7 @@ export default function MockInterviewPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 flex justify-center"
+        className="mt-8 flex flex-col sm:flex-row justify-center gap-4"
       >
         <Button
           size="lg"

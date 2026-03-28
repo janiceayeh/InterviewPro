@@ -36,6 +36,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
+  getUserProfile: () => Promise<void>;
 }
 // Creates the context. user info
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,11 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Fetches user profile from Firestore
-  async function getUserProfile(user: User | null) {
+  async function getUserProfile() {
     if (user) {
       const profileDoc = await getDoc(doc(db, COLLECTIONS.users, user.uid));
-      const profile = profileDoc.data();
-      return profile;
+      setUserProfile(profileDoc.data() as UserProfile);
     }
   }
 
@@ -66,9 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    getUserProfile(user).then((userProfile) => {
-      setUserProfile(userProfile as UserProfile);
-    });
+    if (user) {
+      getUserProfile();
+    }
   }, [user]);
 
   const signIn = async (email: string, password: string) => {
@@ -104,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         logout,
         deleteAccount,
+        getUserProfile,
       }}
     >
       {children}
