@@ -17,7 +17,7 @@ import {
 import {
   InterviewAnswer,
   InterviewSession,
-  Question,
+  InterviewQuestion,
   UserProfile,
 } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
@@ -41,7 +41,10 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { COLLECTIONS } from "@/lib/constants";
+import {
+  COLLECTIONS,
+  NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION,
+} from "@/lib/constants";
 import { toast } from "sonner";
 import PageLoading from "@/components/page-loading";
 import { routes } from "@/lib/routes";
@@ -62,7 +65,7 @@ export default function InterviewSessionPage() {
   const category = params.category as string; // category url parameter
   const interviewSessionId = params.session_id as string;
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
@@ -81,7 +84,8 @@ export default function InterviewSessionPage() {
   >();
   const [error, setError] = useState<string | undefined>();
 
-  const currentQuestion: Question | undefined = questions[currentIndex];
+  const currentQuestion: InterviewQuestion | undefined =
+    questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100; // derived/ computed state
 
   async function questionsGetUnanswered(
@@ -96,7 +100,7 @@ export default function InterviewSessionPage() {
           ...(userLastAnsweredQuestionId
             ? [startAfter(userLastAnsweredQuestionId)]
             : []),
-          limit(2), // TODO: change me to the desired number of questions for each session.
+          limit(NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION), // TODO: change me to the desired number of questions for each session.
         ],
       ),
     );
@@ -104,7 +108,7 @@ export default function InterviewSessionPage() {
     return questionsSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    })) as Question[];
+    })) as InterviewQuestion[];
   }
 
   async function saveAnswer({

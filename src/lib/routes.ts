@@ -19,4 +19,13 @@ export const routes = {
   }) => `/dashboard/mock-interview/${category}/${interviewSessionId}/results`,
   copilot: () => "/dashboard/copilot",
   tips: () => "/dashboard/tips",
+  api: {
+    evaluateInterview: ({
+      category,
+      interviewSessionId,
+    }: {
+      category: string;
+      interviewSessionId: string;
+    }) => `/api/evaluate-interview/${category}/${interviewSessionId}`,
+  },
 };

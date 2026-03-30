@@ -1,4 +1,7 @@
 import { Timestamp } from "firebase/firestore";
+import { TInterviewSessionEvaluation } from "./constants";
+
+//collections
 
 export interface UserProfile {
   createdAt: string;
@@ -12,7 +15,7 @@ export interface UserProfile {
   totalPractiseTime: number | undefined; // in seconds
 }
 
-export interface Question {
+export interface InterviewQuestion {
   id: string;
   question: string;
   category: string;
@@ -40,4 +43,17 @@ export interface InterviewSession {
   interviewCategory: string;
   createdAt: Timestamp;
   isCompleted: boolean;
+  evaluation: TInterviewSessionEvaluation | null;
+}
+
+// ------------
+
+export interface InterviewSessionQA {
+  questionId: string;
+  answerId: string;
+  interviewSessionId: string;
+  question: string;
+  answer: string;
+  timeSpent: number;
+  interviewCategory: string;
 }

@@ -32,6 +32,12 @@ import {
   Tooltip,
 } from "recharts";
 import { routes } from "@/lib/routes";
+import { useAuth } from "@/context/auth-context";
+import { COLLECTIONS, TInterviewSessionEvaluation } from "@/lib/constants";
+import { toast } from "sonner";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { InterviewSession } from "@/lib/types";
 
 interface QuestionScore {
   questionId: string;
@@ -40,69 +46,81 @@ interface QuestionScore {
   keyPoints: string[];
 }
 
-interface Evaluation {
-  overallScore: number;
-  summary: string;
-  strengths: string[];
-  improvements: string[];
-  questionScores: QuestionScore[];
-  categoryBreakdown: {
-    communication: number;
-    relevance: number;
-    structure: number;
-    depth: number;
-    confidence: number;
-  };
-  recommendations: string[];
-}
+type QuestionScoreWithQuestion = QuestionScore & { question: string };
 
 export default function ResultsPage() {
+  const { user, loading: userLoading } = useAuth();
   const params = useParams();
   const router = useRouter();
   const category = params.category as string;
+  const interviewSessionId = params.session_id as string;
 
-  const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [evaluation, setEvaluation] =
+    useState<TInterviewSessionEvaluation | null>(null);
+  const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+
+  async function getInterviewSession(interviewSessionId: string) {
+    try {
+      const interviewSessionSnapshot = await getDoc(
+        doc(db, COLLECTIONS.interviewSessions, interviewSessionId),
+      );
+
+      return ["ok", interviewSessionSnapshot.data()];
+    } catch (error) {
+      return ["error", error];
+    }
+  }
 
   useEffect(() => {
     const fetchEvaluation = async () => {
       try {
-        const stored = sessionStorage.getItem("interviewAnswers");
-        if (!stored) {
-          router.push(routes.mockInterview());
-          return;
+        setEvaluationLoading(true);
+
+        // Load interview session and check whether it has already been evaluated
+        const [interviewSessionStatus, interviewSessionResult] =
+          await getInterviewSession(interviewSessionId);
+        if (interviewSessionStatus === "error") {
+          return setError("Failed to load interview session");
         }
 
-        const { category, answers, questions } = JSON.parse(stored);
+        const interviewSession = interviewSessionResult as InterviewSession;
 
-        const response = await fetch("/api/evaluate-interview", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ category, answers, questions }),
-        });
-
-        if (!response.ok) throw new Error("Failed to evaluate");
-
-        const result = await response.json();
-
-        if (result.error) {
-          throw new Error(result.error);
+        if (interviewSession?.evaluation) {
+          return setEvaluation(interviewSession.evaluation);
         }
+
+        const response = await fetch(
+          routes.api.evaluateInterview({ category, interviewSessionId }),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user?.uid }),
+          },
+        );
+
+        if (!response.ok)
+          throw new Error("Failed to evaluate interview session");
+
+        const result: TInterviewSessionEvaluation = await response.json();
 
         setEvaluation(result);
-      } catch {
-        setError("Failed to generate evaluation. Please try again.");
+      } catch (error) {
+        console.error(error);
+        const errorMessage =
+          "Failed to generate evaluation?. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
       } finally {
-        setLoading(false);
+        setEvaluationLoading(false);
       }
     };
 
     fetchEvaluation();
-  }, [router]);
+  }, [user, interviewSessionId]);
 
-  if (loading) {
+  if (evaluationLoading || userLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
         <Loader2 className="size-12 animate-spin text-primary mb-4" />
@@ -125,9 +143,9 @@ export default function ResultsPage() {
           Something Went Wrong
         </h2>
         <p className="text-muted-foreground text-center mb-6">{error}</p>
-        <Button onClick={() => router.push("/dashboard/mock-interview")}>
+        <Button onClick={() => router.push(routes.mockInterviewHistory())}>
           <ChevronLeft className="size-4 mr-2" />
-          Back to Categories
+          Back to history
         </Button>
       </div>
     );
@@ -136,15 +154,15 @@ export default function ResultsPage() {
   const radarData = [
     {
       subject: "Communication",
-      value: evaluation.categoryBreakdown.communication,
+      value: evaluation?.categoryBreakdown.communication,
     },
-    { subject: "Relevance", value: evaluation.categoryBreakdown.relevance },
-    { subject: "Structure", value: evaluation.categoryBreakdown.structure },
-    { subject: "Depth", value: evaluation.categoryBreakdown.depth },
-    { subject: "Confidence", value: evaluation.categoryBreakdown.confidence },
+    { subject: "Relevance", value: evaluation?.categoryBreakdown.relevance },
+    { subject: "Structure", value: evaluation?.categoryBreakdown.structure },
+    { subject: "Depth", value: evaluation?.categoryBreakdown.depth },
+    { subject: "Confidence", value: evaluation?.categoryBreakdown.confidence },
   ];
 
-  const barData = evaluation.questionScores.map((qs, index) => ({
+  const barData = evaluation?.questionScores.map((qs, index) => ({
     name: `Q${index + 1}`,
     score: qs.score,
   }));
@@ -195,16 +213,16 @@ export default function ResultsPage() {
         transition={{ delay: 0.1 }}
       >
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-8">
+          <div className="bg-linear-to-r from-primary/10 to-accent/10 p-8">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="text-center">
                 <div
-                  className={`text-6xl font-bold ${getScoreColor(evaluation.overallScore)} mb-2`}
+                  className={`text-6xl font-bold ${getScoreColor(evaluation?.overallScore)} mb-2`}
                 >
-                  {evaluation.overallScore}
+                  {evaluation?.overallScore}
                 </div>
                 <div className="text-lg font-medium text-foreground">
-                  {getScoreLabel(evaluation.overallScore)}
+                  {getScoreLabel(evaluation?.overallScore)}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Overall Score
@@ -212,7 +230,7 @@ export default function ResultsPage() {
               </div>
               <div className="flex-1">
                 <p className="text-foreground leading-relaxed">
-                  {evaluation.summary}
+                  {evaluation?.summary}
                 </p>
               </div>
             </div>
@@ -320,9 +338,9 @@ export default function ResultsPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {evaluation.strengths.map((strength, index) => (
+                {evaluation?.strengths.map((strength, index) => (
                   <li key={index} className="flex items-start gap-2">
-                    <span className="size-1.5 rounded-full bg-success mt-2 flex-shrink-0" />
+                    <span className="size-1.5 rounded-full bg-success mt-2 shrink-0" />
                     <span className="text-foreground">{strength}</span>
                   </li>
                 ))}
@@ -345,9 +363,9 @@ export default function ResultsPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {evaluation.improvements.map((improvement, index) => (
+                {evaluation?.improvements.map((improvement, index) => (
                   <li key={index} className="flex items-start gap-2">
-                    <span className="size-1.5 rounded-full bg-warning mt-2 flex-shrink-0" />
+                    <span className="size-1.5 rounded-full bg-warning mt-2 shrink-0" />
                     <span className="text-foreground">{improvement}</span>
                   </li>
                 ))}
@@ -369,58 +387,65 @@ export default function ResultsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {evaluation.questionScores.map((qs, index) => (
-                <div
-                  key={qs.questionId}
-                  className="rounded-lg border border-border p-4 cursor-pointer hover:border-primary/50 transition-colors"
-                  onClick={() =>
-                    setExpandedQuestion(
-                      expandedQuestion === qs.questionId ? null : qs.questionId,
-                    )
-                  }
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-foreground">
-                      Question {index + 1}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <span className={`font-bold ${getScoreColor(qs.score)}`}>
-                        {qs.score}/100
+              {evaluation?.questionScores.map(
+                (qs: QuestionScoreWithQuestion, index) => (
+                  <div
+                    key={qs.questionId}
+                    className="rounded-lg border border-border p-4 cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() =>
+                      setExpandedQuestion(
+                        expandedQuestion === qs.questionId
+                          ? null
+                          : qs.questionId,
+                      )
+                    }
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-foreground">
+                        Question {index + 1}
                       </span>
-                      <Progress value={qs.score} className="w-24 h-2" />
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`font-bold ${getScoreColor(qs.score)}`}
+                        >
+                          {qs.score}/100
+                        </span>
+                        <Progress value={qs.score} className="w-24 h-2" />
+                      </div>
                     </div>
+                    {expandedQuestion === qs.questionId && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="mt-4 pt-4 border-t border-border"
+                      >
+                        <p className="mb-3">Question: {qs.question}</p>
+                        <p className="text-muted-foreground mb-3">
+                          {qs.feedback}
+                        </p>
+                        {qs.keyPoints.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-foreground mb-2">
+                              Key Points:
+                            </p>
+                            <ul className="space-y-1">
+                              {qs.keyPoints.map((point, i) => (
+                                <li
+                                  key={i}
+                                  className="text-sm text-muted-foreground flex gap-2"
+                                >
+                                  <span className="text-primary">•</span>
+                                  {point}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
                   </div>
-                  {expandedQuestion === qs.questionId && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="mt-4 pt-4 border-t border-border"
-                    >
-                      <p className="text-muted-foreground mb-3">
-                        {qs.feedback}
-                      </p>
-                      {qs.keyPoints.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-foreground mb-2">
-                            Key Points:
-                          </p>
-                          <ul className="space-y-1">
-                            {qs.keyPoints.map((point, i) => (
-                              <li
-                                key={i}
-                                className="text-sm text-muted-foreground flex gap-2"
-                              >
-                                <span className="text-primary">•</span>
-                                {point}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </div>
-              ))}
+                ),
+              )}
             </div>
           </CardContent>
         </Card>
@@ -441,9 +466,9 @@ export default function ResultsPage() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {evaluation.recommendations.map((rec, index) => (
+              {evaluation?.recommendations.map((rec, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex-shrink-0">
+                  <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
                     {index + 1}
                   </span>
                   <span className="text-foreground">{rec}</span>
@@ -463,25 +488,27 @@ export default function ResultsPage() {
       >
         <Button
           variant="outline"
-          onClick={() => router.push(routes.mockInterview())}
+          onClick={() => router.push("/dashboard/mock-interview")}
         >
           <ChevronLeft className="size-4 mr-2" />
           Back to Categories
         </Button>
-        <Button onClick={() => router.push(routes.mockInterview())}>
+        <Button
+          onClick={() => router.push(`/dashboard/mock-interview/${category}`)}
+        >
           <RotateCcw className="size-4 mr-2" />
           Try Again
         </Button>
         <Button
           variant="outline"
-          onClick={() => router.push(routes.mockInterviewHistory())}
+          onClick={() => router.push("/dashboard/mock-interview/history")}
         >
           <Trophy className="size-4 mr-2" />
           View History
         </Button>
         <Button
           variant="secondary"
-          onClick={() => router.push(routes.copilot())}
+          onClick={() => router.push("/dashboard/copilot")}
         >
           Practice with Copilot
           <ArrowRight className="size-4 ml-2" />

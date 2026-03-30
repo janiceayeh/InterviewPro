@@ -98,6 +98,7 @@ export default function MockInterviewPage() {
           interviewCategory: selectedCategory,
           createdAt: serverTimestamp() as Timestamp,
           isCompleted: false,
+          evaluation: null,
         } satisfies Omit<InterviewSession, "id">,
       );
 
