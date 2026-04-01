@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/lib/context/auth-context";
 import { motion } from "framer-motion";
 import {
   Mic,

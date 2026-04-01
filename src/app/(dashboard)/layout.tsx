@@ -4,7 +4,7 @@ import React from "react";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/lib/context/auth-context";
 import { DashboardNav } from "@/components/dashboard/nav";
 import { Loader2 } from "lucide-react";
 import PageLoading from "@/components/page-loading";

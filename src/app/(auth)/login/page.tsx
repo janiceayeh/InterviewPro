@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useAuth } from '@/context/auth-context'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/lib/context/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -16,46 +16,46 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false) // Global loading state to disable inputs/buttons and show progress feedback
-  const { signIn, signInWithGoogle } = useAuth()  // Pull auth methods from auth context
-  const router = useRouter()   // Next.js client-side router for redirecting after sign in
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // Global loading state to disable inputs/buttons and show progress feedback
+  const { signIn, signInWithGoogle } = useAuth(); // Pull auth methods from auth context
+  const router = useRouter(); // Next.js client-side router for redirecting after sign in
 
- // Handles email/password login form submission
+  // Handles email/password login form submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      await signIn(email, password) // Attempt to sign in using the provided credentials
-      toast.success('Welcome back!')
-      router.push('/dashboard')
+      await signIn(email, password); // Attempt to sign in using the provided credentials
+      toast.success("Welcome back!");
+      router.push("/dashboard");
     } catch (error) {
-      toast.error('Invalid email or password')
+      toast.error("Invalid email or password");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Handles Google OAuth sign-in
   const handleGoogleSignIn = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      await signInWithGoogle()
-      toast.success('Welcome!')
-      router.push('/dashboard')
+      await signInWithGoogle();
+      toast.success("Welcome!");
+      router.push("/dashboard");
     } catch (error) {
-      toast.error('Failed to sign in with Google')
+      toast.error("Failed to sign in with Google");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -63,15 +63,21 @@ export default function LoginPage() {
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="size-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">IP</span>
+              <span className="text-primary-foreground font-bold text-lg">
+                IP
+              </span>
             </div>
-            <span className="text-2xl font-bold text-foreground">InterviewPro</span>
+            <span className="text-2xl font-bold text-foreground">
+              InterviewPro
+            </span>
           </Link>
         </div>
 
         <Card className="border-0 shadow-xl bg-card">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              Welcome back
+            </CardTitle>
             <CardDescription className="text-center">
               Sign in to continue your interview preparation
             </CardDescription>
@@ -119,7 +125,7 @@ export default function LoginPage() {
                     Signing in...
                   </>
                 ) : (
-                  'Sign in'
+                  "Sign in"
                 )}
               </Button>
             </form>
@@ -129,7 +135,9 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with
+                </span>
               </div>
             </div>
 
@@ -164,7 +172,10 @@ export default function LoginPage() {
           <CardFooter className="flex justify-center pb-6">
             <p className="text-sm text-muted-foreground">
               {"Don't have an account? "}
-              <Link href="/signup" className="text-primary font-medium hover:underline">
+              <Link
+                href="/signup"
+                className="text-primary font-medium hover:underline"
+              >
                 Sign up
               </Link>
             </p>
@@ -172,5 +183,5 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
