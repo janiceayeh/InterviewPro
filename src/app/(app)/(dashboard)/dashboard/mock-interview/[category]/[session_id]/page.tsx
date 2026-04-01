@@ -20,7 +20,7 @@ import {
   InterviewQuestion,
   UserProfile,
 } from "@/lib/types";
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/lib/context/auth-context";
 
 import {
   addDoc,

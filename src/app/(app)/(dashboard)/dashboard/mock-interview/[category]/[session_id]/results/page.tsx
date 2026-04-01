@@ -32,7 +32,7 @@ import {
   Tooltip,
 } from "recharts";
 import { routes } from "@/lib/routes";
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/lib/context/auth-context";
 import { COLLECTIONS, TInterviewSessionEvaluation } from "@/lib/constants";
 import { toast } from "sonner";
 import { doc, getDoc } from "firebase/firestore";

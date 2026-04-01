@@ -14,7 +14,7 @@ import {
   AlertCircle,
   ChevronLeft,
 } from "lucide-react";
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/lib/context/auth-context";
 import { routes } from "@/lib/routes";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/constants";

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/lib/constants";
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/lib/context/auth-context";
 import { InterviewSession } from "@/lib/types";
 import {
   addDoc,
