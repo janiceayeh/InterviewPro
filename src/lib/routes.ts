@@ -27,5 +27,6 @@ export const routes = {
       category: string;
       interviewSessionId: string;
     }) => `/api/evaluate-interview/${category}/${interviewSessionId}`,
+    copilot: () => "/api/copilot",
   },
 };

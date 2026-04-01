@@ -20,6 +20,8 @@ import {
   FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { routes } from "@/lib/routes";
+import Markdown from "react-markdown";
 
 function getUIMessageText(msg: UIMessage): string {
   if (!msg.parts || !Array.isArray(msg.parts)) return "";
@@ -35,7 +37,7 @@ export default function CopilotPage() {
   const [input, setInput] = useState("");
 
   const { messages, sendMessage, status, setMessages } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/copilot" }),
+    transport: new DefaultChatTransport({ api: routes.api.copilot() }),
   });
 
   const isLoading = status === "streaming" || status === "submitted";
@@ -70,7 +72,7 @@ export default function CopilotPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 h-[calc(100vh-8rem)] flex flex-col">
+    <div className="mx-auto max-w-4xl px-4 py-8 h-[calc(100vh-1rem)] flex flex-col">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -138,7 +140,7 @@ export default function CopilotPage() {
               <div className="flex flex-wrap justify-center gap-2">
                 {[
                   "Start a behavioral interview",
-                  "Practice for a tech role",
+                  "Practice for a role",
                   "Help me with common questions",
                 ].map((prompt) => (
                   <Button
@@ -170,7 +172,7 @@ export default function CopilotPage() {
                   >
                     <div
                       className={cn(
-                        "flex items-center justify-center size-8 rounded-full flex-shrink-0",
+                        "flex items-center justify-center size-8 rounded-full shrink-0",
                         message.role === "user" ? "bg-primary" : "bg-accent/20",
                       )}
                     >
@@ -189,7 +191,7 @@ export default function CopilotPage() {
                       )}
                     >
                       <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {messageText}
+                        <Markdown>{messageText}</Markdown>
                       </div>
                     </div>
                   </motion.div>
@@ -203,7 +205,7 @@ export default function CopilotPage() {
               animate={{ opacity: 1 }}
               className="flex gap-3"
             >
-              <div className="flex items-center justify-center size-8 rounded-full bg-accent/20 flex-shrink-0">
+              <div className="flex items-center justify-center size-8 rounded-full bg-accent/20 shrink-0">
                 <Bot className="size-4 text-accent" />
               </div>
               <div className="bg-muted rounded-2xl px-4 py-3">
@@ -229,7 +231,7 @@ export default function CopilotPage() {
               onKeyDown={handleKeyDown}
               placeholder="Type your response..."
               disabled={isLoading}
-              className="min-h-[44px] max-h-[120px] resize-none"
+              className="min-h-11 max-h-30 resize-none"
               rows={1}
             />
             <Button
