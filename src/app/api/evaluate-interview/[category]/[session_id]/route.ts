@@ -193,12 +193,16 @@ export async function POST(
       throw new Error("Failed to evaluate interview session");
     }
 
-    // Reinsert the question into the question scores list
-    result.output.questionScores = result.output.questionScores.map((qs) => ({
-      ...qs,
-      question: interviewSessionQA.find((qa) => qa.questionId === qs.questionId)
-        ?.question,
-    }));
+    // Reinsert the question and answer properties into the question scores list for the UI
+    result.output.questionScores = result.output.questionScores.map((qs) => {
+      const { question, answer } =
+        interviewSessionQA.find((qa) => qa.questionId === qs.questionId) ?? {};
+      return {
+        ...qs,
+        question: question,
+        answer: answer,
+      };
+    });
 
     // Save interview session evaluation
     await updateInterviewSession(interviewSessionId, {

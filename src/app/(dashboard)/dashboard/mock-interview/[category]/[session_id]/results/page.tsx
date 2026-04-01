@@ -46,7 +46,10 @@ interface QuestionScore {
   keyPoints: string[];
 }
 
-type QuestionScoreWithQuestion = QuestionScore & { question: string };
+type QuestionScoreWithQuestion = QuestionScore & {
+  question: string;
+  answer: string;
+};
 
 export default function ResultsPage() {
   const { user, loading: userLoading } = useAuth();
@@ -212,7 +215,7 @@ export default function ResultsPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <Card className="mb-8 overflow-hidden">
+        <Card className="mb-8 overflow-hidden p-0">
           <div className="bg-linear-to-r from-primary/10 to-accent/10 p-8">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="text-center">
@@ -420,6 +423,7 @@ export default function ResultsPage() {
                         className="mt-4 pt-4 border-t border-border"
                       >
                         <p className="mb-3">Question: {qs.question}</p>
+                        <p className="mb-3">Answer: {qs.answer}</p>
                         <p className="text-muted-foreground mb-3">
                           {qs.feedback}
                         </p>
