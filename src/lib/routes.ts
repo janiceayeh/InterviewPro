@@ -19,6 +19,9 @@ export const routes = {
   }) => `/dashboard/mock-interview/${category}/${interviewSessionId}/results`,
   copilot: () => "/dashboard/copilot",
   tips: () => "/dashboard/tips",
+  adminDashboard: () => "/admin/dashboard",
+  adminResetPassword: () => "/admin/reset-password",
+  adminLogin: () => "/admin/login",
   api: {
     evaluateInterview: ({
       category,
@@ -28,5 +31,6 @@ export const routes = {
       interviewSessionId: string;
     }) => `/api/evaluate-interview/${category}/${interviewSessionId}`,
     copilot: () => "/api/copilot",
+    isAdmin: ({ email }: { email: string }) => `/api/users/${email}/is-admin`,
   },
 };

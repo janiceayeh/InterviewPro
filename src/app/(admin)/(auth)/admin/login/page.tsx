@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { routes } from "@/lib/routes";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -26,11 +27,12 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      router.push("/admin/dashboard");
+      const user = await login(email, password);
+      if (user) {
+        router.push(routes.adminDashboard());
+      }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Login failed";
-      setError(message);
+      setError(err);
     } finally {
       setIsLoading(false);
     }
@@ -70,16 +72,13 @@ export default function AdminLoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@interviewpro.com"
+                placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 required
                 className="border-border/50 focus:border-primary"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Demo: admin@interviewpro.com
-              </p>
             </div>
 
             <div className="space-y-2">
@@ -89,16 +88,13 @@ export default function AdminLoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
                 className="border-border/50 focus:border-primary"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Demo: any password works for demo accounts
-              </p>
             </div>
 
             <Button
@@ -119,7 +115,7 @@ export default function AdminLoginPage() {
 
           {/* Forgot Password Link */}
           <div className="mt-6 pt-6 border-t border-border/30">
-            <Link href="/admin/reset-password">
+            <Link href={routes.adminResetPassword()}>
               <Button
                 variant="ghost"
                 className="w-full text-primary hover:text-primary/80"
@@ -127,18 +123,6 @@ export default function AdminLoginPage() {
                 Forgot Password?
               </Button>
             </Link>
-          </div>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border/30">
-            <p className="text-xs font-semibold text-foreground mb-2">
-              Demo Accounts:
-            </p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Super Admin: admin@interviewpro.com</p>
-              <p>Content Manager: content@interviewpro.com</p>
-              <p>Moderator: moderator@interviewpro.com</p>
-            </div>
           </div>
         </div>
       </Card>

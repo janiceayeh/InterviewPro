@@ -57,3 +57,5 @@ export interface InterviewSessionQA {
   timeSpent: number;
   interviewCategory: string;
 }
+
+export type AdminRole = "super-admin" | "content-manager" | "moderator";

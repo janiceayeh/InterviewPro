@@ -1,153 +1,178 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { auth } from '@/lib/firebase'
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
   type User,
-} from 'firebase/auth'
-
-export type AdminRole = 'super-admin' | 'content-manager' | 'moderator'
+} from "firebase/auth";
+import { AdminRole } from "../types";
+import { routes } from "../routes";
 
 interface AdminUser extends User {
-  role?: AdminRole
+  role?: AdminRole;
 }
 
 interface AdminAuthContextType {
-  user: AdminUser | null
-  isLoading: boolean
-  error: string | null
-  role: AdminRole | null
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  sendResetEmail: (email: string) => Promise<void>
-  hasPermission: (permission: string) => boolean
+  user: AdminUser | null;
+  isLoading: boolean;
+  error: string | null;
+  role: AdminRole | null;
+  login: (email: string, password: string) => Promise<AdminUser | null>;
+  logout: () => Promise<void>;
+  sendResetEmail: (email: string) => Promise<void>;
+  hasPermission: (permission: string) => boolean;
 }
 
-const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined)
+const AdminAuthContext = createContext<AdminAuthContextType | undefined>(
+  undefined,
+);
 
 const rolePermissions: Record<AdminRole, string[]> = {
-  'super-admin': [
-    'manage_questions',
-    'manage_tips',
-    'manage_users',
-    'manage_feedback',
-    'manage_forum',
-    'manage_billing',
-    'manage_admins',
-    'view_analytics',
+  "super-admin": [
+    "manage_questions",
+    "manage_tips",
+    "manage_users",
+    "manage_feedback",
+    "manage_forum",
+    "manage_billing",
+    "manage_admins",
+    "view_analytics",
   ],
-  'content-manager': [
-    'manage_questions',
-    'manage_tips',
-    'view_analytics',
-  ],
-  'moderator': [
-    'manage_forum',
-    'manage_users',
-    'view_analytics',
-  ],
+  "content-manager": ["manage_questions", "manage_tips", "view_analytics"],
+  moderator: ["manage_forum", "manage_users", "view_analytics"],
+};
+
+async function isAdmin(email: string) {
+  try {
+    const res = await fetch(routes.api.isAdmin({ email }), {
+      headers: { "Content-type": "application/json" },
+    });
+
+    if (res.ok) {
+      const isAdminData = await res.json();
+      return ["ok", isAdminData];
+    }
+    return ["error", new Error("Request failed")];
+  } catch (error) {
+    return ["error", error];
+  }
 }
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AdminUser | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  // Mock admin users (in real app, check custom claims or Firestore)
-  const adminUsers: Record<string, AdminRole> = {
-    'admin@interviewpro.com': 'super-admin',
-    'content@interviewpro.com': 'content-manager',
-    'moderator@interviewpro.com': 'moderator',
-  }
+  const [user, setUser] = useState<AdminUser | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isAdminLoading, setIsAdminLoading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser && adminUsers[firebaseUser.email || '']) {
-        setUser({
-          ...firebaseUser,
-          role: adminUsers[firebaseUser.email || ''],
-        })
-      } else {
-        setUser(null)
-      }
-      setIsLoading(false)
-    })
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setUser(user);
+      setLoading(false);
+    });
 
-    return () => unsubscribe()
-  }, [])
+    return () => unsubscribe();
+  }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string,
+  ): Promise<AdminUser | null> => {
     try {
-      setError(null)
-      const result = await signInWithEmailAndPassword(auth, email, password)
-
-      if (!adminUsers[result.user.email || '']) {
-        await signOut(auth)
-        setError('You do not have admin access')
-        throw new Error('Not an admin user')
+      setIsAdminLoading(true);
+      const [isAdminStatus, isAdminData] = await isAdmin(email);
+      if (isAdminStatus === "error") {
+        throw isAdminData;
       }
 
-      setUser({
-        ...result.user,
-        role: adminUsers[result.user.email || ''],
-      })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed'
-      setError(message)
-      throw err
+      if (isAdminData.isAdmin) {
+        const userCred = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password,
+        );
+        const user = userCred?.user;
+        if (!user?.email) return null;
+
+        setUser({
+          ...user,
+          role: isAdminData.role,
+        });
+        return { ...user, role: isAdminData.role };
+      }
+
+      setUser(null);
+      if (isAdminData.error) {
+        throw isAdminData.message;
+      }
+      return null;
+    } catch (error) {
+      if (error.code && error.code === "auth/invalid-credential") {
+        const message = "Invalid credentials";
+        setError(message);
+        throw message;
+      }
+      setError(error);
+      throw error;
+    } finally {
+      setIsAdminLoading(false);
     }
-  }
+  };
 
   const logout = async () => {
     try {
-      setError(null)
-      await signOut(auth)
-      setUser(null)
+      setError(null);
+      await signOut(auth);
+      setUser(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Logout failed'
-      setError(message)
-      throw err
+      const message = err instanceof Error ? err.message : "Logout failed";
+      setError(message);
+      throw err;
     }
-  }
+  };
 
   const sendResetEmail = async (email: string) => {
     try {
-      setError(null)
-      await sendPasswordResetEmail(auth, email)
+      setError(null);
+      await sendPasswordResetEmail(auth, email);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to send reset email'
-      setError(message)
-      throw err
+      const message =
+        err instanceof Error ? err.message : "Failed to send reset email";
+      setError(message);
+      throw err;
     }
-  }
+  };
 
   const hasPermission = (permission: string): boolean => {
-    if (!user?.role) return false
-    return rolePermissions[user.role].includes(permission)
-  }
+    if (!user?.role) return false;
+    return rolePermissions[user.role].includes(permission);
+  };
 
   const value: AdminAuthContextType = {
     user,
-    isLoading,
+    isLoading: loading || isAdminLoading,
     error,
     role: user?.role || null,
     login,
     logout,
     sendResetEmail,
     hasPermission,
-  }
+  };
 
-  return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>
+  return (
+    <AdminAuthContext.Provider value={value}>
+      {children}
+    </AdminAuthContext.Provider>
+  );
 }
 
 export function useAdminAuth() {
-  const context = useContext(AdminAuthContext)
+  const context = useContext(AdminAuthContext);
   if (!context) {
-    throw new Error('useAdminAuth must be used within AdminAuthProvider')
+    throw new Error("useAdminAuth must be used within AdminAuthProvider");
   }
-  return context
+  return context;
 }

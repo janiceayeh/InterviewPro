@@ -2,6 +2,7 @@
 
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { useAdminAuth } from "@/lib/context/admin-auth-context";
+import { routes } from "@/lib/routes";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -11,7 +12,7 @@ export default function CMSLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/admin/login");
+      router.push(routes.adminLogin());
     }
   }, [user, isLoading]);
 
