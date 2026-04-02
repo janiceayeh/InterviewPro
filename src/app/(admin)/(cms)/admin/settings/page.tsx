@@ -153,10 +153,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <Label className="text-muted-foreground text-sm">Role</Label>
-            <Badge
-              className={roleColor[role as keyof typeof roleColor]}
-              className="mt-1"
-            >
+            <Badge className={roleColor[role as keyof typeof roleColor]}>
               {role?.replace("-", " ")}
             </Badge>
           </div>

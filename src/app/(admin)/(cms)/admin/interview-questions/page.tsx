@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Trash2, Edit2, Plus, Search } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Edit2, Plus, Search } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,59 +13,76 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { NewQuestionForm } from "@/components/admin/new-question-form";
 
 interface Question {
-  id: string
-  question: string
-  category: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  status: 'draft' | 'published'
+  id: string;
+  question: string;
+  category: string;
+  difficulty: "easy" | "medium" | "hard";
+  status: "draft" | "published";
 }
 
 export default function InterviewQuestionsPage() {
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await fetch('/api/admin/interview-questions')
+        const response = await fetch("/api/admin/interview-questions");
         if (response.ok) {
-          const data = await response.json()
-          setQuestions(data)
+          const data = await response.json();
+          setQuestions(data);
         }
       } catch (error) {
-        console.error('Failed to fetch questions:', error)
+        console.error("Failed to fetch questions:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchQuestions()
-  }, [])
+    fetchQuestions();
+  }, []);
 
-  const filteredQuestions = questions.filter(q =>
-    q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    q.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredQuestions = questions.filter(
+    (q) =>
+      q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.category.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const difficultyColor = {
-    easy: 'bg-emerald-500/20 text-emerald-700',
-    medium: 'bg-amber-500/20 text-amber-700',
-    hard: 'bg-red-500/20 text-red-700',
-  }
+    easy: "bg-emerald-500/20 text-emerald-700",
+    medium: "bg-amber-500/20 text-amber-700",
+    hard: "bg-red-500/20 text-red-700",
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Interview Questions</h1>
-          <p className="text-muted-foreground">Manage interview questions library</p>
+          <h1 className="text-3xl font-bold text-foreground mb-1">
+            Interview Questions
+          </h1>
+          <p className="text-muted-foreground">
+            Manage interview questions library
+          </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button
+          className="bg-primary hover:bg-primary/90"
+          onClick={() => setIsFormOpen(true)}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Question
         </Button>
@@ -91,29 +108,40 @@ export default function InterviewQuestionsPage() {
               <TableHead className="text-foreground">Category</TableHead>
               <TableHead className="text-foreground">Difficulty</TableHead>
               <TableHead className="text-foreground">Status</TableHead>
-              <TableHead className="text-right text-foreground">Actions</TableHead>
+              <TableHead className="text-right text-foreground">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8">
-                  <div className="text-muted-foreground">Loading questions...</div>
+                  <div className="text-muted-foreground">
+                    Loading questions...
+                  </div>
                 </TableCell>
               </TableRow>
             ) : filteredQuestions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8">
-                  <div className="text-muted-foreground">No questions found</div>
+                  <div className="text-muted-foreground">
+                    No questions found
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               filteredQuestions.map((question) => (
-                <TableRow key={question.id} className="border-border/30 hover:bg-muted/50">
+                <TableRow
+                  key={question.id}
+                  className="border-border/30 hover:bg-muted/50"
+                >
                   <TableCell className="font-medium text-foreground max-w-md truncate">
                     {question.question}
                   </TableCell>
-                  <TableCell className="text-muted-foreground capitalize">{question.category}</TableCell>
+                  <TableCell className="text-muted-foreground capitalize">
+                    {question.category}
+                  </TableCell>
                   <TableCell>
                     <Badge className={difficultyColor[question.difficulty]}>
                       {question.difficulty}
@@ -121,8 +149,14 @@ export default function InterviewQuestionsPage() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={question.status === 'published' ? 'default' : 'outline'}
-                      className={question.status === 'published' ? 'bg-emerald-500/20 text-emerald-700' : ''}
+                      variant={
+                        question.status === "published" ? "default" : "outline"
+                      }
+                      className={
+                        question.status === "published"
+                          ? "bg-emerald-500/20 text-emerald-700"
+                          : ""
+                      }
                     >
                       {question.status}
                     </Badge>
@@ -131,7 +165,11 @@ export default function InterviewQuestionsPage() {
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <Edit2 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -141,6 +179,39 @@ export default function InterviewQuestionsPage() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* New Question Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Interview Question</DialogTitle>
+            <DialogDescription>
+              Create a new interview question to add to the library
+            </DialogDescription>
+          </DialogHeader>
+          <NewQuestionForm
+            onClose={() => setIsFormOpen(false)}
+            onSuccess={() => {
+              setIsFormOpen(false);
+              // Refetch questions
+              const fetchQuestions = async () => {
+                try {
+                  const response = await fetch(
+                    "/api/admin/interview-questions",
+                  );
+                  if (response.ok) {
+                    const data = await response.json();
+                    setQuestions(data);
+                  }
+                } catch (error) {
+                  console.error("Failed to fetch questions:", error);
+                }
+              };
+              fetchQuestions();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }
