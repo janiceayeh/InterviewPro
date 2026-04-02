@@ -22,6 +22,12 @@ export const routes = {
   adminDashboard: () => "/admin/dashboard",
   adminResetPassword: () => "/admin/reset-password",
   adminLogin: () => "/admin/login",
+  adminInterviewQuestions: () => "/admin/interview-questions",
+  adminTips: () => "/admin/tips",
+  adminUsers: () => "/admin/users",
+  adminForumModeration: () => "/admin/forum-moderation",
+  adminFeedback: () => "/admin/feedback",
+  adminSettings: () => "/admin/settings",
   api: {
     evaluateInterview: ({
       category,

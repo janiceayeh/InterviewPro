@@ -18,54 +18,49 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { routes } from "@/lib/routes";
 
 const menuItems = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    href: "/admin/dashboard",
+    href: routes.adminDashboard(),
     permission: "view_analytics",
   },
   {
     label: "Interview Questions",
     icon: FileText,
-    href: "/admin/interview-questions",
+    href: routes.adminInterviewQuestions(),
     permission: "manage_questions",
   },
   {
     label: "Tips",
     icon: Lightbulb,
-    href: "/admin/tips",
+    href: routes.adminTips(),
     permission: "manage_tips",
   },
   {
     label: "Users",
     icon: Users,
-    href: "/admin/users",
+    href: routes.adminUsers(),
     permission: "manage_users",
   },
   {
     label: "Forum Moderation",
     icon: MessageSquare,
-    href: "/admin/forum-moderation",
+    href: routes.adminForumModeration(),
     permission: "manage_forum",
   },
   {
     label: "Feedback",
     icon: MessageCircle,
-    href: "/admin/feedback",
+    href: routes.adminFeedback(),
     permission: "manage_feedback",
-  },
-  {
-    label: "Billing",
-    icon: CreditCard,
-    href: "/admin/billing",
-    permission: "manage_billing",
   },
   {
     label: "Settings",
     icon: Settings,
-    href: "/admin/settings",
+    href: routes.adminSettings(),
     permission: "manage_admins",
   },
 ];

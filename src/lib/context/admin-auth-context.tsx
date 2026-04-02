@@ -52,11 +52,8 @@ async function isAdmin(email: string) {
       headers: { "Content-type": "application/json" },
     });
 
-    if (res.ok) {
-      const isAdminData = await res.json();
-      return ["ok", isAdminData];
-    }
-    return ["error", new Error("Request failed")];
+    const isAdminData = await res.json();
+    return ["ok", isAdminData];
   } catch (error) {
     return ["error", error];
   }
@@ -110,6 +107,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       }
       return null;
     } catch (error) {
+      console.log({ error });
       if (error.code && error.code === "auth/invalid-credential") {
         const message = "Invalid credentials";
         setError(message);

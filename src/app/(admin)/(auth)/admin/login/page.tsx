@@ -32,7 +32,8 @@ export default function AdminLoginPage() {
         router.push(routes.adminDashboard());
       }
     } catch (err) {
-      setError(err);
+      const message = err instanceof Error ? err.message : err;
+      setError(message);
     } finally {
       setIsLoading(false);
     }
