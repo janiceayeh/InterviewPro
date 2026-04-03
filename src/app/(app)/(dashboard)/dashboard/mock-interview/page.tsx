@@ -38,7 +38,7 @@ import { routes } from "@/lib/routes";
 // defines the available interview categories data
 const categories = [
   {
-    id: "behavioural",
+    id: "behavioral",
     title: "Behavioral",
     description:
       "Questions about your past experiences and how you handled situations",
@@ -173,7 +173,7 @@ export default function MockInterviewPage() {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div
-                        className={`inline-flex items-center justify-center size-12 rounded-xl bg-gradient-to-br ${category.color}`}
+                        className={`inline-flex items-center justify-center size-12 rounded-xl bg-linear-to-br ${category.color}`}
                       >
                         <Icon className="size-6 text-primary-foreground" />
                       </div>
@@ -256,7 +256,7 @@ export default function MockInterviewPage() {
         </h3>
         <ol className="space-y-3 text-muted-foreground">
           <li className="flex items-start gap-3">
-            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex-shrink-0">
+            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
               1
             </span>
             <span>
@@ -264,7 +264,7 @@ export default function MockInterviewPage() {
             </span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex-shrink-0">
+            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
               2
             </span>
             <span>
@@ -273,7 +273,7 @@ export default function MockInterviewPage() {
             </span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex-shrink-0">
+            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
               3
             </span>
             <span>
@@ -281,7 +281,7 @@ export default function MockInterviewPage() {
             </span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex-shrink-0">
+            <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
               4
             </span>
             <span>

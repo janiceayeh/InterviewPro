@@ -1,7 +1,6 @@
 import React from "react";
 import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/lib/context/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -45,10 +44,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <AuthProvider>
-          {children}
-          <Toaster richColors />
-        </AuthProvider>
+        {children}
+        <Toaster richColors />
       </body>
     </html>
   );

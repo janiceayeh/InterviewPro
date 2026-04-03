@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import PageLoading from "@/components/page-loading";
 import { useAdminAuth } from "@/lib/context/admin-auth-context";
 import { routes } from "@/lib/routes";
 import { useRouter } from "next/navigation";
@@ -17,14 +18,7 @@ export default function CMSLayout({ children }: { children: React.ReactNode }) {
   }, [user, isLoading]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   if (!user) {

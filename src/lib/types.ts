@@ -1,4 +1,8 @@
-import { Timestamp } from "firebase/firestore";
+import {
+  DocumentData,
+  QueryDocumentSnapshot,
+  Timestamp,
+} from "firebase/firestore";
 import { TInterviewSessionEvaluation } from "./constants";
 
 //collections
@@ -18,9 +22,11 @@ export interface UserProfile {
 export interface InterviewQuestion {
   id: string;
   question: string;
-  category: string;
+  category: "technical" | "situational" | "general" | "behavioral";
+  difficulty: "easy" | "medium" | "hard";
   timeLimit: number; // in seconds
   tips: string[];
+  status: "draft" | "published";
   createdAt: Timestamp;
 }
 
@@ -59,3 +65,18 @@ export interface InterviewSessionQA {
 }
 
 export type AdminRole = "super-admin" | "content-manager" | "moderator";
+
+export type PaginatedDocsResult<T> = {
+  items: T[];
+  nextCursor: QueryDocumentSnapshot<DocumentData> | null;
+};
+
+export type IsAdminResponseDto = {
+  isAdmin: boolean;
+  role: AdminRole;
+};
+
+export type ApiResponse<D> = {
+  data: D | null;
+  error: string | null;
+};

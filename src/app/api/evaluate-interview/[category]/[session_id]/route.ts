@@ -33,9 +33,9 @@ async function interviewSessionGetAnswers({
       (doc) => ({ id: doc.id, ...doc.data() }),
     ) as InterviewAnswer[];
 
-    return ["ok", interviewSessionAnswers];
+    return { ok: true, interviewSessionAnswers };
   } catch (error) {
-    return ["error", error];
+    return { error: error as Error };
   }
 }
 
@@ -55,11 +55,11 @@ async function interviewSessionGetQuestions(
 
     const interviewQuestions = interviewQuestionsSnapShot
       .filter((s) => s.exists)
-      .map((s) => ({ id: s.id, ...s.data() }));
+      .map((s) => ({ id: s.id, ...s.data() }) as InterviewQuestion);
 
-    return ["ok", interviewQuestions];
+    return { ok: true, interviewQuestions };
   } catch (error) {
-    return ["error", error];
+    return { error: error as Error };
   }
 }
 
@@ -79,12 +79,12 @@ export async function POST(
 ) {
   try {
     const body = await req.json();
-    const { error, success, data: dto } = requestDto.safeParse(body);
+    const { error: dtoError, success, data: dto } = requestDto.safeParse(body);
 
     if (!success) {
       return Response.json(
         {
-          errors: error,
+          errors: dtoError,
           message: "Invalid request body",
         },
         { status: 400 },
@@ -93,71 +93,68 @@ export async function POST(
 
     const { category, session_id: interviewSessionId } = await params;
 
-    const [interviewSessionGetAnswersStatus, interviewSessionGetAnswersData] =
-      await interviewSessionGetAnswers({
-        interviewSessionId,
-        userId: dto.userId,
-      });
-    if (interviewSessionGetAnswersStatus === "error") {
+    const {
+      error: interviewSessionError,
+      ok: interviewSessionOk,
+      interviewSessionAnswers,
+    } = await interviewSessionGetAnswers({
+      interviewSessionId,
+      userId: dto.userId,
+    });
+
+    if (interviewSessionError) {
       return Response.json(
         {
-          errors: interviewSessionGetAnswersData,
+          errors: interviewSessionError.message,
           message: "Failed to load interview session answers",
         },
         { status: 500 },
       );
-    }
-
-    const interviewAnswers =
-      interviewSessionGetAnswersData as InterviewAnswer[];
-    const partialInterviewSessionQA = interviewAnswers.map(
-      (a) =>
-        ({
-          questionId: a.questionId,
-          answerId: a.id,
-          answer: a.answer,
-          timeSpent: a.timeSpent,
-        }) satisfies Partial<InterviewSessionQA>,
-    );
-
-    const [
-      interviewSessionGetQuestionsStatus,
-      interviewSessionGetQuestionsData,
-    ] = await interviewSessionGetQuestions(partialInterviewSessionQA);
-    if (interviewSessionGetQuestionsStatus === "error") {
-      return Response.json({
-        errors: interviewSessionGetQuestionsData,
-        message: "Failed to load interview session questions",
-      });
-    }
-
-    const interviewQuestions =
-      interviewSessionGetQuestionsData as InterviewQuestion[];
-
-    const interviewSessionQA: InterviewSessionQA[] =
-      partialInterviewSessionQA.map(
-        ({ answer, questionId, timeSpent, answerId }) => {
-          const question = interviewQuestions.find((q) => q.id === questionId);
-
-          return {
-            questionId: questionId,
-            answerId: answerId,
-            interviewSessionId: interviewSessionId,
-            question: question.question,
-            answer: answer,
-            timeSpent: timeSpent,
-            interviewCategory: category,
-          };
-        },
+    } else if (interviewSessionOk) {
+      const partialInterviewSessionQA = interviewSessionAnswers.map(
+        (a) =>
+          ({
+            questionId: a.questionId,
+            answerId: a.id,
+            answer: a.answer,
+            timeSpent: a.timeSpent,
+          }) satisfies Partial<InterviewSessionQA>,
       );
-    console.log({ interviewSessionQA }); //TODO: Next, pass this data to the AI
 
-    const result = await generateText({
-      model: "anthropic/claude-sonnet-4",
-      output: Output.object({
-        schema: InterviewSessionEvaluationSchema,
-      }),
-      system: `You are an expert interview coach and evaluator. Analyze interview responses and provide detailed, constructive feedback. Be encouraging but honest. Score fairly based on:
+      const { error, ok, interviewQuestions } =
+        await interviewSessionGetQuestions(partialInterviewSessionQA);
+      if (error) {
+        return Response.json({
+          errors: error.message,
+          message: "Failed to load interview session questions",
+        });
+      }
+
+      const interviewSessionQA: InterviewSessionQA[] =
+        partialInterviewSessionQA.map(
+          ({ answer, questionId, timeSpent, answerId }) => {
+            const question = interviewQuestions.find(
+              (q) => q.id === questionId,
+            );
+
+            return {
+              questionId: questionId,
+              answerId: answerId,
+              interviewSessionId: interviewSessionId,
+              question: question.question,
+              answer: answer,
+              timeSpent: timeSpent,
+              interviewCategory: category,
+            };
+          },
+        );
+
+      const result = await generateText({
+        model: "anthropic/claude-sonnet-4",
+        output: Output.object({
+          schema: InterviewSessionEvaluationSchema,
+        }),
+        system: `You are an expert interview coach and evaluator. Analyze interview responses and provide detailed, constructive feedback. Be encouraging but honest. Score fairly based on:
     - Communication clarity and articulation
     - Relevance to the question asked
     - Structure and organization of the response
@@ -167,7 +164,7 @@ export async function POST(
     For the ${category} interview category, focus on aspects specific to that type of interview.
 
     IMPORTANT: For questionScores, use these exact questionIds: ${interviewSessionQA.map((qa) => qa.questionId).join(", ")}`,
-      prompt: `Evaluate the following ${category} interview responses:
+        prompt: `Evaluate the following ${category} interview responses:
 
     ${interviewSessionQA
       .map(
@@ -187,30 +184,32 @@ export async function POST(
     5. Individual scores and feedback for each question (use the provided question IDs)
     6. Category breakdown scores for: communication, relevance, structure, depth, confidence
     7. Actionable recommendations for improvement`,
-    });
+      });
 
-    if (!result.output) {
-      throw new Error("Failed to evaluate interview session");
+      if (!result.output) {
+        throw new Error("Failed to evaluate interview session");
+      }
+
+      // Reinsert the question and answer properties into the question scores list for the UI
+      result.output.questionScores = result.output.questionScores.map((qs) => {
+        const { question, answer } =
+          interviewSessionQA.find((qa) => qa.questionId === qs.questionId) ??
+          {};
+        return {
+          ...qs,
+          question: question,
+          answer: answer,
+        };
+      });
+
+      // Save interview session evaluation
+      await updateInterviewSession(interviewSessionId, {
+        totalScore: result.output.overallScore,
+        evaluation: result.output,
+      });
+
+      return Response.json(result.output);
     }
-
-    // Reinsert the question and answer properties into the question scores list for the UI
-    result.output.questionScores = result.output.questionScores.map((qs) => {
-      const { question, answer } =
-        interviewSessionQA.find((qa) => qa.questionId === qs.questionId) ?? {};
-      return {
-        ...qs,
-        question: question,
-        answer: answer,
-      };
-    });
-
-    // Save interview session evaluation
-    await updateInterviewSession(interviewSessionId, {
-      totalScore: result.output.overallScore,
-      evaluation: result.output,
-    });
-
-    return Response.json(result.output);
   } catch (error) {
     console.error(error);
     return Response.json(

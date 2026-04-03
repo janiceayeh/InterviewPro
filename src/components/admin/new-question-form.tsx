@@ -1,22 +1,22 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { X, Plus, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { useState } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { X, Plus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -25,91 +25,149 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
+} from "@/components/ui/form";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  limit,
+  query,
+  serverTimestamp,
+  Timestamp,
+  where,
+} from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/constants";
+import { db } from "@/lib/firebase";
+import { InterviewQuestion } from "@/lib/types";
 
 const questionSchema = z.object({
-  question: z.string().min(10, 'Question must be at least 10 characters').max(500, 'Question must be less than 500 characters'),
-  category: z.enum(['behavioral', 'technical', 'situational', 'general']),
-  difficulty: z.enum(['easy', 'medium', 'hard']),
-  timeLimit: z.number().min(30, 'Minimum 30 seconds').max(600, 'Maximum 10 minutes').default(120),
+  question: z
+    .string()
+    .min(10, "Question must be at least 10 characters")
+    .max(500, "Question must be less than 500 characters"),
+  category: z.enum(["behavioral", "technical", "situational", "general"]),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  timeLimit: z
+    .number()
+    .min(30, "Minimum 30 seconds")
+    .max(600, "Maximum 10 minutes")
+    .default(120),
   tips: z.array(z.string()).default([]),
-  status: z.enum(['draft', 'published']).default('draft'),
-})
+  status: z.enum(["draft", "published"]).default("draft"),
+});
 
-type QuestionFormData = z.infer<typeof questionSchema>
+type QuestionFormData = z.infer<typeof questionSchema>;
 
 interface NewQuestionFormProps {
-  onClose?: () => void
-  onSuccess?: () => void
+  onClose?: () => void;
+  onSuccess?: () => void;
 }
 
 const categories = [
-  { value: 'behavioral', label: 'Behavioral' },
-  { value: 'technical', label: 'Technical' },
-  { value: 'situational', label: 'Situational' },
-  { value: 'general', label: 'General' },
-]
+  { value: "behavioral", label: "Behavioral" },
+  { value: "technical", label: "Technical" },
+  { value: "situational", label: "Situational" },
+  { value: "general", label: "General" },
+];
 
 const difficulties = [
-  { value: 'easy', label: 'Easy', color: 'bg-emerald-500/20 text-emerald-700' },
-  { value: 'medium', label: 'Medium', color: 'bg-amber-500/20 text-amber-700' },
-  { value: 'hard', label: 'Hard', color: 'bg-red-500/20 text-red-700' },
-]
+  { value: "easy", label: "Easy", color: "bg-emerald-500/20 text-emerald-700" },
+  { value: "medium", label: "Medium", color: "bg-amber-500/20 text-amber-700" },
+  { value: "hard", label: "Hard", color: "bg-red-500/20 text-red-700" },
+];
 
 export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
-  const [tipInput, setTipInput] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  const form = useForm<QuestionFormData>({
+  const [tipInput, setTipInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm({
     resolver: zodResolver(questionSchema),
     defaultValues: {
-      question: '',
-      category: 'behavioral',
-      difficulty: 'medium',
+      question: "",
+      category: "behavioral",
+      difficulty: "medium",
       timeLimit: 120,
       tips: [],
-      status: 'draft',
+      status: "draft",
     },
-  })
+  });
 
   const handleAddTip = () => {
     if (tipInput.trim() && tipInput.length > 0) {
-      const currentTips = form.getValues('tips')
-      form.setValue('tips', [...currentTips, tipInput])
-      setTipInput('')
+      const currentTips = form.getValues("tips");
+      form.setValue("tips", [...currentTips, tipInput]);
+      setTipInput("");
     }
-  }
+  };
 
   const handleRemoveTip = (index: number) => {
-    const currentTips = form.getValues('tips')
-    form.setValue('tips', currentTips.filter((_, i) => i !== index))
-  }
+    const currentTips = form.getValues("tips");
+    form.setValue(
+      "tips",
+      currentTips.filter((_, i) => i !== index),
+    );
+  };
 
-  const onSubmit = async (data: QuestionFormData) => {
+  async function interviewQuestionExists(question: string) {
     try {
-      setIsSubmitting(true)
-      const response = await fetch('/api/admin/interview-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create question')
-      }
-
-      toast.success('Question created successfully')
-      form.reset()
-      onSuccess?.()
+      const docSnap = await getDocs(
+        query(
+          collection(db, COLLECTIONS.interviewQuestions),
+          where("question", "==", question),
+          limit(1),
+        ),
+      );
+      return { ok: true, exists: !docSnap.empty };
     } catch (error) {
-      console.error('[v0] Error creating question:', error)
-      toast.error('Failed to create question')
-    } finally {
-      setIsSubmitting(false)
+      return { error: error as Error };
     }
   }
 
-  const tips = form.watch('tips')
+  async function interviewQuestionCreate(data: QuestionFormData) {
+    try {
+      const { ok, error, exists } = await interviewQuestionExists(
+        data.question,
+      );
+      if (error) return { error };
+
+      if (ok) {
+        if (exists) return { error: new Error("Question already exists") };
+      }
+      const newInterviewQuestion = await addDoc(
+        collection(db, COLLECTIONS.interviewQuestions),
+        {
+          ...data,
+          createdAt: serverTimestamp() as Timestamp,
+        } satisfies Omit<InterviewQuestion, "id">,
+      );
+
+      return { ok: true, newInterviewQuestion };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  }
+
+  const onSubmit: SubmitHandler<QuestionFormData> = async (data) => {
+    try {
+      setIsSubmitting(true);
+      const { error, ok } = await interviewQuestionCreate(data);
+      if (error) {
+        console.error(error);
+        toast.error(`Failed to create question: ${error.message}`);
+      } else if (ok) {
+        toast.success("Question created successfully");
+        form.reset();
+        onSuccess?.();
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create question");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const tips = form.watch("tips");
 
   return (
     <Form {...form}>
@@ -121,8 +179,8 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
             <FormItem>
               <FormLabel>Question</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Enter the interview question..." 
+                <Textarea
+                  placeholder="Enter the interview question..."
                   className="min-h-24"
                   {...field}
                 />
@@ -146,7 +204,7 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {categories.map(cat => (
+                    {categories.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.label}
                       </SelectItem>
@@ -171,7 +229,7 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {difficulties.map(diff => (
+                    {difficulties.map((diff) => (
                       <SelectItem key={diff.value} value={diff.value}>
                         {diff.label}
                       </SelectItem>
@@ -191,7 +249,7 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
             <FormItem>
               <FormLabel>Time Limit (seconds)</FormLabel>
               <FormControl>
-                <Input 
+                <Input
                   type="number"
                   min="30"
                   max="600"
@@ -199,7 +257,9 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
                   onChange={(e) => field.onChange(parseInt(e.target.value))}
                 />
               </FormControl>
-              <FormDescription>Between 30 seconds and 10 minutes</FormDescription>
+              <FormDescription>
+                Between 30 seconds and 10 minutes
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -213,9 +273,9 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
               value={tipInput}
               onChange={(e) => setTipInput(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  handleAddTip()
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddTip();
                 }
               }}
             />
@@ -276,5 +336,5 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
         </div>
       </form>
     </Form>
-  )
+  );
 }

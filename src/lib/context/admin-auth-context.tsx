@@ -9,7 +9,7 @@ import {
   sendPasswordResetEmail,
   type User,
 } from "firebase/auth";
-import { AdminRole } from "../types";
+import { AdminRole, ApiResponse, IsAdminResponseDto } from "../types";
 import { routes } from "../routes";
 
 interface AdminUser extends User {
@@ -21,7 +21,7 @@ interface AdminAuthContextType {
   isLoading: boolean;
   error: string | null;
   role: AdminRole | null;
-  login: (email: string, password: string) => Promise<AdminUser | null>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   sendResetEmail: (email: string) => Promise<void>;
   hasPermission: (permission: string) => boolean;
@@ -53,71 +53,42 @@ async function isAdmin(email: string) {
     });
 
     const isAdminData = await res.json();
-    return ["ok", isAdminData];
+    return {
+      ok: true,
+      isAdminData: isAdminData as ApiResponse<IsAdminResponseDto>,
+    };
   } catch (error) {
-    return ["error", error];
+    return { error: error as Error };
   }
 }
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAdminLoading, setIsAdminLoading] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      setLoading(false);
+      const { ok, error, isAdminData } = await isAdmin(user.email);
+      if (error) {
+        setError(error.message);
+      }
+
+      if (ok) {
+        if (isAdminData.error) {
+          setError(isAdminData.error);
+        } else {
+          setUser({ ...user, role: isAdminData.data.role });
+          setLoading(false);
+        }
+      }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const login = async (
-    email: string,
-    password: string,
-  ): Promise<AdminUser | null> => {
-    try {
-      setIsAdminLoading(true);
-      const [isAdminStatus, isAdminData] = await isAdmin(email);
-      if (isAdminStatus === "error") {
-        throw isAdminData;
-      }
-
-      if (isAdminData.isAdmin) {
-        const userCred = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password,
-        );
-        const user = userCred?.user;
-        if (!user?.email) return null;
-
-        setUser({
-          ...user,
-          role: isAdminData.role,
-        });
-        return { ...user, role: isAdminData.role };
-      }
-
-      setUser(null);
-      if (isAdminData.error) {
-        throw isAdminData.message;
-      }
-      return null;
-    } catch (error) {
-      console.log({ error });
-      if (error.code && error.code === "auth/invalid-credential") {
-        const message = "Invalid credentials";
-        setError(message);
-        throw message;
-      }
-      setError(error);
-      throw error;
-    } finally {
-      setIsAdminLoading(false);
-    }
+  const login = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = async () => {
@@ -151,7 +122,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AdminAuthContextType = {
     user,
-    isLoading: loading || isAdminLoading,
+    isLoading: loading,
     error,
     role: user?.role || null,
     login,

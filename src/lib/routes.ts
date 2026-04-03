@@ -1,5 +1,6 @@
 export const routes = {
   home: () => "/",
+  userLogin: () => "/login",
   dashboard: () => "/dashboard",
   mockInterview: () => "/dashboard/mock-interview",
   mockInterviewHistory: () => "/dashboard/mock-interview/history",

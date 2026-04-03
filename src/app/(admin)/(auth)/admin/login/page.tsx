@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { routes } from "@/lib/routes";
+import { FirebaseError } from "firebase/app";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -27,13 +28,19 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const user = await login(email, password);
-      if (user) {
-        router.push(routes.adminDashboard());
+      await login(email, password);
+      router.push(routes.adminDashboard());
+    } catch (error) {
+      if (
+        error instanceof FirebaseError &&
+        error.code === "auth/invalid-credential"
+      ) {
+        setError("Incorrect email or password");
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError(error);
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : err;
-      setError(message);
     } finally {
       setIsLoading(false);
     }

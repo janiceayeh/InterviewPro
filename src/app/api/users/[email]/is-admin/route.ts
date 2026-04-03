@@ -1,4 +1,4 @@
-import { AdminRole } from "@/lib/types";
+import { AdminRole, ApiResponse, IsAdminResponseDto } from "@/lib/types";
 import { z } from "zod";
 
 let adminUsers: Record<string, AdminRole> = {};
@@ -32,17 +32,17 @@ export async function GET(
     if (!adminRole) {
       return Response.json(
         {
-          error: new Error("Not an admin user"),
-          message: "You do not have admin access",
-        },
+          data: null,
+          error: "You do not have admin access",
+        } satisfies ApiResponse<IsAdminResponseDto>,
         { status: 403 },
       );
     }
 
     return Response.json({
-      isAdmin: true,
-      role: adminRole,
-    });
+      data: { isAdmin: true, role: adminRole },
+      error: null,
+    } satisfies ApiResponse<IsAdminResponseDto>);
   } catch (error) {
     console.error(error);
     return Response.json(

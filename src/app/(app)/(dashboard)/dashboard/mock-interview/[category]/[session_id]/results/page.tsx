@@ -70,9 +70,12 @@ export default function ResultsPage() {
         doc(db, COLLECTIONS.interviewSessions, interviewSessionId),
       );
 
-      return ["ok", interviewSessionSnapshot.data()];
+      return {
+        ok: true,
+        interviewSession: interviewSessionSnapshot.data() as InterviewSession,
+      };
     } catch (error) {
-      return ["error", error];
+      return { error: error as Error };
     }
   }
 
@@ -82,33 +85,31 @@ export default function ResultsPage() {
         setEvaluationLoading(true);
 
         // Load interview session and check whether it has already been evaluated
-        const [interviewSessionStatus, interviewSessionResult] =
+        const { error, ok, interviewSession } =
           await getInterviewSession(interviewSessionId);
-        if (interviewSessionStatus === "error") {
-          return setError("Failed to load interview session");
+        if (error) {
+          setError(`Failed to load interview session: ${error.message}`);
+        } else if (ok) {
+          if (interviewSession?.evaluation) {
+            return setEvaluation(interviewSession.evaluation);
+          }
+
+          const response = await fetch(
+            routes.api.evaluateInterview({ category, interviewSessionId }),
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: user?.uid }),
+            },
+          );
+
+          if (!response.ok)
+            throw new Error("Failed to evaluate interview session");
+
+          const result: TInterviewSessionEvaluation = await response.json();
+
+          setEvaluation(result);
         }
-
-        const interviewSession = interviewSessionResult as InterviewSession;
-
-        if (interviewSession?.evaluation) {
-          return setEvaluation(interviewSession.evaluation);
-        }
-
-        const response = await fetch(
-          routes.api.evaluateInterview({ category, interviewSessionId }),
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: user?.uid }),
-          },
-        );
-
-        if (!response.ok)
-          throw new Error("Failed to evaluate interview session");
-
-        const result: TInterviewSessionEvaluation = await response.json();
-
-        setEvaluation(result);
       } catch (error) {
         console.error(error);
         const errorMessage =

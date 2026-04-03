@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { routes } from "@/lib/routes";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -35,7 +36,7 @@ export default function LoginPage() {
     try {
       await signIn(email, password); // Attempt to sign in using the provided credentials
       toast.success("Welcome back!");
-      router.push("/dashboard");
+      router.push(routes.dashboard());
     } catch (error) {
       toast.error("Invalid email or password");
     } finally {

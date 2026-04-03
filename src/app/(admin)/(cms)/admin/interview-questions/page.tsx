@@ -22,36 +22,71 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { NewQuestionForm } from "@/components/admin/new-question-form";
+import {
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  QueryDocumentSnapshot,
+  startAfter,
+  where,
+} from "firebase/firestore";
+import { InterviewQuestion, PaginatedDocsResult } from "@/lib/types";
+import { COLLECTIONS } from "@/lib/constants";
+import { db } from "@/lib/firebase";
+import { toast } from "sonner";
+import PageLoading from "@/components/page-loading";
 
-interface Question {
-  id: string;
-  question: string;
-  category: string;
-  difficulty: "easy" | "medium" | "hard";
-  status: "draft" | "published";
+async function interviewQuestionsFetchPaginated({
+  pageSize = 5,
+  cursor,
+}: {
+  pageSize?: number;
+  cursor?: QueryDocumentSnapshot;
+}): Promise<PaginatedDocsResult<InterviewQuestion>> {
+  const colRef = collection(db, COLLECTIONS.interviewQuestions);
+  const q = query(
+    colRef,
+    // where("category", "==", category),
+    orderBy("createdAt"),
+    ...(cursor ? [startAfter(cursor)] : []),
+    limit(pageSize),
+  );
+
+  const snap = await getDocs(q);
+  const items = snap.docs.map((d) => ({
+    id: d.id,
+    ...(d.data() as Omit<InterviewQuestion, "id">),
+  }));
+  const nextCursor =
+    snap.docs.length === 0 ? null : snap.docs[snap.docs.length - 1];
+  return { items, nextCursor };
 }
 
 export default function InterviewQuestionsPage() {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [{ items: questions = [], nextCursor } = {}, setPaginatedResult] =
+    useState<PaginatedDocsResult<InterviewQuestion>>();
+  const [interviewQuestionsLoading, setInterviewQuestionsLoading] =
+    useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  const fetchQuestions = async () => {
+    try {
+      setInterviewQuestionsLoading(true);
+      const paginatedResult = await interviewQuestionsFetchPaginated({
+        cursor: nextCursor,
+      });
+      setPaginatedResult(paginatedResult);
+    } catch (error) {
+      console.error("Failed to fetch interview questions questions:", error);
+      toast.error("Failed to fetch interview questions");
+    } finally {
+      setInterviewQuestionsLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await fetch("/api/admin/interview-questions");
-        if (response.ok) {
-          const data = await response.json();
-          setQuestions(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch questions:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchQuestions();
   }, []);
 
@@ -66,6 +101,8 @@ export default function InterviewQuestionsPage() {
     medium: "bg-amber-500/20 text-amber-700",
     hard: "bg-red-500/20 text-red-700",
   };
+
+  if (interviewQuestionsLoading) return <PageLoading />;
 
   return (
     <div className="space-y-6">
@@ -114,15 +151,7 @@ export default function InterviewQuestionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  <div className="text-muted-foreground">
-                    Loading questions...
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : filteredQuestions.length === 0 ? (
+            {filteredQuestions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8">
                   <div className="text-muted-foreground">
@@ -136,7 +165,7 @@ export default function InterviewQuestionsPage() {
                   key={question.id}
                   className="border-border/30 hover:bg-muted/50"
                 >
-                  <TableCell className="font-medium text-foreground max-w-md truncate">
+                  <TableCell className="font-medium text-foreground max-w-xs whitespace-normal break-normal">
                     {question.question}
                   </TableCell>
                   <TableCell className="text-muted-foreground capitalize">
@@ -194,19 +223,6 @@ export default function InterviewQuestionsPage() {
             onSuccess={() => {
               setIsFormOpen(false);
               // Refetch questions
-              const fetchQuestions = async () => {
-                try {
-                  const response = await fetch(
-                    "/api/admin/interview-questions",
-                  );
-                  if (response.ok) {
-                    const data = await response.json();
-                    setQuestions(data);
-                  }
-                } catch (error) {
-                  console.error("Failed to fetch questions:", error);
-                }
-              };
               fetchQuestions();
             }}
           />
