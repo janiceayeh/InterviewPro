@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,73 +22,31 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { NewQuestionForm } from "@/components/admin/new-question-form";
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  QueryDocumentSnapshot,
-  startAfter,
-  where,
-} from "firebase/firestore";
-import { InterviewQuestion, PaginatedDocsResult } from "@/lib/types";
-import { COLLECTIONS } from "@/lib/constants";
-import { db } from "@/lib/firebase";
-import { toast } from "sonner";
+
+import { InterviewQuestion } from "@/lib/types";
+import { AlertCircle } from "lucide-react";
 import PageLoading from "@/components/page-loading";
-
-async function interviewQuestionsFetchPaginated({
-  pageSize = 5,
-  cursor,
-}: {
-  pageSize?: number;
-  cursor?: QueryDocumentSnapshot;
-}): Promise<PaginatedDocsResult<InterviewQuestion>> {
-  const colRef = collection(db, COLLECTIONS.interviewQuestions);
-  const q = query(
-    colRef,
-    // where("category", "==", category),
-    orderBy("createdAt"),
-    ...(cursor ? [startAfter(cursor)] : []),
-    limit(pageSize),
-  );
-
-  const snap = await getDocs(q);
-  const items = snap.docs.map((d) => ({
-    id: d.id,
-    ...(d.data() as Omit<InterviewQuestion, "id">),
-  }));
-  const nextCursor =
-    snap.docs.length === 0 ? null : snap.docs[snap.docs.length - 1];
-  return { items, nextCursor };
-}
+import { useInterviewQuestions } from "@/lib/hooks";
+import { Alert } from "@/components/ui/alert";
 
 export default function InterviewQuestionsPage() {
-  const [{ items: questions = [], nextCursor } = {}, setPaginatedResult] =
-    useState<PaginatedDocsResult<InterviewQuestion>>();
-  const [interviewQuestionsLoading, setInterviewQuestionsLoading] =
-    useState(false);
+  const {
+    error,
+    loading,
+    questions,
+    previous,
+    next,
+    reset,
+    first,
+    pageIndex,
+    hasNext,
+    hasPrev,
+  } = useInterviewQuestions();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const fetchQuestions = async () => {
-    try {
-      setInterviewQuestionsLoading(true);
-      const paginatedResult = await interviewQuestionsFetchPaginated({
-        cursor: nextCursor,
-      });
-      setPaginatedResult(paginatedResult);
-    } catch (error) {
-      console.error("Failed to fetch interview questions questions:", error);
-      toast.error("Failed to fetch interview questions");
-    } finally {
-      setInterviewQuestionsLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
+  const [interviewQuestionSelected, setInterviewQuestionSelected] =
+    useState<InterviewQuestion | null>(null);
 
   const filteredQuestions = questions.filter(
     (q) =>
@@ -102,10 +60,27 @@ export default function InterviewQuestionsPage() {
     hard: "bg-red-500/20 text-red-700",
   };
 
-  if (interviewQuestionsLoading) return <PageLoading />;
+  useEffect(() => {
+    first();
+  }, []);
+
+  if (loading) return <PageLoading />;
 
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          className="mb-6 border-destructive/50 bg-destructive/10"
+          variant="destructive"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <div className="ml-3">
+            <p className="text-sm font-medium text-destructive">{error}</p>
+          </div>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -137,7 +112,7 @@ export default function InterviewQuestionsPage() {
       </div>
 
       {/* Table */}
-      <Card className="border-border/50 overflow-hidden">
+      <Card className="border-border/50 overflow-hidden p-4">
         <Table>
           <TableHeader>
             <TableRow className="border-border/30 bg-muted/30">
@@ -207,6 +182,17 @@ export default function InterviewQuestionsPage() {
             )}
           </TableBody>
         </Table>
+
+        <div className="w-full flex justify-center items-center">
+          <div className="flex gap-2">
+            <Button variant="outline" disabled={!hasPrev} onClick={previous}>
+              Previous
+            </Button>
+            <Button disabled={!hasNext} onClick={next}>
+              Next
+            </Button>
+          </div>
+        </div>
       </Card>
 
       {/* New Question Dialog */}
@@ -223,7 +209,8 @@ export default function InterviewQuestionsPage() {
             onSuccess={() => {
               setIsFormOpen(false);
               // Refetch questions
-              fetchQuestions();
+              reset();
+              first();
             }}
           />
         </DialogContent>

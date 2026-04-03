@@ -1,0 +1,97 @@
+import { useState, useMemo } from "react";
+import { COLLECTIONS } from "@/lib/constants";
+import { limit, orderBy, query, startAfter } from "firebase/firestore";
+import { InterviewQuestion } from "./types";
+import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
+
+export function useInterviewQuestions() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [hasNext, setHasNext] = useState<boolean>(false);
+  const [hasPrev, setHasPrev] = useState<boolean>(false);
+
+  const paginator = useMemo(() => {
+    const builder: QueryBuilder = (colRef, cursor) => {
+      const clauses = [
+        // where("category", "==", "algorithms"),
+        orderBy("createdAt", "desc"),
+        cursor ? startAfter(cursor) : undefined,
+        limit(PAGE_SIZE),
+      ].filter(Boolean) as any[];
+      return query(colRef, ...clauses);
+    };
+    return new Paginator<InterviewQuestion>(
+      COLLECTIONS.interviewQuestions,
+      builder,
+      5,
+    );
+  }, []);
+
+  async function next() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await paginator.next();
+      if (res) {
+        const { hasNext, hasPrev, items } = res;
+        setHasNext(hasNext);
+        setHasPrev(hasPrev);
+        setQuestions(items);
+      }
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function previous() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await paginator.previous();
+      if (res) {
+        const { hasPrev, hasNext, items } = res;
+        setHasPrev(hasPrev);
+        setHasNext(hasNext);
+        setQuestions(items);
+      }
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function first() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { hasNext, hasPrev, items } = await paginator.fetchPage(0);
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setQuestions(items);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return {
+    loading,
+    error,
+    questions,
+    next,
+    previous,
+    first,
+    reset: paginator.reset,
+    pageIndex: paginator.getCurrentPageIndex(),
+    hasPrev: paginator.getCurrentPageIndex() > 0,
+    hasNext,
+  };
+}

@@ -61,6 +61,7 @@ type QuestionFormData = z.infer<typeof questionSchema>;
 interface NewQuestionFormProps {
   onClose?: () => void;
   onSuccess?: () => void;
+  question?: InterviewQuestion;
 }
 
 const categories = [
@@ -76,19 +77,23 @@ const difficulties = [
   { value: "hard", label: "Hard", color: "bg-red-500/20 text-red-700" },
 ];
 
-export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
+export function NewQuestionForm({
+  onClose,
+  onSuccess,
+  question,
+}: NewQuestionFormProps) {
   const [tipInput, setTipInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(questionSchema),
     defaultValues: {
-      question: "",
-      category: "behavioral",
-      difficulty: "medium",
-      timeLimit: 120,
-      tips: [],
-      status: "draft",
+      question: question?.question ?? "",
+      category: question?.category ?? "behavioral",
+      difficulty: question?.difficulty ?? "medium",
+      timeLimit: question?.timeLimit ?? 120,
+      tips: question?.tips ?? [],
+      status: question?.status ?? "draft",
     },
   });
 
@@ -326,7 +331,7 @@ export function NewQuestionForm({ onClose, onSuccess }: NewQuestionFormProps) {
         <div className="flex gap-2 pt-4">
           <Button type="submit" disabled={isSubmitting} className="flex-1">
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Question
+            {question ? "Update Question" : "Create Question"}
           </Button>
           {onClose && (
             <Button type="button" variant="outline" onClick={onClose}>
