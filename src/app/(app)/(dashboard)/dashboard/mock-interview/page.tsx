@@ -43,7 +43,6 @@ const categories = [
     description:
       "Questions about your past experiences and how you handled situations",
     icon: Users,
-    questionCount: 10,
     duration: "15 min",
     color: "from-primary to-accent",
   },
@@ -53,7 +52,6 @@ const categories = [
     description:
       "Assess your technical knowledge and problem-solving abilities",
     icon: Code,
-    questionCount: 8,
     duration: "20 min",
     color: "from-accent to-chart-3",
   },
@@ -63,7 +61,6 @@ const categories = [
     description:
       "Hypothetical scenarios to evaluate your decision-making skills",
     icon: Target,
-    questionCount: 8,
     duration: "15 min",
     color: "from-chart-3 to-chart-5",
   },
@@ -73,7 +70,6 @@ const categories = [
     description:
       "Common interview questions every candidate should prepare for",
     icon: Briefcase,
-    questionCount: 12,
     duration: "20 min",
     color: "from-chart-5 to-primary",
   },
@@ -189,9 +185,6 @@ export default function MockInterviewPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {category.questionCount} questions
-                      </span>
                       {selectedCategory === category.id && (
                         <motion.div
                           initial={{ scale: 0 }}

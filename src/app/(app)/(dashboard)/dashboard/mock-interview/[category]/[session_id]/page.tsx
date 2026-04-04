@@ -96,6 +96,11 @@ export default function InterviewSessionPage() {
         collection(db, COLLECTIONS.interviewQuestions),
         ...[
           where("category", "==", category),
+          where(
+            "status",
+            "==",
+            "published" satisfies InterviewQuestion["status"],
+          ),
           orderBy(documentId()),
           ...(userLastAnsweredQuestionId
             ? [startAfter(userLastAnsweredQuestionId)]
