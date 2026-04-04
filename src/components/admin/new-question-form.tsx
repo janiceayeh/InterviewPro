@@ -29,11 +29,13 @@ import {
 import {
   addDoc,
   collection,
+  doc,
   getDocs,
   limit,
   query,
   serverTimestamp,
   Timestamp,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/constants";
@@ -152,21 +154,48 @@ export function NewQuestionForm({
     }
   }
 
+  async function interviewQuestionUpdate(
+    questionId: string,
+    question: Partial<InterviewQuestion>,
+  ) {
+    try {
+      await updateDoc(
+        doc(db, COLLECTIONS.interviewQuestions, questionId),
+        question,
+      );
+
+      return { ok: true };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  }
+
   const onSubmit: SubmitHandler<QuestionFormData> = async (data) => {
     try {
       setIsSubmitting(true);
-      const { error, ok } = await interviewQuestionCreate(data);
-      if (error) {
-        console.error(error);
-        toast.error(`Failed to create question: ${error.message}`);
-      } else if (ok) {
-        toast.success("Question created successfully");
-        form.reset();
-        onSuccess?.();
+      if (question) {
+        const { error, ok } = await interviewQuestionUpdate(question.id, data);
+        if (error) {
+          console.error(error);
+          toast.error(`Failed to update question: ${error.message}`);
+        } else if (ok) {
+          toast.success("Question updated successfully");
+          onSuccess?.();
+        }
+      } else {
+        const { error, ok } = await interviewQuestionCreate(data);
+        if (error) {
+          console.error(error);
+          toast.error(`Failed to create question: ${error.message}`);
+        } else if (ok) {
+          toast.success("Question created successfully");
+          form.reset();
+          onSuccess?.();
+        }
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create question");
+      toast.error("Operation failed");
     } finally {
       setIsSubmitting(false);
     }

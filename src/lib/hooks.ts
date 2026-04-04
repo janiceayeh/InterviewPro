@@ -24,7 +24,6 @@ export function useInterviewQuestions() {
     return new Paginator<InterviewQuestion>(
       COLLECTIONS.interviewQuestions,
       builder,
-      5,
     );
   }, []);
 
@@ -82,6 +81,26 @@ export function useInterviewQuestions() {
     }
   }
 
+  async function refetch() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const currentPage = paginator.getCurrentPageIndex();
+      paginator.clearCache();
+      const { hasNext, hasPrev, items } =
+        await paginator.fetchPage(currentPage);
+
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setQuestions(items);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     loading,
     error,
@@ -89,7 +108,8 @@ export function useInterviewQuestions() {
     next,
     previous,
     first,
-    reset: paginator.reset,
+    refetch,
+    reset: () => paginator.reset(),
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev: paginator.getCurrentPageIndex() > 0,
     hasNext,

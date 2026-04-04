@@ -8,7 +8,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 
-export const PAGE_SIZE = 5;
+export const PAGE_SIZE = 15;
 
 export type QueryBuilder = (
   colRef: CollectionReference<DocumentData>,
@@ -63,6 +63,7 @@ export class Paginator<D> {
     }));
     this.pageCache[pageIndex] = items;
     const lastSnap = snap.docs[snap.docs.length - 1] ?? null;
+
     this.pageSnapshots[pageIndex + 1] = lastSnap;
     this.currentPage = pageIndex;
 
@@ -102,6 +103,10 @@ export class Paginator<D> {
     this.pageSnapshots = [null];
     this.pageCache = [];
     this.currentPage = 0;
+  }
+
+  clearCache(): void {
+    this.pageCache = [];
   }
 
   getCurrentPageIndex(): number {

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Edit2, Plus, Search } from "lucide-react";
+import { Trash2, Edit2, Plus, Search, Trash2Icon, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -28,6 +28,22 @@ import { AlertCircle } from "lucide-react";
 import PageLoading from "@/components/page-loading";
 import { useInterviewQuestions } from "@/lib/hooks";
 import { Alert } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { deleteDoc, doc } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/constants";
+import { db } from "@/lib/firebase";
+import { toast } from "sonner";
 
 export default function InterviewQuestionsPage() {
   const {
@@ -38,15 +54,18 @@ export default function InterviewQuestionsPage() {
     next,
     reset,
     first,
-    pageIndex,
     hasNext,
     hasPrev,
+    refetch,
   } = useInterviewQuestions();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [questionConfirmDeleteOpen, setQuestionConfirmDeleteOpen] =
+    useState(false);
   const [interviewQuestionSelected, setInterviewQuestionSelected] =
     useState<InterviewQuestion | null>(null);
+  const [questionDeleting, setQuestionDeleting] = useState(false);
 
   const filteredQuestions = questions.filter(
     (q) =>
@@ -59,6 +78,20 @@ export default function InterviewQuestionsPage() {
     medium: "bg-amber-500/20 text-amber-700",
     hard: "bg-red-500/20 text-red-700",
   };
+
+  async function deleteQuestion(questionId: string) {
+    try {
+      setQuestionDeleting(true);
+      await deleteDoc(doc(db, COLLECTIONS.interviewQuestions, questionId));
+      refetch();
+      setQuestionConfirmDeleteOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to delete question: ${(error as Error).message}`);
+    } finally {
+      setQuestionDeleting(false);
+    }
+  }
 
   useEffect(() => {
     first();
@@ -166,13 +199,25 @@ export default function InterviewQuestionsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        setInterviewQuestionSelected(question);
+                        setIsFormOpen(true);
+                      }}
+                    >
                       <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setInterviewQuestionSelected(question);
+                        setQuestionConfirmDeleteOpen(true);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -205,16 +250,56 @@ export default function InterviewQuestionsPage() {
             </DialogDescription>
           </DialogHeader>
           <NewQuestionForm
+            question={interviewQuestionSelected}
             onClose={() => setIsFormOpen(false)}
             onSuccess={() => {
               setIsFormOpen(false);
               // Refetch questions
-              reset();
-              first();
+              if (interviewQuestionSelected) {
+                // Updated question. Refetch current page
+                refetch();
+              } else {
+                // New question. Fetch first page
+                reset();
+                first();
+              }
             }}
           />
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Delete Question Alert Dialog */}
+      <AlertDialog
+        open={questionConfirmDeleteOpen}
+        onOpenChange={setQuestionConfirmDeleteOpen}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+              <Trash2Icon />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete Question?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this question. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" disabled={questionDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => deleteQuestion(interviewQuestionSelected.id)}
+              disabled={questionDeleting}
+            >
+              {questionDeleting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
