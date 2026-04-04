@@ -38,7 +38,6 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { deleteDoc, doc } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/constants";
@@ -57,10 +56,7 @@ export default function InterviewQuestionsPage() {
     hasNext,
     hasPrev,
     refetch,
-    pageIndex,
   } = useInterviewQuestions();
-
-  console.log({ hasNext, hasPrev, pageIndex });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -82,6 +78,8 @@ export default function InterviewQuestionsPage() {
     hard: "bg-red-500/20 text-red-700",
   };
 
+  const noQuestionsFound = filteredQuestions.length === 0;
+
   async function deleteQuestion(questionId: string) {
     try {
       setQuestionDeleting(true);
@@ -101,7 +99,6 @@ export default function InterviewQuestionsPage() {
   }, []);
 
   if (loading) return <PageLoading />;
-
   return (
     <div className="space-y-6">
       {/* Error Alert */}
@@ -165,7 +162,7 @@ export default function InterviewQuestionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredQuestions.length === 0 ? (
+            {noQuestionsFound ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8">
                   <div className="text-muted-foreground">
@@ -234,16 +231,18 @@ export default function InterviewQuestionsPage() {
           </TableBody>
         </Table>
 
-        <div className="w-full flex justify-center items-center">
-          <div className="flex gap-2">
-            <Button variant="outline" disabled={!hasPrev} onClick={previous}>
-              Previous
-            </Button>
-            <Button disabled={!hasNext} onClick={next}>
-              Next
-            </Button>
+        {!noQuestionsFound && (
+          <div className="w-full flex justify-center items-center">
+            <div className="flex gap-2">
+              <Button variant="outline" disabled={!hasPrev} onClick={previous}>
+                Previous
+              </Button>
+              <Button disabled={!hasNext} onClick={next}>
+                Next
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </Card>
 
       {/* New Question Dialog */}

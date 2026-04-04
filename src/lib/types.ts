@@ -52,6 +52,20 @@ export interface InterviewSession {
   evaluation: TInterviewSessionEvaluation | null;
 }
 
+export interface InterviewTip {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  content: string;
+  keyTakeaways: string[];
+  examples: string[];
+  viewsCount?: number;
+  helpfulCount?: 450;
+  status: "draft" | "published";
+  createdAt: Timestamp;
+}
+
 // ------------
 
 export interface InterviewSessionQA {

@@ -1,17 +1,21 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion'
-import { interviewTips, tipCategories, type InterviewTip } from '@/lib/interview-tips'
+} from "@/components/ui/accordion";
+import {
+  interviewTips,
+  tipCategories,
+  type InterviewTip,
+} from "@/lib/interview-tips";
 import {
   Lightbulb,
   Search,
@@ -19,28 +23,30 @@ import {
   CheckCircle2,
   BookOpen,
   ChevronRight,
-} from 'lucide-react'
-import Link from 'next/link'
-import { cn } from '@/lib/utils'
+} from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import PageLoading from "@/components/page-loading";
 
-// displays tips with optional search and filter 
+// displays tips with optional search and filter
 export default function TipsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTip, setSelectedTip] = useState<InterviewTip | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTip, setSelectedTip] = useState<InterviewTip | null>(null);
 
   // filters cards based on currently selected tip category and search input
   const filteredTips = interviewTips.filter((tip) => {
-    const matchesCategory = selectedCategory === 'all' || tip.category === selectedCategory
+    const matchesCategory =
+      selectedCategory === "all" || tip.category === selectedCategory;
     const matchesSearch =
-      searchQuery === '' ||
+      searchQuery === "" ||
       tip.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tip.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tip.content.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+      tip.content.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
-  // displays full tips guide details for the current tip card selected 
+  // displays full tips guide details for the current tip card selected
   if (selectedTip) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
@@ -62,8 +68,12 @@ export default function TipsPage() {
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold text-foreground mb-4">{selectedTip.title}</h1>
-          <p className="text-lg text-muted-foreground mb-8">{selectedTip.summary}</p>
+          <h1 className="text-3xl font-bold text-foreground mb-4">
+            {selectedTip.title}
+          </h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            {selectedTip.summary}
+          </p>
 
           <Card className="mb-8">
             <CardHeader>
@@ -74,8 +84,11 @@ export default function TipsPage() {
             </CardHeader>
             <CardContent>
               <div className="prose prose-slate max-w-none">
-                {selectedTip.content.split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="text-foreground leading-relaxed mb-4">
+                {selectedTip.content.split("\n\n").map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className="text-foreground leading-relaxed mb-4"
+                  >
                     {paragraph}
                   </p>
                 ))}
@@ -94,7 +107,7 @@ export default function TipsPage() {
               <ul className="space-y-3">
                 {selectedTip.keyTakeaways.map((takeaway, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="size-1.5 rounded-full bg-success mt-2 flex-shrink-0" />
+                    <span className="size-1.5 rounded-full bg-success mt-2 shrink-0" />
                     <span className="text-foreground">{takeaway}</span>
                   </li>
                 ))}
@@ -147,7 +160,7 @@ export default function TipsPage() {
           </Card> */}
         </motion.div>
       </div>
-    )
+    );
   }
 
   // displays all the tip cards, search and tip categories
@@ -161,12 +174,16 @@ export default function TipsPage() {
       >
         <div className="flex items-center gap-2 mb-2">
           <Lightbulb className="size-5 text-primary" />
-          <span className="text-sm font-medium text-primary">Interview Tips</span>
+          <span className="text-sm font-medium text-primary">
+            Interview Tips
+          </span>
         </div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Expert Interview Advice</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Expert Interview Advice
+        </h1>
         <p className="text-muted-foreground max-w-2xl">
-          Browse curated tips from industry professionals. Click on any tip to learn more or ask
-          questions.
+          Browse curated tips from industry professionals. Click on any tip to
+          learn more or ask questions.
         </p>
       </motion.div>
 
@@ -191,13 +208,13 @@ export default function TipsPage() {
           {tipCategories.map((category) => (
             <Button
               key={category.id}
-              variant={selectedCategory === category.id ? 'default' : 'outline'}
+              variant={selectedCategory === category.id ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory(category.id)}
               className={cn(
                 selectedCategory === category.id
-                  ? ''
-                  : 'hover:bg-primary/10 hover:text-primary hover:border-primary/30'
+                  ? ""
+                  : "hover:bg-primary/10 hover:text-primary hover:border-primary/30",
               )}
             >
               {category.label}
@@ -216,7 +233,9 @@ export default function TipsPage() {
             className="text-center py-12"
           >
             <Search className="size-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No tips found</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              No tips found
+            </h3>
             <p className="text-muted-foreground">
               Try adjusting your search or filter criteria
             </p>
@@ -242,7 +261,7 @@ export default function TipsPage() {
                   >
                     <AccordionTrigger className="hover:no-underline py-6">
                       <div className="flex items-start gap-4 text-left">
-                        <div className="flex items-center justify-center size-10 rounded-lg bg-primary/10 flex-shrink-0">
+                        <div className="flex items-center justify-center size-10 rounded-lg bg-primary/10 shrink-0">
                           <Lightbulb className="size-5 text-primary" />
                         </div>
                         <div>
@@ -251,15 +270,19 @@ export default function TipsPage() {
                               {tip.category}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-foreground">{tip.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{tip.summary}</p>
+                          <h3 className="font-semibold text-foreground">
+                            {tip.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {tip.summary}
+                          </p>
                         </div>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-6">
                       <div className="pl-14">
                         <p className="text-muted-foreground mb-4 leading-relaxed">
-                          {tip.content.split('\n\n')[0]}
+                          {tip.content.split("\n\n")[0]}
                         </p>
                         <div className="flex items-center gap-3">
                           <Button
@@ -319,5 +342,5 @@ export default function TipsPage() {
         </Card> */}
       </motion.div>
     </div>
-  )
+  );
 }

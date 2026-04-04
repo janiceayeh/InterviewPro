@@ -79,6 +79,59 @@ const difficulties = [
   { value: "hard", label: "Hard", color: "bg-red-500/20 text-red-700" },
 ];
 
+async function interviewQuestionUpdate(
+  questionId: string,
+  question: Partial<InterviewQuestion>,
+) {
+  try {
+    await updateDoc(
+      doc(db, COLLECTIONS.interviewQuestions, questionId),
+      question,
+    );
+
+    return { ok: true };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
+
+async function interviewQuestionExists(question: string) {
+  try {
+    const docSnap = await getDocs(
+      query(
+        collection(db, COLLECTIONS.interviewQuestions),
+        where("question", "==", question),
+        limit(1),
+      ),
+    );
+    return { ok: true, exists: !docSnap.empty };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
+
+async function interviewQuestionCreate(data: QuestionFormData) {
+  try {
+    const { ok, error, exists } = await interviewQuestionExists(data.question);
+    if (error) return { error };
+
+    if (ok) {
+      if (exists) return { error: new Error("Question already exists") };
+    }
+    const newInterviewQuestion = await addDoc(
+      collection(db, COLLECTIONS.interviewQuestions),
+      {
+        ...data,
+        createdAt: serverTimestamp() as Timestamp,
+      } satisfies Omit<InterviewQuestion, "id">,
+    );
+
+    return { ok: true, newInterviewQuestion };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
+
 export function NewQuestionForm({
   onClose,
   onSuccess,
@@ -114,61 +167,6 @@ export function NewQuestionForm({
       currentTips.filter((_, i) => i !== index),
     );
   };
-
-  async function interviewQuestionExists(question: string) {
-    try {
-      const docSnap = await getDocs(
-        query(
-          collection(db, COLLECTIONS.interviewQuestions),
-          where("question", "==", question),
-          limit(1),
-        ),
-      );
-      return { ok: true, exists: !docSnap.empty };
-    } catch (error) {
-      return { error: error as Error };
-    }
-  }
-
-  async function interviewQuestionCreate(data: QuestionFormData) {
-    try {
-      const { ok, error, exists } = await interviewQuestionExists(
-        data.question,
-      );
-      if (error) return { error };
-
-      if (ok) {
-        if (exists) return { error: new Error("Question already exists") };
-      }
-      const newInterviewQuestion = await addDoc(
-        collection(db, COLLECTIONS.interviewQuestions),
-        {
-          ...data,
-          createdAt: serverTimestamp() as Timestamp,
-        } satisfies Omit<InterviewQuestion, "id">,
-      );
-
-      return { ok: true, newInterviewQuestion };
-    } catch (error) {
-      return { error: error as Error };
-    }
-  }
-
-  async function interviewQuestionUpdate(
-    questionId: string,
-    question: Partial<InterviewQuestion>,
-  ) {
-    try {
-      await updateDoc(
-        doc(db, COLLECTIONS.interviewQuestions, questionId),
-        question,
-      );
-
-      return { ok: true };
-    } catch (error) {
-      return { error: error as Error };
-    }
-  }
 
   const onSubmit: SubmitHandler<QuestionFormData> = async (data) => {
     try {

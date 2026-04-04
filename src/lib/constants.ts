@@ -6,6 +6,7 @@ export const COLLECTIONS = {
   interviewQuestions: "interview-questions",
   interviewSessions: "interview-sessions",
   interviewAnswers: "interview-answers",
+  interviewTips: "interview-tips",
 };
 
 export const InterviewSessionEvaluationSchema = z.object({
