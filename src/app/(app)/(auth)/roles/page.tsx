@@ -19,7 +19,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { SubmitEventHandler, useEffect, useState } from "react";
-import { query, getDocs, collection, setDoc, doc } from "firebase/firestore";
+import {
+  query,
+  getDocs,
+  collection,
+  setDoc,
+  doc,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/context/auth-context";
@@ -27,6 +35,7 @@ import { useRouter } from "next/navigation";
 import PageLoading from "@/components/page-loading";
 import { COLLECTIONS } from "@/lib/constants";
 import { routes } from "@/lib/routes";
+import { UserProfile } from "firebase/auth";
 
 interface Role {
   category: string;
@@ -66,7 +75,11 @@ export default function RolesPage() {
   async function saveRole(field: string, role: string) {
     return setDoc(
       doc(db, COLLECTIONS.users, user.uid),
-      { role, field },
+      {
+        role,
+        field,
+        createAt: serverTimestamp() as Timestamp,
+      } satisfies Partial<UserProfile>,
       { merge: true },
     );
   }

@@ -8,7 +8,8 @@ import { TInterviewSessionEvaluation } from "./constants";
 //collections
 
 export interface UserProfile {
-  createdAt: string;
+  id: string;
+  createdAt: Timestamp;
   email: string;
   field: string;
   firstname: string;
