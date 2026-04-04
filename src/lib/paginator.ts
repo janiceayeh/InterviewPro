@@ -56,12 +56,6 @@ export class Paginator<D> {
 
     const hasNext = snap.docs.length === this.pageSize;
 
-    console.log({
-      doclen: snap.docs.length,
-      ps: this.pageSize,
-      cu: this.currentPage,
-    });
-
     return { items, hasNext, hasPrev: this.currentPage > 0 };
   }
 

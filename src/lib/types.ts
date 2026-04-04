@@ -61,8 +61,23 @@ export interface InterviewTip {
   keyTakeaways: string[];
   examples: string[];
   viewsCount?: number;
-  helpfulCount?: 450;
+  helpfulCount: number | null;
   status: "draft" | "published";
+  createdAt: Timestamp;
+}
+
+export interface InterviewTipHelpful {
+  id: string;
+  userId: string;
+  tipId: string;
+  isHelpful: boolean | null;
+  createdAt: Timestamp;
+}
+
+export interface InterviewTipView {
+  id: string;
+  userId: string;
+  tipId: string;
   createdAt: Timestamp;
 }
 

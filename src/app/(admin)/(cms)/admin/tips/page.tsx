@@ -42,12 +42,34 @@ import {
 } from "@/components/ui/alert-dialog";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getCountFromServer,
+  query,
+  where,
+} from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/constants";
 import { Alert } from "@/components/ui/alert";
 import PageLoading from "@/components/page-loading";
 import { InterviewTip } from "@/lib/types";
 import { useInterviewTips } from "@/lib/hooks";
+
+async function tipGetHelpfulCount(tipId: string) {
+  try {
+    const docSnap = await getCountFromServer(
+      query(
+        collection(db, COLLECTIONS.interviewTipHelpfuls),
+        where("tipId", "==", tipId),
+        where("isHelpful", "==", true),
+      ),
+    );
+    return { ok: true, tipHelpfulCount: docSnap.data().count };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
 
 export default function TipsPage() {
   const {
@@ -68,12 +90,8 @@ export default function TipsPage() {
   const [tipConfirmDeleteOpen, setTipConfirmDeleteOpen] = useState(false);
   const [tipSelected, setTipSelected] = useState<InterviewTip | null>(null);
   const [tipDeleting, setTipDeleting] = useState(false);
-
-  const filteredTips = tips.filter(
-    (t) =>
-      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.category.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const [filteredTips, setFilteredTips] = useState([]);
+  const [tipHelpfulCountLoading, setTipHelpfulCountLoading] = useState(false);
 
   const noTipsFound = filteredTips.length === 0;
 
@@ -95,7 +113,34 @@ export default function TipsPage() {
     first();
   }, []);
 
-  if (loading) return <PageLoading />;
+  useEffect(() => {
+    (async () => {
+      setTipHelpfulCountLoading(true);
+      const filteredTips = tips
+        .filter(
+          (t) =>
+            t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.category.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+        .map(async (tip) => {
+          const { error, ok, tipHelpfulCount } = await tipGetHelpfulCount(
+            tip.id,
+          );
+          if (error) {
+            console.error(error);
+          } else if (ok) {
+            tip.helpfulCount = tipHelpfulCount;
+            return tip;
+          }
+        });
+      Promise.all(filteredTips).then((tips) => {
+        setTipHelpfulCountLoading(false);
+        setFilteredTips(tips);
+      });
+    })();
+  }, [tips, searchQuery]);
+
+  if (loading || tipHelpfulCountLoading) return <PageLoading />;
   return (
     <div className="space-y-6">
       {/* Error Alert */}
@@ -145,7 +190,7 @@ export default function TipsPage() {
       </div>
 
       {/* Table */}
-      <Card className="border-border/50 overflow-hidden">
+      <Card className="border-border/50 overflow-hidden p-4">
         <Table>
           <TableHeader>
             <TableRow className="border-border/30 bg-muted/30">

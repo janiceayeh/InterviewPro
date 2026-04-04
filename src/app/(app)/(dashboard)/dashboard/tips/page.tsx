@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Accordion,
@@ -11,21 +10,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Lightbulb,
-  Search,
-  MessageCircle,
-  CheckCircle2,
-  BookOpen,
-  ChevronRight,
-  AlertCircle,
-} from "lucide-react";
+import { Lightbulb, Search, ChevronRight, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PageLoading from "@/components/page-loading";
 import { useInterviewTips } from "@/lib/hooks";
 import { InterviewTip } from "@/lib/types";
 import { Alert } from "@/components/ui/alert";
 import { INTERVIEW_TIP_CATEGORIES } from "@/lib/constants";
+import InterviewTipDetails from "@/components/dashboard/interview-tip-details/InterviewTipDetails";
 
 export const tipCategories = [
   { id: "all", label: "All Tips" },
@@ -63,115 +55,16 @@ export default function TipsPage() {
   if (selectedTip) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+        <Button
+          variant="link"
+          onClick={() => setSelectedTip(null)}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors p-0!"
         >
-          <button
-            onClick={() => setSelectedTip(null)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-          >
-            <ChevronRight className="size-4 rotate-180" />
-            Back to all tips
-          </button>
+          <ChevronRight className="size-4 rotate-180" />
+          Back to all tips
+        </Button>
 
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">
-              {selectedTip.category}
-            </span>
-          </div>
-
-          <h1 className="text-3xl font-bold text-foreground mb-4">
-            {selectedTip.title}
-          </h1>
-          <p className="text-lg text-muted-foreground mb-8">
-            {selectedTip.summary}
-          </p>
-
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="size-5 text-primary" />
-                Full Guide
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-slate max-w-none">
-                {selectedTip.content.split("\n\n").map((paragraph, index) => (
-                  <p
-                    key={index}
-                    className="text-foreground leading-relaxed mb-4"
-                  >
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle2 className="size-5 text-success" />
-                Key Takeaways
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {selectedTip.keyTakeaways.map((takeaway, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="size-1.5 rounded-full bg-success mt-2 shrink-0" />
-                    <span className="text-foreground">{takeaway}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          {selectedTip.examples && selectedTip.examples.length > 0 && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="size-5 text-accent" />
-                  Examples
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-4">
-                  {selectedTip.examples.map((example, index) => (
-                    <li
-                      key={index}
-                      className="rounded-lg bg-muted/50 p-4 text-foreground italic"
-                    >
-                      {example}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="py-6">
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="font-semibold text-foreground mb-1">
-                    Have questions about this tip?
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Ask our AI for more details or personalized advice
-                  </p>
-                </div>
-                <Link href={`/dashboard/tips/${selectedTip.id}/chat`}>
-                  <Button>
-                    <MessageCircle className="size-4 mr-2" />
-                    Ask Questions
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card> */}
-        </motion.div>
+        <InterviewTipDetails tip={selectedTip} />
       </div>
     );
   }
