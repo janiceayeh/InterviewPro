@@ -71,6 +71,20 @@ async function tipGetHelpfulCount(tipId: string) {
   }
 }
 
+async function tipGetViewsCount(tipId: string) {
+  try {
+    const docSnap = await getCountFromServer(
+      query(
+        collection(db, COLLECTIONS.interviewTipViews),
+        where("tipId", "==", tipId),
+      ),
+    );
+    return { ok: true, tipViewsCount: docSnap.data().count };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
+
 export default function TipsPage() {
   const {
     error,
@@ -123,15 +137,27 @@ export default function TipsPage() {
             t.category.toLowerCase().includes(searchQuery.toLowerCase()),
         )
         .map(async (tip) => {
-          const { error, ok, tipHelpfulCount } = await tipGetHelpfulCount(
-            tip.id,
-          );
-          if (error) {
-            console.error(error);
-          } else if (ok) {
+          const {
+            error: helpfulErr,
+            ok: helpfulOk,
+            tipHelpfulCount,
+          } = await tipGetHelpfulCount(tip.id);
+          if (helpfulErr) {
+            console.error(helpfulErr);
+          } else if (helpfulOk) {
             tip.helpfulCount = tipHelpfulCount;
-            return tip;
           }
+          const {
+            error: viewsErr,
+            ok: viewsOk,
+            tipViewsCount,
+          } = await tipGetViewsCount(tip.id);
+          if (viewsErr) {
+            console.error(viewsErr);
+          } else if (viewsOk) {
+            tip.viewsCount = tipViewsCount;
+          }
+          return tip;
         });
       Promise.all(filteredTips).then((tips) => {
         setTipHelpfulCountLoading(false);

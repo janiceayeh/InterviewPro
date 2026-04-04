@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { InterviewTip, InterviewTipHelpful } from "@/lib/types";
+import {
+  InterviewTip,
+  InterviewTipHelpful,
+  InterviewTipView,
+} from "@/lib/types";
 import {
   collection,
   doc,
@@ -121,6 +125,7 @@ export default function InterviewTipDetails({ tip }: Props) {
     }
   }
 
+  //fetch tip helpful feedback
   useEffect(() => {
     (async () => {
       try {
@@ -145,6 +150,29 @@ export default function InterviewTipDetails({ tip }: Props) {
       }
     })();
   }, [user?.uid, tip.id]);
+
+  // create tip view doc
+  useEffect(() => {
+    (async () => {
+      try {
+        // deterministic doc id ensures single doc per (tip,user)
+        const deterministicId = `${tip.id}_${user.uid}`;
+        const ref = doc(db, COLLECTIONS.interviewTipViews, deterministicId);
+        // Use merge so it creates if missing, updates otherwise.
+        await setDoc(
+          ref,
+          {
+            tipId: tip.id,
+            userId: user.uid,
+            createdAt: serverTimestamp() as Timestamp,
+          } satisfies Omit<Partial<InterviewTipView>, "id">,
+          { merge: true },
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    })();
+  }, []);
 
   if (tipHelpfulLoading || userLoading) return <PageLoading />;
 
