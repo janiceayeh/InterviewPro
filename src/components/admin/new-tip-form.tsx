@@ -81,6 +81,8 @@ const categories = [
   { value: "Behavioral", label: "Behavioral" },
   { value: "Body Language", label: "Body Language" },
   { value: "Follow-up", label: "Follow-up" },
+  { value: "During Interview", label: "During Interview" },
+  { value: "Common Questions", label: "Common Questions" },
 ];
 
 async function interviewTipExists(title: string) {

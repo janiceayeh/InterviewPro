@@ -36,3 +36,14 @@ export type TInterviewSessionEvaluation = z.infer<
 >;
 
 export const NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION = 5;
+
+export const INTERVIEW_TIP_CATEGORIES = [
+  { value: "Preparation", label: "Preparation" },
+  { value: "Communication", label: "Communication" },
+  { value: "Technical", label: "Technical" },
+  { value: "Behavioral", label: "Behavioral" },
+  { value: "Body Language", label: "Body Language" },
+  { value: "Follow-up", label: "Follow-up" },
+  { value: "During Interview", label: "During Interview" },
+  { value: "Common Questions", label: "Common Questions" },
+];

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { COLLECTIONS } from "@/lib/constants";
-import { limit, orderBy, query, startAfter } from "firebase/firestore";
+import { limit, orderBy, query, startAfter, where } from "firebase/firestore";
 import { InterviewQuestion, InterviewTip } from "./types";
 import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
 
@@ -115,7 +115,7 @@ export function useInterviewQuestions() {
   };
 }
 
-export function useInterviewTips() {
+export function useInterviewTips(options?: { hideDraft: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tips, setTips] = useState<InterviewTip[]>([]);
@@ -125,6 +125,9 @@ export function useInterviewTips() {
   const paginator = useMemo(() => {
     const builder: QueryBuilder = (colRef, cursor) => {
       const clauses = [
+        options?.hideDraft
+          ? where("status", "==", "published" satisfies InterviewTip["status"])
+          : undefined,
         orderBy("createdAt", "desc"),
         cursor ? startAfter(cursor) : undefined,
         limit(PAGE_SIZE),

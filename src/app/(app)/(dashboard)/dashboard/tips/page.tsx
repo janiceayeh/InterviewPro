@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,30 +12,37 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  interviewTips,
-  tipCategories,
-  type InterviewTip,
-} from "@/lib/interview-tips";
-import {
   Lightbulb,
   Search,
   MessageCircle,
   CheckCircle2,
   BookOpen,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import PageLoading from "@/components/page-loading";
+import { useInterviewTips } from "@/lib/hooks";
+import { InterviewTip } from "@/lib/types";
+import { Alert } from "@/components/ui/alert";
+import { INTERVIEW_TIP_CATEGORIES } from "@/lib/constants";
+
+export const tipCategories = [
+  { id: "all", label: "All Tips" },
+  ...INTERVIEW_TIP_CATEGORIES.map(({ value, label }) => ({ id: value, label })),
+];
 
 // displays tips with optional search and filter
 export default function TipsPage() {
+  const { error, loading, tips, previous, next, first, hasNext, hasPrev } =
+    useInterviewTips({ hideDraft: true });
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTip, setSelectedTip] = useState<InterviewTip | null>(null);
 
   // filters cards based on currently selected tip category and search input
-  const filteredTips = interviewTips.filter((tip) => {
+  const filteredTips = tips.filter((tip) => {
     const matchesCategory =
       selectedCategory === "all" || tip.category === selectedCategory;
     const matchesSearch =
@@ -45,6 +52,12 @@ export default function TipsPage() {
       tip.content.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const noTipsFound = filteredTips.length === 0;
+
+  useEffect(() => {
+    first();
+  }, []);
 
   // displays full tips guide details for the current tip card selected
   if (selectedTip) {
@@ -163,9 +176,24 @@ export default function TipsPage() {
     );
   }
 
+  if (loading) return <PageLoading />;
+
   // displays all the tip cards, search and tip categories
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          className="mb-6 border-destructive/50 bg-destructive/10"
+          variant="destructive"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <div className="ml-3">
+            <p className="text-sm font-medium text-destructive">{error}</p>
+          </div>
+        </Alert>
+      )}
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -306,6 +334,23 @@ export default function TipsPage() {
                 </motion.div>
               ))}
             </Accordion>
+
+            {!noTipsFound && (
+              <div className="w-full flex justify-center items-center">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    disabled={!hasPrev}
+                    onClick={previous}
+                  >
+                    Previous
+                  </Button>
+                  <Button disabled={!hasNext} onClick={next}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
