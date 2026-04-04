@@ -57,7 +57,10 @@ export default function InterviewQuestionsPage() {
     hasNext,
     hasPrev,
     refetch,
+    pageIndex,
   } = useInterviewQuestions();
+
+  console.log({ hasNext, hasPrev, pageIndex });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -126,7 +129,10 @@ export default function InterviewQuestionsPage() {
         </div>
         <Button
           className="bg-primary hover:bg-primary/90"
-          onClick={() => setIsFormOpen(true)}
+          onClick={() => {
+            setInterviewQuestionSelected(null);
+            setIsFormOpen(true);
+          }}
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Question

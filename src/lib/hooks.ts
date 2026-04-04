@@ -87,7 +87,6 @@ export function useInterviewQuestions() {
       setError(null);
 
       const currentPage = paginator.getCurrentPageIndex();
-      paginator.clearCache();
       const { hasNext, hasPrev, items } =
         await paginator.fetchPage(currentPage);
 
@@ -111,7 +110,7 @@ export function useInterviewQuestions() {
     refetch,
     reset: () => paginator.reset(),
     pageIndex: paginator.getCurrentPageIndex(),
-    hasPrev: paginator.getCurrentPageIndex() > 0,
+    hasPrev,
     hasNext,
   };
 }
