@@ -295,55 +295,7 @@ export default function SignupPage() {
             </p>
           </CardFooter>
         </Card>
-
-        <p className="text-center text-xs text-muted-foreground px-4">
-          By creating an account, you agree to our{" "}
-          <Link href="/terms" className="underline hover:text-foreground">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="underline hover:text-foreground">
-            Privacy Policy
-          </Link>
-        </p>
       </div>
     </div>
   );
 }
-
-// JUST FOR REFERENCE
-// export default function  SignupPage() {
-//   // let num = 1; // when declared like this, num is not REACTIVE!!!!!!!!!!!!
-
-// // create a reactive variable
-//      const [num, setNum]  = useState(1) // useState is called a hook. A REACTIVE VARIABLE -- Tell React to re-render the DOM when this value changes: useState()
-//   console.log("num..", num)
-
-//   function increment(){
-//     console.log("Incrementing value...")
-//     // num = num + 1; // rebinding/reassigning the value directly
-//     setNum(num + 1)
-//   // console.log(`num is now: ${num}`)
-
-//   }
-
-//   function decrement(){
-//     console.log("decrementing value...")
-//     // num = num - 1; // rebinding/reassigning the value directly
-//      setNum(num - 1)
-//     //  console.log(`num is now: ${num}`)
-//   }
-
-//   // html event handling - invoke the function
-//   // REact event - don't invoke the function - pass the reference
-//   return (
-//    <div className="flex flex-col justify-center items-center">
-//     <div className="font-semibold text-center text-lg m-5 bg-gray-300 p-6 rounded"> {num} </div>
-//      <div className="flex gap-x-4 mt-10">
-
-//       <Button onClick={increment}>Increment +</Button>
-//       <Button onClick={decrement}>Decrement -</Button>
-//     </div>
-//    </div>
-//   )
-// }
