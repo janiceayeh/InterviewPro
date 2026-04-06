@@ -88,6 +88,58 @@ export interface IndustryRole {
   roles: string[]; //array of string type
 }
 
+export interface ForumPost {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  author: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  views: number;
+  votes: number;
+  answers: number;
+  createdAt: Date;
+  updatedAt: Date;
+  isAnswered: boolean;
+  isPinned: boolean;
+  isLocked: boolean;
+  userVote?: 1 | -1 | 0;
+}
+
+export interface ForumCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  color: string;
+  postCount: number;
+}
+
+export interface ForumAnswer {
+  id: string;
+  postId: string;
+  content: string;
+  author: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+    isAdmin?: boolean;
+  };
+  votes: number;
+  replies: number;
+  createdAt: Date;
+  updatedAt: Date;
+  isAccepted: boolean;
+  userVote?: 1 | -1 | 0;
+}
+
 // ------------
 
 export interface InterviewSessionQA {

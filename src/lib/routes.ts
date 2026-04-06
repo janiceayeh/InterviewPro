@@ -3,6 +3,7 @@ export const routes = {
   userLogin: () => "/login",
   dashboard: () => "/dashboard",
   mockInterview: () => "/dashboard/mock-interview",
+  forum: () => "/dashboard/forum",
   mockInterviewHistory: () => "/dashboard/mock-interview/history",
   mockInterviewSession: ({
     category,

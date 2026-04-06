@@ -141,7 +141,7 @@ export function NewQuestionForm({
   question,
 }: NewQuestionFormProps) {
   const [tipInput, setTipInput] = useState("");
-  const [roles, setRoles] = useState<string[]>([]);
+  const [roles, setRoles] = useState<string[]>([...(question?.roles ?? [])]);
   const [roleSelected, setRoleSelected] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { roles: industryRoles, rolesLoading } = useRoles();

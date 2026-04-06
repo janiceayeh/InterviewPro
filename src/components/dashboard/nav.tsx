@@ -21,16 +21,19 @@ import {
   LogOut,
   User,
   Menu,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { routes } from "@/lib/routes";
 
 const navItems = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/mock-interview", label: "Mock Interview", icon: Mic },
-  { href: "/dashboard/copilot", label: "Copilot", icon: MessageSquare },
-  { href: "/dashboard/tips", label: "Tips", icon: Lightbulb },
+  { href: routes.dashboard(), label: "Home", icon: Home },
+  { href: routes.mockInterview(), label: "Mock Interview", icon: Mic },
+  { href: routes.copilot(), label: "Copilot", icon: MessageSquare },
+  { href: routes.tips(), label: "Tips", icon: Lightbulb },
+  { href: routes.forum(), label: "Forum", icon: MessageCircle },
 ];
 
 export function DashboardNav() {
