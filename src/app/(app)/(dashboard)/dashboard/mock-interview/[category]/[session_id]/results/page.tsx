@@ -496,14 +496,14 @@ export default function ResultsPage() {
           onClick={() => router.push("/dashboard/mock-interview")}
         >
           <ChevronLeft className="size-4 mr-2" />
-          Back to Categories
+          Start New Interview
         </Button>
-        <Button
+        {/* <Button
           onClick={() => router.push(`/dashboard/mock-interview/${category}`)}
         >
           <RotateCcw className="size-4 mr-2" />
           Try Again
-        </Button>
+        </Button> */}
         <Button
           variant="outline"
           onClick={() => router.push("/dashboard/mock-interview/history")}

@@ -17,7 +17,6 @@ import {
   Mic,
   MessageSquare,
   Lightbulb,
-  CreditCard,
   Settings,
   LogOut,
   User,
@@ -36,7 +35,7 @@ const navItems = [
 
 export function DashboardNav() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -99,9 +98,9 @@ export function DashboardNav() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="relative size-9 rounded-full"
+                    className="relative size-9 rounded-full bg-primary/10 "
                   >
-                    <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="size-9 rounded-full flex items-center justify-center">
                       <User className="size-5 text-primary" />
                     </div>
                   </Button>
@@ -109,7 +108,9 @@ export function DashboardNav() {
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-medium">{user?.email}</p>
-                    <p className="text-xs text-muted-foreground">Free Plan</p>
+                    <p className="text-xs text-muted-foreground max-w-sm truncate">
+                      {userProfile?.role}
+                    </p>
                   </div>
                   <DropdownMenuSeparator />
                   {/* <DropdownMenuItem asChild>

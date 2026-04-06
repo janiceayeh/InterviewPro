@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import PageLoading from "@/components/page-loading";
 import { routes } from "@/lib/routes";
 import ErrorAlert from "@/components/error-alert/ErrorAlert";
+import { useMockInterviewQuestions } from "@/lib/hooks";
 
 interface Answer {
   questionId: string;
@@ -65,12 +66,9 @@ export default function InterviewSessionPage() {
   const category = params.category as string; // category url parameter
   const interviewSessionId = params.session_id as string;
 
-  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
-  const [questionsLoading, setQuestionsLoading] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [currentAnswer, setCurrentAnswer] = useState("");
-  const [timeLeft, setTimeLeft] = useState(questions[0]?.timeLimit || 120);
   const [isStarted, setIsStarted] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,38 +81,16 @@ export default function InterviewSessionPage() {
     InterviewSession | undefined
   >();
   const [error, setError] = useState<string | undefined>();
+  const { questions, questionsLoading } = useMockInterviewQuestions({
+    userProfile: userProfile,
+    questionCategory: category,
+    startFetch: userProfile && !isStarted,
+  });
+  const [timeLeft, setTimeLeft] = useState(questions[0]?.timeLimit || 120);
 
   const currentQuestion: InterviewQuestion | undefined =
     questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100; // derived/ computed state
-
-  async function questionsGetUnanswered(
-    userLastAnsweredQuestionId: string | undefined,
-  ) {
-    const questionsSnapshot = await getDocs(
-      query(
-        collection(db, COLLECTIONS.interviewQuestions),
-        ...[
-          where("category", "==", category),
-          where(
-            "status",
-            "==",
-            "published" satisfies InterviewQuestion["status"],
-          ),
-          orderBy(documentId()),
-          ...(userLastAnsweredQuestionId
-            ? [startAfter(userLastAnsweredQuestionId)]
-            : []),
-          limit(NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION), // TODO: change me to the desired number of questions for each session.
-        ],
-      ),
-    );
-
-    return questionsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as InterviewQuestion[];
-  }
 
   async function saveAnswer({
     timeSpentOnQuestion,
@@ -289,26 +265,6 @@ export default function InterviewSessionPage() {
     if (percentage > 0.25) return "text-warning";
     return "text-destructive";
   };
-
-  // fetch interview questions from the COLLECTIONS.interviewQuesions collection
-  useEffect(() => {
-    if (userProfile && !isStarted) {
-      setQuestionsLoading(true);
-      (async () => {
-        try {
-          const questions = await questionsGetUnanswered(
-            userProfile.lastAnsweredQuestionId,
-          );
-          setQuestions(questions);
-        } catch (error) {
-          console.error(error);
-          toast.error("Failed to fetch questions. Try again");
-        } finally {
-          setQuestionsLoading(false);
-        }
-      })();
-    }
-  }, [userProfile]);
 
   // get inteview session from database to ensure it exists
   useEffect(() => {

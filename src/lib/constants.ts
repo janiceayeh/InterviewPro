@@ -37,7 +37,7 @@ export type TInterviewSessionEvaluation = z.infer<
   typeof InterviewSessionEvaluationSchema
 >;
 
-export const NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION = 5;
+export const NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION = 3;
 
 export const INTERVIEW_TIP_CATEGORIES = [
   { value: "Preparation", label: "Preparation" },

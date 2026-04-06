@@ -77,7 +77,7 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 h-screen bg-card border-r border-border/50 transition-all duration-300",
+        "fixed left-0 top-0 h-screen bg-card border-r border-border/50 transition-all duration-300 z-1000",
         isCollapsed ? "w-20" : "w-64",
       )}
     >

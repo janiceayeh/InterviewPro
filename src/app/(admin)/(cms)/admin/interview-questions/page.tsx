@@ -104,12 +104,14 @@ export default function InterviewQuestionsPage() {
       {/* Error Alert */}
       {error && (
         <Alert
-          className="mb-6 border-destructive/50 bg-destructive/10"
+          className="mb-6 border-destructive/50 bg-destructive/10 "
           variant="destructive"
         >
           <AlertCircle className="h-4 w-4" />
           <div className="ml-3">
-            <p className="text-sm font-medium text-destructive">{error}</p>
+            <p className="text-sm font-medium text-destructive max-w-md whitespace-normal break-normal">
+              {error}
+            </p>
           </div>
         </Alert>
       )}

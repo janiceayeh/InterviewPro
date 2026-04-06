@@ -183,7 +183,8 @@ export async function POST(
     4. Areas for improvement
     5. Individual scores and feedback for each question (use the provided question IDs)
     6. Category breakdown scores for: communication, relevance, structure, depth, confidence
-    7. Actionable recommendations for improvement`,
+    7. Actionable recommendations for improvement
+    8. If no answer is provided for a particular question, the score should be zero`,
       });
 
       if (!result.output) {

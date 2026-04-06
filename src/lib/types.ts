@@ -28,6 +28,7 @@ export interface InterviewQuestion {
   timeLimit: number; // in seconds
   tips: string[];
   status: "draft" | "published";
+  roles: string[]; // The user roles which the question applies to
   createdAt: Timestamp;
 }
 
@@ -80,6 +81,11 @@ export interface InterviewTipView {
   userId: string;
   tipId: string;
   createdAt: Timestamp;
+}
+
+export interface IndustryRole {
+  category: string;
+  roles: string[]; //array of string type
 }
 
 // ------------

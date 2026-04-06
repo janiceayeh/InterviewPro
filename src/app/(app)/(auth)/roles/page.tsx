@@ -36,40 +36,27 @@ import PageLoading from "@/components/page-loading";
 import { COLLECTIONS } from "@/lib/constants";
 import { routes } from "@/lib/routes";
 import { UserProfile } from "firebase/auth";
-
-interface Role {
-  category: string;
-  roles: string[]; //array of string type
-}
+import { useRoles } from "@/lib/hooks";
 
 export default function RolesPage() {
   const [field, setField] = useState<string>("");
   const [role, setRole] = useState<string>("");
-  const [roleObjects, setRoleObjects] = useState<Role[]>([]);
-  const [loadingRoles, setLoadingRoles] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const { roles: industryRoles, rolesLoading } = useRoles();
 
   const { user } = useAuth();
   const router = useRouter();
 
-  const fields = roleObjects.map((roleObject) => roleObject.category);
+  const fields = industryRoles.map((roleObject) => roleObject.category);
 
   const selectedRoleObject = getField(field);
   const roles = selectedRoleObject?.roles;
 
   function getField(category: string) {
-    const field = roleObjects.find(
+    const field = industryRoles.find(
       (roleObject) => roleObject.category == category,
     );
     return field;
-  }
-
-  async function getRoles() {
-    const rolesSnapshot = await getDocs(
-      query(collection(db, COLLECTIONS.roles)),
-    );
-    const roles = rolesSnapshot.docs.map((doc) => doc.data()) as Role[];
-    return roles;
   }
 
   async function saveRole(field: string, role: string) {
@@ -83,21 +70,6 @@ export default function RolesPage() {
       { merge: true },
     );
   }
-
-  useEffect(() => {
-    async function handleGetRoles() {
-      try {
-        setLoadingRoles(true);
-        const roles = await getRoles();
-        setRoleObjects(roles);
-        setLoadingRoles(false);
-      } catch (error) {
-        toast.error("Failed to fetch roles. Try again");
-        setLoadingRoles(false);
-      }
-    }
-    handleGetRoles();
-  }, []);
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
@@ -122,7 +94,7 @@ export default function RolesPage() {
     return Boolean(field && role);
   }
 
-  if (loadingRoles) {
+  if (rolesLoading) {
     return <PageLoading />;
   }
 

@@ -41,6 +41,8 @@ import {
 import { COLLECTIONS } from "@/lib/constants";
 import { db } from "@/lib/firebase";
 import { InterviewQuestion } from "@/lib/types";
+import { useRoles } from "@/lib/hooks";
+import PageLoading from "../page-loading";
 
 const questionSchema = z.object({
   question: z
@@ -55,6 +57,7 @@ const questionSchema = z.object({
     .max(600, "Maximum 10 minutes")
     .default(120),
   tips: z.array(z.string()).default([]),
+  roles: z.array(z.string()).min(1, "Add at least one role"),
   status: z.enum(["draft", "published"]).default("draft"),
 });
 
@@ -138,7 +141,15 @@ export function NewQuestionForm({
   question,
 }: NewQuestionFormProps) {
   const [tipInput, setTipInput] = useState("");
+  const [roles, setRoles] = useState<string[]>([]);
+  const [roleSelected, setRoleSelected] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { roles: industryRoles, rolesLoading } = useRoles();
+
+  const allRoles = industryRoles?.reduce<string[]>(
+    (acc, r) => [...acc, ...r.roles],
+    [],
+  );
 
   const form = useForm({
     resolver: zodResolver(questionSchema),
@@ -149,6 +160,7 @@ export function NewQuestionForm({
       timeLimit: question?.timeLimit ?? 120,
       tips: question?.tips ?? [],
       status: question?.status ?? "draft",
+      roles: question?.roles ?? [],
     },
   });
 
@@ -332,6 +344,75 @@ export function NewQuestionForm({
             </div>
           )}
         </div>
+
+        <FormField
+          control={form.control}
+          name="roles"
+          render={({ field }) => (
+            <FormItem>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Roles</label>
+                <div className="flex gap-2 items-center">
+                  {rolesLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Select
+                      value={roleSelected}
+                      onValueChange={(role) => {
+                        setRoleSelected(role);
+                        const newRoles = [...roles, role];
+                        setRoles(newRoles);
+                        field.onChange(newRoles);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {allRoles.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddTip}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {roles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {roles.map((role, idx) => (
+                      <Badge key={idx} variant="secondary" className="pl-2">
+                        {role}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newRoles = roles.filter((r) => r !== role);
+                            setRoles(newRoles);
+                            field.onChange(newRoles);
+                          }}
+                          className="ml-1 hover:text-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

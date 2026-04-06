@@ -1,8 +1,29 @@
-import { useState, useMemo } from "react";
-import { COLLECTIONS } from "@/lib/constants";
-import { limit, orderBy, query, startAfter, where } from "firebase/firestore";
-import { InterviewQuestion, InterviewTip, UserProfile } from "./types";
+import { useState, useMemo, useEffect } from "react";
+import {
+  COLLECTIONS,
+  NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION,
+} from "@/lib/constants";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  where,
+} from "firebase/firestore";
+import {
+  InterviewQuestion,
+  InterviewTip,
+  IndustryRole,
+  UserProfile,
+} from "./types";
 import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
+import { db } from "./firebase";
+import { toast } from "sonner";
+import { useAuth } from "./context/auth-context";
 
 export function useInterviewQuestions() {
   const [loading, setLoading] = useState(false);
@@ -14,8 +35,8 @@ export function useInterviewQuestions() {
   const paginator = useMemo(() => {
     const builder: QueryBuilder = (colRef, cursor) => {
       const clauses = [
-        // where("category", "==", "algorithms"),
         orderBy("createdAt", "desc"),
+        // orderBy("category", "asc"),
         cursor ? startAfter(cursor) : undefined,
         limit(PAGE_SIZE),
       ].filter(Boolean) as any[];
@@ -329,5 +350,105 @@ export function useUserProfiles() {
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev,
     hasNext,
+  };
+}
+
+export function useRoles() {
+  const [rolesLoading, setRolesLoading] = useState(false);
+  const [roles, setRoles] = useState<IndustryRole[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setRolesLoading(true);
+        const rolesSnapshot = await getDocs(
+          query(collection(db, COLLECTIONS.roles)),
+        );
+        const roles = rolesSnapshot.docs.map((doc) =>
+          doc.data(),
+        ) as IndustryRole[];
+
+        setRoles(roles);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load roles");
+      } finally {
+        setRolesLoading(false);
+      }
+    })();
+  }, []);
+
+  return {
+    rolesLoading,
+    roles,
+  };
+}
+
+export function useMockInterviewQuestions({
+  startFetch,
+  userProfile,
+  questionCategory,
+}: {
+  userProfile: UserProfile;
+  startFetch: boolean;
+  questionCategory: string;
+}) {
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState<boolean>(true);
+
+  // fetch interview questions from the COLLECTIONS.interviewQuesions collection
+  useEffect(() => {
+    if (startFetch) {
+      setQuestionsLoading(true);
+      (async () => {
+        try {
+          const lastQuestionDocSnap = userProfile.lastAnsweredQuestionId
+            ? await getDoc(
+                doc(
+                  db,
+                  COLLECTIONS.interviewQuestions,
+                  userProfile.lastAnsweredQuestionId,
+                ),
+              )
+            : null;
+
+          const questionsSnapshot = await getDocs(
+            query(
+              collection(db, COLLECTIONS.interviewQuestions),
+              ...[
+                where("category", "==", questionCategory),
+                where("roles", "array-contains", userProfile?.role),
+                where(
+                  "status",
+                  "==",
+                  "published" satisfies InterviewQuestion["status"],
+                ),
+                orderBy("createdAt", "desc"),
+                ...(lastQuestionDocSnap
+                  ? [startAfter(lastQuestionDocSnap)]
+                  : []),
+                limit(NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION), // TODO: change me to the desired number of questions for each session.
+              ],
+            ),
+          );
+
+          const questions = questionsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as InterviewQuestion[];
+          setQuestions(questions);
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to fetch questions. Try again");
+        } finally {
+          setQuestionsLoading(false);
+        }
+      })();
+    }
+  }, [userProfile, startFetch, questionCategory]);
+
+  return {
+    questions,
+    questionsLoading,
   };
 }

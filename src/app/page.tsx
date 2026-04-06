@@ -3,47 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import {
-  Mic,
-  MessageSquare,
-  Lightbulb,
-  ArrowRight,
-  CheckCircle2,
-  Sparkles,
-  BarChart3,
-  Users,
-  Shield,
-} from "lucide-react";
-
-const features = [
-  {
-    icon: Mic,
-    title: "Mock Interview Prep",
-    description:
-      "Timed practice sessions with AI-powered feedback and detailed performance reports.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Interview Copilot",
-    description:
-      "Real-time AI chatbot that simulates actual interview conversations.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Expert Tips",
-    description:
-      "Curated advice from industry professionals with interactive Q&A.",
-  },
-];
-
-const benefits = [
-  "AI-powered answer evaluation",
-  "Personalized improvement recommendations",
-  "Real-time feedback and coaching",
-  "Comprehensive performance analytics",
-  "Practice at your own pace",
-  "Industry-specific question banks",
-];
+import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function LandingPage() {
   return (
