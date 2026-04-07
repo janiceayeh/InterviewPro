@@ -119,19 +119,26 @@ export interface ForumAnswer {
   id: string;
   postId: string;
   content: string;
-  author: {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-    isAdmin?: boolean;
-  };
+  authorId: string;
   votes: number;
   replies: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
   isAccepted: boolean;
-  userVote?: 1 | -1 | 0;
+}
+
+export interface ForumPostViews {
+  id: string;
+  createdAt: Timestamp;
+  userId: string;
+  postId: string;
+}
+
+export interface ForumPostVotes {
+  id: string;
+  createdAt: Timestamp;
+  userId: string;
+  postId: string;
 }
 
 // ------------

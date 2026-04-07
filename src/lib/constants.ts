@@ -11,6 +11,9 @@ export const COLLECTIONS = {
   interviewTipHelpfuls: "interview-tip-helpfuls",
   interviewTipViews: "interview-tip-views",
   forumPosts: "forum-posts",
+  forumPostAnswers: "forum-post-answers",
+  forumPostViews: "forum-post-views",
+  forumPostVotes: "forum-post-votes",
 };
 
 export const InterviewSessionEvaluationSchema = z.object({
