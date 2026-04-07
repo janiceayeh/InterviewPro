@@ -4,6 +4,9 @@ export const routes = {
   dashboard: () => "/dashboard",
   mockInterview: () => "/dashboard/mock-interview",
   forum: () => "/dashboard/forum",
+  newForumPost: () => "/dashboard/forum/new",
+  forumPost: ({ postId }: { postId: string }) =>
+    `/dashboard/forum/posts/${postId}`,
   mockInterviewHistory: () => "/dashboard/mock-interview/history",
   mockInterviewSession: ({
     category,

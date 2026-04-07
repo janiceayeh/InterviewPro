@@ -8,65 +8,41 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CategoryFilter } from "@/components/forum/category-filter";
 import { useAuth } from "@/lib/context/auth-context";
-import type { ForumPost } from "@/lib/types";
-import { Plus, MessageCircle, ThumbsUp, Settings } from "lucide-react";
+import {
+  Plus,
+  MessageCircle,
+  ThumbsUp,
+  CircleQuestionMarkIcon,
+} from "lucide-react";
 import { motion } from "framer-motion";
+import { routes } from "@/lib/routes";
+import { useForumPosts } from "@/lib/hooks";
+import PageLoading from "@/components/page-loading";
+import ms from "ms";
 
 type SortBy = "recent" | "popular" | "unanswered";
 
 export default function ForumPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [posts, setPosts] = useState<ForumPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState<SortBy>("recent");
   const [searchQuery, setSearchQuery] = useState("");
+  const { first, next, previous, hasNext, hasPrev, loading, forumPosts } =
+    useForumPosts();
 
-  useEffect(() => {
-    fetchPosts();
-  }, [selectedCategory, sortBy]);
+  const noForumPosts = forumPosts?.length === 0;
 
-  const fetchPosts = async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (selectedCategory !== "all")
-        params.append("category", selectedCategory);
-      params.append("sortBy", sortBy);
-
-      const response = await fetch(`/api/forum/posts?${params}`);
-      const data = await response.json();
-      setPosts(data.posts || []);
-    } catch (error) {
-      console.error("[v0] Failed to fetch posts:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams({ search: query });
-      if (selectedCategory !== "all")
-        params.append("category", selectedCategory);
-
-      const response = await fetch(`/api/forum/posts?${params}`);
-      const data = await response.json();
-      setPosts(data.posts || []);
-    } catch (error) {
-      console.error("[v0] Search failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleSearch = async (query: string) => {};
 
   const handleClear = () => {
     setSearchQuery("");
-    fetchPosts();
+    first();
   };
+
+  useEffect(() => {
+    first();
+  }, []);
 
   return (
     <>
@@ -128,31 +104,23 @@ export default function ForumPage() {
               <div className="space-y-4">
                 <div className="text-center">
                   <p className="text-xs md:text-sm text-muted-foreground mb-2">
-                    Post anonymously as
+                    Ask for help from the community
                   </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Settings className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-                    </div>
-                    <p className="font-medium text-foreground text-xs md:text-sm">
-                      Interview Candidate
-                    </p>
-                  </div>
                 </div>
 
                 {user && (
                   <Button
                     asChild
-                    className="w-full rounded-full bg-foreground hover:bg-foreground/90 text-background text-sm"
+                    className="w-full rounded-full bg-foreground hover:bg-foreground/90 text-background text-sm py-6"
                     size="sm"
                   >
                     <Link
-                      href="/dashboard/forum/new"
+                      href={routes.newForumPost()}
                       className="flex items-center justify-center gap-2"
                     >
-                      <Plus className="w-4 h-4" />
-                      <span className="hidden sm:inline">Create post</span>
+                      <span className="hidden sm:inline">Ask Question</span>
                       <span className="sm:hidden">Create</span>
+                      <Plus size={30} />
                     </Link>
                   </Button>
                 )}
@@ -206,34 +174,32 @@ export default function ForumPage() {
 
             {/* Posts Feed */}
             <div className="space-y-3">
-              {isLoading ? (
+              {loading ? (
                 <Card className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Loading posts...
-                  </p>
+                  <PageLoading />
                 </Card>
-              ) : posts.length === 0 ? (
+              ) : noForumPosts ? (
                 <Card className="p-6 text-center">
                   <p className="text-sm text-muted-foreground">
                     No posts found
                   </p>
                 </Card>
               ) : (
-                posts.map((post) => (
+                forumPosts.map((post) => (
                   <motion.div
                     key={post.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="cursor-pointer"
                     onClick={() =>
-                      router.push(`/dashboard/forum/posts/${post.id}`)
+                      router.push(routes.forumPost({ postId: post.id }))
                     }
                   >
                     <Card className="p-3 md:p-4 hover:shadow-md transition-all hover:border-primary/30">
                       <div className="flex gap-3 md:gap-4">
                         {/* Author Avatar */}
-                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Settings className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                          <CircleQuestionMarkIcon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                         </div>
 
                         {/* Content */}
@@ -250,7 +216,7 @@ export default function ForumPage() {
                             <button className="flex items-center gap-1 hover:text-primary transition-colors">
                               <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
                               <span className="text-foreground font-medium">
-                                {post.votes}
+                                {post.votes ?? 0}
                               </span>
                             </button>
                             <button className="flex items-center gap-1 hover:text-primary transition-colors">
@@ -259,17 +225,19 @@ export default function ForumPage() {
                                 {post.answers}
                               </span>
                             </button>
-                            <div className="flex items-center gap-1">
+                            {/* <div className="flex items-center gap-1">
                               <span className="text-xs">😊😍😢</span>
                               <span className="text-foreground font-medium text-xs md:text-sm">
-                                {Math.floor(post.votes * 1.5)}
+                                {post.votes ?? 0}
                               </span>
-                            </div>
+                            </div> */}
                           </div>
                         </div>
 
-                        <div className="text-xs text-muted-foreground text-right flex-shrink-0 whitespace-nowrap">
-                          <p>2w</p>
+                        <div className="text-xs text-muted-foreground text-right shrink-0 whitespace-nowrap">
+                          <p>
+                            {ms(Date.now() - post.createdAt?.toMillis())} ago
+                          </p>
                         </div>
                       </div>
                     </Card>
@@ -277,6 +245,23 @@ export default function ForumPage() {
                 ))
               )}
             </div>
+
+            {!noForumPosts && (
+              <div className="w-full flex justify-center items-center">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    disabled={!hasPrev}
+                    onClick={previous}
+                  >
+                    Previous
+                  </Button>
+                  <Button disabled={!hasNext} onClick={next}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* Right Sidebar - Bowls/Communities - Hidden on mobile */}

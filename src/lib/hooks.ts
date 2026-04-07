@@ -19,6 +19,7 @@ import {
   InterviewTip,
   IndustryRole,
   UserProfile,
+  ForumPost,
 } from "./types";
 import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
 import { db } from "./firebase";
@@ -450,5 +451,112 @@ export function useMockInterviewQuestions({
   return {
     questions,
     questionsLoading,
+  };
+}
+
+export function useForumPosts() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
+  const [hasNext, setHasNext] = useState<boolean>(false);
+  const [hasPrev, setHasPrev] = useState<boolean>(false);
+
+  const paginator = useMemo(() => {
+    const builder: QueryBuilder = (colRef, cursor) => {
+      const clauses = [
+        orderBy("createdAt", "desc"),
+        cursor ? startAfter(cursor) : undefined,
+        limit(5),
+      ].filter(Boolean) as any[];
+      return query(colRef, ...clauses);
+    };
+    return new Paginator<ForumPost>(COLLECTIONS.forumPosts, builder);
+  }, []);
+
+  async function next() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await paginator.next();
+      if (res) {
+        const { hasNext, hasPrev, items } = res;
+        setHasNext(hasNext);
+        setHasPrev(hasPrev);
+        setForumPosts(items);
+      }
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function previous() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await paginator.previous();
+      if (res) {
+        const { hasPrev, hasNext, items } = res;
+        setHasPrev(hasPrev);
+        setHasNext(hasNext);
+        setForumPosts(items);
+      }
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function first() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { hasNext, hasPrev, items } = await paginator.fetchPage(0);
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setForumPosts(items);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function refetch() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const currentPage = paginator.getCurrentPageIndex();
+      const { hasNext, hasPrev, items } =
+        await paginator.fetchPage(currentPage);
+
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setForumPosts(items);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return {
+    loading,
+    error,
+    forumPosts,
+    next,
+    previous,
+    first,
+    refetch,
+    reset: () => paginator.reset(),
+    pageIndex: paginator.getCurrentPageIndex(),
+    hasPrev,
+    hasNext,
   };
 }
