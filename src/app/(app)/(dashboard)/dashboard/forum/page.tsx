@@ -19,17 +19,26 @@ import { routes } from "@/lib/routes";
 import { useForumPosts } from "@/lib/hooks";
 import PageLoading from "@/components/page-loading";
 import ms from "ms";
-
-type SortBy = "recent" | "popular" | "unanswered";
+import { toast } from "sonner";
+import { ForumPostSortBy } from "@/lib/types";
 
 export default function ForumPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState<SortBy>("recent");
+  const [sortBy, setSortBy] = useState<ForumPostSortBy>("recent");
   const [searchQuery, setSearchQuery] = useState("");
-  const { first, next, previous, hasNext, hasPrev, loading, forumPosts } =
-    useForumPosts();
+  const {
+    first,
+    next,
+    previous,
+    hasNext,
+    hasPrev,
+    loading,
+    forumPosts,
+    error,
+    refetch,
+  } = useForumPosts({ category: selectedCategory, sortBy: sortBy });
 
   const noForumPosts = forumPosts?.length === 0;
 
@@ -43,6 +52,18 @@ export default function ForumPage() {
   useEffect(() => {
     first();
   }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [selectedCategory, sortBy]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to fetch posts");
+    }
+  }, [error]);
+
+  console.log(error);
 
   return (
     <>

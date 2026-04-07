@@ -103,7 +103,6 @@ export interface ForumPost {
   isAnswered: boolean;
   isPinned: boolean;
   isLocked: boolean;
-  userVote?: 1 | -1 | 0;
 }
 
 export interface ForumCategory {
@@ -163,3 +162,5 @@ export type ApiResponse<D> = {
   data: D | null;
   error: string | null;
 };
+
+export type ForumPostSortBy = "recent" | "popular" | "unanswered";

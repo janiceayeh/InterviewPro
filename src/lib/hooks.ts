@@ -20,6 +20,7 @@ import {
   IndustryRole,
   UserProfile,
   ForumPost,
+  ForumPostSortBy,
 } from "./types";
 import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
 import { db } from "./firebase";
@@ -454,7 +455,11 @@ export function useMockInterviewQuestions({
   };
 }
 
-export function useForumPosts() {
+export function useForumPosts(options?: {
+  category: string;
+  sortBy: ForumPostSortBy;
+}) {
+  console.log({ options });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
@@ -464,14 +469,21 @@ export function useForumPosts() {
   const paginator = useMemo(() => {
     const builder: QueryBuilder = (colRef, cursor) => {
       const clauses = [
-        orderBy("createdAt", "desc"),
+        options?.category && options.category !== "all"
+          ? where("category", "==", options.category)
+          : undefined,
+        options?.sortBy === "recent" ? orderBy("createdAt", "desc") : undefined,
+        options?.sortBy === "popular" ? orderBy("views", "desc") : undefined,
+        options?.sortBy === "unanswered"
+          ? orderBy("answers", "asc")
+          : undefined,
         cursor ? startAfter(cursor) : undefined,
         limit(5),
       ].filter(Boolean) as any[];
       return query(colRef, ...clauses);
     };
     return new Paginator<ForumPost>(COLLECTIONS.forumPosts, builder);
-  }, []);
+  }, [options]);
 
   async function next() {
     try {
