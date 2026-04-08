@@ -8,18 +8,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CategoryFilter } from "@/components/forum/category-filter";
 import { useAuth } from "@/lib/context/auth-context";
-import {
-  Plus,
-  MessageCircle,
-  ThumbsUp,
-  CircleQuestionMarkIcon,
-  Eye,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { routes } from "@/lib/routes";
 import { useForumPosts } from "@/lib/hooks";
 import PageLoading from "@/components/page-loading";
-import ms from "ms";
 import { toast } from "sonner";
 import { ForumPostSortBy } from "@/lib/types";
 import ForumPostCard from "@/components/forum/ForumPostCard";
@@ -64,8 +57,6 @@ export default function ForumPage() {
       toast.error("Failed to fetch posts");
     }
   }, [error]);
-
-  console.log(error);
 
   return (
     <>
@@ -213,10 +204,6 @@ export default function ForumPage() {
                     key={post.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="cursor-pointer"
-                    onClick={() =>
-                      router.push(routes.forumPost({ postId: post.id }))
-                    }
                   >
                     <ForumPostCard post={post} />
                   </motion.div>

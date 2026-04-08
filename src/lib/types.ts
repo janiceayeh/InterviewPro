@@ -127,18 +127,19 @@ export interface ForumAnswer {
   isAccepted: boolean;
 }
 
-export interface ForumPostViews {
+export interface ForumPostView {
   id: string;
   createdAt: Timestamp;
   userId: string;
   postId: string;
 }
 
-export interface ForumPostVotes {
+export interface ForumPostVote {
   id: string;
   createdAt: Timestamp;
   userId: string;
   postId: string;
+  voteType: "upvote" | "downvote";
 }
 
 // ------------

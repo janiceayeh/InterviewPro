@@ -459,7 +459,6 @@ export function useForumPosts(options?: {
   category: string;
   sortBy: ForumPostSortBy;
 }) {
-  console.log({ options });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);

@@ -23,6 +23,7 @@ import { COLLECTIONS } from "@/lib/constants";
 import PageLoading from "@/components/page-loading";
 import { routes } from "@/lib/routes";
 import ms from "ms";
+import { ForumPostVoteButton } from "@/components/forum/ForumPostVoteButton";
 
 function useForumPost({ postId }: { postId: string }) {
   const [forumPostLoading, setForumPostLoading] = useState(false);
@@ -40,14 +41,14 @@ function useForumPost({ postId }: { postId: string }) {
             doc(db, COLLECTIONS.forumPosts, postId),
           );
           const post = postSnap.data() as ForumPost;
-          setForumPost(post);
+          setForumPost({ id: postSnap.id, ...post });
 
           if (post) {
             const authorSnap = await getDoc(
               doc(db, COLLECTIONS.users, post.authorId),
             );
             const author = authorSnap.data() as UserProfile;
-            setForumPostAuthor(author);
+            setForumPostAuthor({ id: authorSnap.id, ...author });
           }
         }
       } catch (error) {
@@ -68,7 +69,6 @@ function useForumPost({ postId }: { postId: string }) {
 
 export default function PostDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { user } = useAuth();
   const postId = params.postId as string;
 
@@ -149,12 +149,7 @@ export default function PostDetailPage() {
 
           {/* Engagement Metrics */}
           <div className="flex items-center gap-4 py-3 border-y border-border">
-            <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-              <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="text-foreground font-medium">
-                {forumPost.votes}
-              </span>
-            </button>
+            <ForumPostVoteButton post={forumPost} />
             <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
               <MessageCircle className="w-4 h-4" />
               <span className="text-foreground font-medium">

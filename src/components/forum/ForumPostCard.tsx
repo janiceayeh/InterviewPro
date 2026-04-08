@@ -1,13 +1,10 @@
-import {
-  CircleQuestionMarkIcon,
-  ThumbsUp,
-  MessageCircle,
-  Eye,
-} from "lucide-react";
+import { CircleQuestionMarkIcon, MessageCircle, Eye } from "lucide-react";
 import ms from "ms";
 import { Card } from "../ui/card";
 import { ForumPost } from "@/lib/types";
 import { ForumPostVoteButton } from "./ForumPostVoteButton";
+import Link from "next/link";
+import { routes } from "@/lib/routes";
 
 type Props = {
   post: ForumPost;
@@ -24,24 +21,30 @@ export default function ForumPostCard({ post }: Props) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground mb-1 line-clamp-2 text-sm md:text-base">
+          <Link
+            href={routes.forumPost({ postId: post.id })}
+            className="hover:text-primary font-semibold text-foreground mb-1 line-clamp-2 text-sm md:text-base"
+          >
             {post.title}
-          </h3>
+          </Link>
           <p className="text-xs md:text-sm text-foreground mb-2 line-clamp-2">
             {post.content}
           </p>
 
           {/* Engagement Metrics */}
-          <div className="flex items-center gap-3 text-xs md:text-sm text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-3 text-xs md:text-sm text-muted-foreground flex-wrap mt-4">
             <ForumPostVoteButton post={post} />
-            <button className="flex items-center gap-1 hover:text-primary transition-colors">
-              <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="text-foreground font-medium">
-                {post.answers}
-              </span>
-            </button>
+
+            <Link href={routes.forumPost({ postId: post.id })}>
+              <button className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
+                <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-foreground font-medium">
+                  {post.answers}
+                </span>
+              </button>
+            </Link>
             <div className="flex items-center gap-1">
-              <Eye className="size-4" />
+              <Eye className="w-3 h-3 md:w-4 md:h-4" />
               <span className="font-medium text-xs">{post.views}</span>
             </div>
           </div>
