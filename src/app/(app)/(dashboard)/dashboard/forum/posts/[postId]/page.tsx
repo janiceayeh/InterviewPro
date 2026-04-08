@@ -1,29 +1,41 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/context/auth-context";
-import type { ForumPost, ForumAnswer, UserProfile } from "@/lib/types";
+import type {
+  ForumPost,
+  ForumAnswer,
+  UserProfile,
+  ForumPostView,
+} from "@/lib/types";
 import { toast } from "sonner";
 import {
   MessageCircle,
   Loader2,
   CircleQuestionMarkIcon,
   ChevronRight,
-  ThumbsUp,
+  User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/lib/constants";
 import PageLoading from "@/components/page-loading";
 import { routes } from "@/lib/routes";
 import ms from "ms";
 import { ForumPostVoteButton } from "@/components/forum/ForumPostVoteButton";
+import ForumPostViewCount from "@/components/forum/ForumPostViewCount";
 
 function useForumPost({ postId }: { postId: string }) {
   const [forumPostLoading, setForumPostLoading] = useState(false);
@@ -88,6 +100,34 @@ export default function PostDetailPage() {
     toast.success("Link copied to clipboard!");
   };
 
+  // Upsert post views record
+  useEffect(() => {
+    async function increasePostViewCount() {
+      if (forumPost && user) {
+        try {
+          // deterministic doc id ensures single doc per (post,user)
+          const deterministicId = `${forumPost?.id}_${user?.uid}`;
+          const ref = doc(db, COLLECTIONS.forumPostViews, deterministicId);
+          await setDoc(
+            ref,
+            {
+              postId: forumPost?.id,
+              userId: user?.uid,
+              createdAt: serverTimestamp() as Timestamp,
+            } satisfies Omit<ForumPostView, "id">,
+            {
+              merge: true,
+            },
+          );
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }
+
+    increasePostViewCount();
+  }, [forumPost, user]);
+
   if (!forumPostLoading && !forumPost) {
     return (
       <div className="flex justify-center py-10">
@@ -119,14 +159,14 @@ export default function PostDetailPage() {
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                <CircleQuestionMarkIcon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                <User className="w-4 h-4 md:w-5 md:h-5 text-primary" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">
                   {forumPostAuthor?.firstname}
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  First time poster
+                  {forumPostAuthor?.role}
                 </p>
               </div>
             </div>
@@ -150,12 +190,15 @@ export default function PostDetailPage() {
           {/* Engagement Metrics */}
           <div className="flex items-center gap-4 py-3 border-y border-border">
             <ForumPostVoteButton post={forumPost} />
-            <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-foreground font-medium">
-                {forumPost.answers}
-              </span>
-            </button>
+            <Link href="#post_answers">
+              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-foreground font-medium">
+                  {"forumPost.answers"}
+                </span>
+              </button>
+            </Link>
+            <ForumPostViewCount post={forumPost} />
           </div>
         </div>
 
@@ -201,11 +244,13 @@ export default function PostDetailPage() {
         </div>
 
         {/* Answers/Comments Section */}
-        <div className="space-y-4 py-4 border-t border-border">
+        <div
+          id="post_answers"
+          className="space-y-4 py-4 border-t border-border"
+        >
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground text-sm">
-              {forumPost.answers}{" "}
-              {forumPost.answers === 1 ? "Comment" : "Comments"}
+              {0} {answers.length === 1 ? "Comment" : "Comments"}
             </h3>
             {/* TODO: Sort comments/answers */}
             {/* <Button variant="ghost" size="sm" className="text-xs h-7">

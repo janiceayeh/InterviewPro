@@ -95,14 +95,9 @@ export interface ForumPost {
   category: string;
   tags: string[];
   authorId: string; // User ID of the author
-  views: number;
-  votes: number;
-  answers: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   isAnswered: boolean;
-  isPinned: boolean;
-  isLocked: boolean;
 }
 
 export interface ForumCategory {

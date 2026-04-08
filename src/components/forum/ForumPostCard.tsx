@@ -5,6 +5,7 @@ import { ForumPost } from "@/lib/types";
 import { ForumPostVoteButton } from "./ForumPostVoteButton";
 import Link from "next/link";
 import { routes } from "@/lib/routes";
+import ForumPostViewCount from "./ForumPostViewCount";
 
 type Props = {
   post: ForumPost;
@@ -39,14 +40,11 @@ export default function ForumPostCard({ post }: Props) {
               <button className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
                 <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="text-foreground font-medium">
-                  {post.answers}
+                  {"post.answers"}
                 </span>
               </button>
             </Link>
-            <div className="flex items-center gap-1">
-              <Eye className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="font-medium text-xs">{post.views}</span>
-            </div>
+            <ForumPostViewCount post={post} />
           </div>
         </div>
 

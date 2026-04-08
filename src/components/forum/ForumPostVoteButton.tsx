@@ -45,7 +45,7 @@ function useForumPostVote({ post }: { post: ForumPost }) {
           downvote: prev.downvote + 1,
         }));
       }
-      // deterministic doc id ensures single doc per (tip,user)
+      // deterministic doc id ensures single doc per (post,user)
       const deterministicId = `${post.id}_${user.uid}`;
       const ref = doc(db, COLLECTIONS.forumPostVotes, deterministicId);
       // Use merge so it creates if missing, updates otherwise.
