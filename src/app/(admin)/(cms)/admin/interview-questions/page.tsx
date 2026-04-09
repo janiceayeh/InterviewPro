@@ -86,6 +86,7 @@ export default function InterviewQuestionsPage() {
       await deleteDoc(doc(db, COLLECTIONS.interviewQuestions, questionId));
       refetch();
       setQuestionConfirmDeleteOpen(false);
+      toast.success("Question deleted successfully");
     } catch (error) {
       console.error(error);
       toast.error(`Failed to delete question: ${(error as Error).message}`);

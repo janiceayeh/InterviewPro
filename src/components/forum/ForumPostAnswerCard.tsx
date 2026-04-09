@@ -1,4 +1,4 @@
-import { Loader2, User, Check, DotIcon } from "lucide-react";
+import { Loader2, User, Check, DotIcon, Trash2Icon } from "lucide-react";
 import { ForumPost, ForumPostAnswer } from "@/lib/types";
 import ms from "ms";
 import { useUserProfile } from "@/lib/hooks";
@@ -14,11 +14,23 @@ import {
   limit,
   query,
   where,
+  deleteDoc,
 } from "firebase/firestore";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import ForumPostAnswerForm from "./ForumPostAnswerForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 
 async function acceptAnswer(answer: ForumPostAnswer) {
   try {
@@ -76,6 +88,8 @@ export default function ForumPostAnswerCard({
   const isAnswerAuthor = userId === answer?.authorId;
   const isPostAuthor = userId === post?.authorId;
   const [isEditingAnswer, setIsEditingAnswer] = useState<boolean>(false);
+  const [answerConfirmDelete, setAnswerConfirmDelete] = useState(false);
+  const [answerDeleting, setAnswerDeleting] = useState(false);
 
   async function handleAcceptAnswer() {
     try {
@@ -97,6 +111,21 @@ export default function ForumPostAnswerCard({
     }
   }
 
+  async function deleteAnswer(answerId: string) {
+    try {
+      setAnswerDeleting(true);
+      await deleteDoc(doc(db, COLLECTIONS.forumPostAnswers, answerId));
+      refetchAnswers();
+      setAnswerConfirmDelete(false);
+      toast.success("Answer deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to delete answer: ${(error as Error).message}`);
+    } finally {
+      setAnswerDeleting(false);
+    }
+  }
+
   if (isEditingAnswer) {
     return (
       <ForumPostAnswerForm
@@ -113,88 +142,128 @@ export default function ForumPostAnswerCard({
   }
 
   return (
-    <div key={answer.id} className="border-t border-border pt-4">
-      <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-          <User className="w-4 h-4 text-primary" />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <div>
-              {authorLoading ? (
-                <Loader2 className="size-4 mr-2 animate-spin text-primary" />
-              ) : (
-                <>
-                  <h4 className="font-semibold text-foreground text-sm">
-                    {author?.firstname}
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    {author?.role}
-                  </p>
-                </>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="text-xs text-muted-foreground">
-                {ms(Date.now() - answer?.createdAt?.toMillis())} ago{" "}
-                {answer?.isEdited && (
-                  <span className="text-xs text-muted-foreground">
-                    <DotIcon className="inline" /> Edited
-                  </span>
-                )}
-              </div>
-            </div>
+    <>
+      <div key={answer.id} className="border-t border-border pt-4">
+        <div className="flex gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <User className="w-4 h-4 text-primary" />
           </div>
-          <div className="grid grid-cols-12 gap-2">
-            <p
-              className={cn(
-                "text-xs text-foreground mt-2 leading-relaxed col-span-12",
-                {
-                  "col-span-11": answer?.isAccepted,
-                },
-              )}
-            >
-              {answer.content}
-            </p>
-            {answer?.isAccepted && (
-              <div className="" title="Accepted answer">
-                <Check className="h-10 w-10 text-green-500" strokeWidth={2} />
-              </div>
-            )}
-          </div>
-          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-            <button className="hover:text-primary transition-colors">
-              Like
-            </button>
-            <button className="hover:text-primary transition-colors">
-              Reply
-            </button>
-            <button className="hover:text-primary transition-colors">
-              Share
-            </button>
-            {isPostAuthor && (
-              <button
-                className="hover:text-primary transition-colors cursor-pointer flex items-center"
-                onClick={handleAcceptAnswer}
-                disabled={isAcceptingAnswer}
-              >
-                {isAcceptingAnswer && (
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                {authorLoading ? (
                   <Loader2 className="size-4 mr-2 animate-spin text-primary" />
+                ) : (
+                  <>
+                    <h4 className="font-semibold text-foreground text-sm">
+                      {author?.firstname}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      {author?.role}
+                    </p>
+                  </>
                 )}
-                {isAcceptingAnswer ? "Accepting..." : "Accept answer"}
-              </button>
-            )}
-            {isAnswerAuthor && (
-              <button
-                className="hover:text-primary transition-colors cursor-pointer"
-                onClick={() => setIsEditingAnswer(true)}
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-xs text-muted-foreground">
+                  {ms(Date.now() - answer?.createdAt?.toMillis())} ago{" "}
+                  {answer?.isEdited && (
+                    <span className="text-xs text-muted-foreground">
+                      <DotIcon className="inline" /> Edited
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-12 gap-2">
+              <p
+                className={cn(
+                  "text-xs text-foreground mt-2 leading-relaxed col-span-12",
+                  {
+                    "col-span-11": answer?.isAccepted,
+                  },
+                )}
               >
-                Edit
+                {answer.content}
+              </p>
+              {answer?.isAccepted && (
+                <div className="" title="Accepted answer">
+                  <Check className="h-10 w-10 text-green-500" strokeWidth={2} />
+                </div>
+              )}
+            </div>
+            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+              <button className="hover:text-primary transition-colors">
+                Like
               </button>
-            )}
+              <button className="hover:text-primary transition-colors">
+                Share
+              </button>
+              {isPostAuthor && (
+                <button
+                  className="hover:text-primary transition-colors cursor-pointer flex items-center"
+                  onClick={handleAcceptAnswer}
+                  disabled={isAcceptingAnswer}
+                >
+                  {isAcceptingAnswer && (
+                    <Loader2 className="size-4 mr-2 animate-spin text-primary" />
+                  )}
+                  {isAcceptingAnswer ? "Accepting..." : "Accept answer"}
+                </button>
+              )}
+              {isAnswerAuthor && (
+                <button
+                  className="hover:text-primary transition-colors cursor-pointer"
+                  onClick={() => setIsEditingAnswer(true)}
+                >
+                  Edit
+                </button>
+              )}
+              {isAnswerAuthor && (
+                <button
+                  className="hover:text-primary transition-colors cursor-pointer text-destructive"
+                  onClick={() => setAnswerConfirmDelete(true)}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Confirm Delete Answer */}
+      <AlertDialog
+        open={answerConfirmDelete}
+        onOpenChange={setAnswerConfirmDelete}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+              <Trash2Icon />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this comment. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" disabled={answerDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => deleteAnswer(answer.id)}
+              disabled={answerDeleting}
+            >
+              {answerDeleting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
