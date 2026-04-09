@@ -18,6 +18,7 @@ import { InterviewTip } from "@/lib/types";
 import { Alert } from "@/components/ui/alert";
 import { INTERVIEW_TIP_CATEGORIES } from "@/lib/constants";
 import InterviewTipDetails from "@/components/dashboard/interview-tip-details/InterviewTipDetails";
+import PaginationButtons from "@/components/pagination-buttons/PaginationButtons";
 
 export const tipCategories = [
   { id: "all", label: "All Tips" },
@@ -229,20 +230,12 @@ export default function TipsPage() {
             </Accordion>
 
             {!noTipsFound && (
-              <div className="w-full flex justify-center items-center">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    disabled={!hasPrev}
-                    onClick={previous}
-                  >
-                    Previous
-                  </Button>
-                  <Button disabled={!hasNext} onClick={next}>
-                    Next
-                  </Button>
-                </div>
-              </div>
+              <PaginationButtons
+                previous={previous}
+                hasNext={hasNext}
+                hasPrev={hasPrev}
+                next={next}
+              />
             )}
           </motion.div>
         )}

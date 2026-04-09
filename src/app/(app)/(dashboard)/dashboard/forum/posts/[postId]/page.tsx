@@ -5,22 +5,10 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/context/auth-context";
-import type {
-  ForumPost,
-  ForumAnswer,
-  UserProfile,
-  ForumPostView,
-} from "@/lib/types";
+import type { ForumPost, UserProfile, ForumPostView } from "@/lib/types";
 import { toast } from "sonner";
-import {
-  MessageCircle,
-  Loader2,
-  CircleQuestionMarkIcon,
-  ChevronRight,
-  User,
-} from "lucide-react";
+import { ChevronRight, Loader2, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   doc,
@@ -36,6 +24,13 @@ import { routes } from "@/lib/routes";
 import ms from "ms";
 import { ForumPostVoteButton } from "@/components/forum/ForumPostVoteButton";
 import ForumPostViewCount from "@/components/forum/ForumPostViewCount";
+import ForumPostAnswersCount, {
+  useForumPostAnswersCount,
+} from "@/components/forum/ForumPostAnswersCount";
+import ForumPostAnswerForm from "@/components/forum/ForumPostAnswerForm";
+import ForumPostAnswerCard from "@/components/forum/ForumPostAnswerCard";
+import { useForumPostAnswers } from "@/lib/hooks";
+import PaginationButtons from "@/components/pagination-buttons/PaginationButtons";
 
 function useForumPost({ postId }: { postId: string }) {
   const [forumPostLoading, setForumPostLoading] = useState(false);
@@ -44,31 +39,33 @@ function useForumPost({ postId }: { postId: string }) {
     null,
   );
 
+  async function forumPostGet(postId: string) {
+    try {
+      if (postId) {
+        setForumPostLoading(true);
+        const postSnap = await getDoc(doc(db, COLLECTIONS.forumPosts, postId));
+        const post = postSnap.data() as ForumPost;
+        setForumPost({ id: postSnap.id, ...post });
+
+        if (post) {
+          const authorSnap = await getDoc(
+            doc(db, COLLECTIONS.users, post.authorId),
+          );
+          const author = authorSnap.data() as UserProfile;
+          setForumPostAuthor({ id: authorSnap.id, ...author });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load post");
+    } finally {
+      setForumPostLoading(false);
+    }
+  }
+
   useEffect(() => {
     (async () => {
-      try {
-        if (postId) {
-          setForumPostLoading(true);
-          const postSnap = await getDoc(
-            doc(db, COLLECTIONS.forumPosts, postId),
-          );
-          const post = postSnap.data() as ForumPost;
-          setForumPost({ id: postSnap.id, ...post });
-
-          if (post) {
-            const authorSnap = await getDoc(
-              doc(db, COLLECTIONS.users, post.authorId),
-            );
-            const author = authorSnap.data() as UserProfile;
-            setForumPostAuthor({ id: authorSnap.id, ...author });
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load post");
-      } finally {
-        setForumPostLoading(false);
-      }
+      await forumPostGet(postId);
     })();
   }, [postId]);
 
@@ -76,6 +73,7 @@ function useForumPost({ postId }: { postId: string }) {
     forumPostLoading,
     forumPost,
     forumPostAuthor,
+    forumPostGet,
   };
 }
 
@@ -84,15 +82,25 @@ export default function PostDetailPage() {
   const { user } = useAuth();
   const postId = params.postId as string;
 
-  const [answers, setAnswers] = useState<ForumAnswer[]>([]);
-  const [answerContent, setAnswerContent] = useState("");
-  const [isSubmittingAnswer, setIsSubmitting] = useState(false);
+  const { forumPost, forumPostLoading, forumPostAuthor, forumPostGet } =
+    useForumPost({
+      postId,
+    });
 
-  const { forumPost, forumPostLoading, forumPostAuthor } = useForumPost({
-    postId,
-  });
+  const {
+    first,
+    forumPostAnswers,
+    hasNext,
+    hasPrev,
+    loading: forumPostAnswersLoading,
+    next,
+    pageIndex,
+    previous,
+    refetch,
+    reset,
+  } = useForumPostAnswers(postId);
 
-  const handlePostAnswer = async (e: React.FormEvent) => {};
+  const { forumPostAnswersCount } = useForumPostAnswersCount(postId);
 
   const handleShare = () => {
     const url = `${window.location.origin}/dashboard/forum/posts/${postId}`;
@@ -127,6 +135,10 @@ export default function PostDetailPage() {
 
     increasePostViewCount();
   }, [forumPost, user]);
+
+  useEffect(() => {
+    first();
+  }, []);
 
   if (!forumPostLoading && !forumPost) {
     return (
@@ -191,46 +203,20 @@ export default function PostDetailPage() {
           <div className="flex items-center gap-4 py-3 border-y border-border">
             <ForumPostVoteButton post={forumPost} />
             <Link href="#post_answers">
-              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-foreground font-medium">
-                  {"forumPost.answers"}
-                </span>
-              </button>
+              <ForumPostAnswersCount post={forumPost} />
             </Link>
             <ForumPostViewCount post={forumPost} />
           </div>
         </div>
 
-        {/* Comment Form */}
+        {/* Answer Form */}
         {user && (
-          <div className="space-y-3 py-4 ">
-            <Textarea
-              value={answerContent}
-              onChange={(e) => setAnswerContent(e.target.value)}
-              placeholder=""
-              className="min-h-20 text-sm"
-            />
-            <div className="flex gap-2 justify-between items-center">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  disabled={isSubmittingAnswer || !answerContent.trim()}
-                  onClick={handlePostAnswer}
-                >
-                  {isSubmittingAnswer && (
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                  )}
-                  Comment
-                </Button>
-                <Link href={routes.forum()}>
-                  <Button variant="outline" size="sm">
-                    Cancel
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+          <ForumPostAnswerForm
+            postId={postId}
+            userId={user?.uid}
+            onCreate={first}
+            onUpdate={refetch}
+          />
         )}
 
         {/* Post tags */}
@@ -243,61 +229,51 @@ export default function PostDetailPage() {
             ))}
         </div>
 
-        {/* Answers/Comments Section */}
+        {/* Answers Section */}
         <div
           id="post_answers"
           className="space-y-4 py-4 border-t border-border"
         >
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground text-sm">
-              {0} {answers.length === 1 ? "Comment" : "Comments"}
+              {forumPostAnswersCount}{" "}
+              {forumPostAnswersCount === 1 ? "Comment" : "Comments"}
             </h3>
-            {/* TODO: Sort comments/answers */}
+            {/* TODO: Sort answers */}
             {/* <Button variant="ghost" size="sm" className="text-xs h-7">
               Popular ▼
             </Button> */}
           </div>
 
-          {answers.length > 0 ? (
+          {forumPostAnswersLoading ? (
+            <div className="h-4 flex justify-center items-center">
+              {" "}
+              <Loader2 className="size-4 mr-2 animate-spin text-primary" />
+            </div>
+          ) : forumPostAnswers.length > 0 ? (
             <div className="space-y-4">
-              {answers.map((answer) => (
-                <div key={answer.id} className="border-t border-border pt-4">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <CircleQuestionMarkIcon className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-semibold text-foreground text-sm">
-                            {"answer.author.name"}
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            {ms(Date.now() - answer?.createdAt?.toMillis())} ago
-                          </p>
-                        </div>
-                        <span className="text-xs cursor-pointer hover:text-foreground transition-colors">
-                          ···
-                        </span>
-                      </div>
-                      <p className="text-xs text-foreground mt-2 leading-relaxed">
-                        {answer.content}
-                      </p>
-                      <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                        <button className="hover:text-primary transition-colors">
-                          Like
-                        </button>
-                        <button className="hover:text-primary transition-colors">
-                          Reply
-                        </button>
-                        <button className="hover:text-primary transition-colors">
-                          Share
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {forumPostAnswers.map((answer) => (
+                <ForumPostAnswerCard
+                  key={answer.id}
+                  answer={answer}
+                  userId={user?.uid}
+                  post={forumPost}
+                  onAcceptAnswer={() => {
+                    refetch();
+                    forumPostGet(postId);
+                  }}
+                />
               ))}
+
+              {/* Pagination Buttons */}
+              {forumPostAnswers.length !== 0 && (
+                <PaginationButtons
+                  previous={previous}
+                  hasNext={hasNext}
+                  hasPrev={hasPrev}
+                  next={next}
+                />
+              )}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">

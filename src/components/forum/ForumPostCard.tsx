@@ -1,4 +1,4 @@
-import { CircleQuestionMarkIcon, MessageCircle, Eye } from "lucide-react";
+import { CircleQuestionMarkIcon } from "lucide-react";
 import ms from "ms";
 import { Card } from "../ui/card";
 import { ForumPost } from "@/lib/types";
@@ -6,6 +6,7 @@ import { ForumPostVoteButton } from "./ForumPostVoteButton";
 import Link from "next/link";
 import { routes } from "@/lib/routes";
 import ForumPostViewCount from "./ForumPostViewCount";
+import ForumPostAnswersCount from "./ForumPostAnswersCount";
 
 type Props = {
   post: ForumPost;
@@ -37,12 +38,7 @@ export default function ForumPostCard({ post }: Props) {
             <ForumPostVoteButton post={post} />
 
             <Link href={routes.forumPost({ postId: post.id })}>
-              <button className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
-                <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="text-foreground font-medium">
-                  {"post.answers"}
-                </span>
-              </button>
+              <ForumPostAnswersCount post={post} />
             </Link>
             <ForumPostViewCount post={post} />
           </div>

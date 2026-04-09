@@ -21,6 +21,8 @@ import {
   UserProfile,
   ForumPost,
   ForumPostSortBy,
+  ForumPostAnswer,
+  ForumPostAnswerSortBy,
 } from "./types";
 import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
 import { db } from "./firebase";
@@ -569,5 +571,159 @@ export function useForumPosts(options?: {
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev,
     hasNext,
+  };
+}
+
+export function useForumPostAnswers(
+  postId: string,
+  options?: {
+    sortBy: ForumPostAnswerSortBy;
+  },
+) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [forumPostAnswers, setForumPostAnswers] = useState<ForumPostAnswer[]>(
+    [],
+  );
+  const [hasNext, setHasNext] = useState<boolean>(false);
+  const [hasPrev, setHasPrev] = useState<boolean>(false);
+
+  const paginator = useMemo(() => {
+    const builder: QueryBuilder = (colRef, cursor) => {
+      const clauses = [
+        where("postId", "==", postId),
+        options?.sortBy === "recent" ? orderBy("createdAt", "desc") : undefined,
+        options?.sortBy === "accepted"
+          ? orderBy("isAccepted", "desc")
+          : undefined,
+        cursor ? startAfter(cursor) : undefined,
+        limit(5),
+      ].filter(Boolean) as any[];
+      return query(colRef, ...clauses);
+    };
+    return new Paginator<ForumPostAnswer>(
+      COLLECTIONS.forumPostAnswers,
+      builder,
+    );
+  }, [options]);
+
+  async function next() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await paginator.next();
+      if (res) {
+        const { hasNext, hasPrev, items } = res;
+        setHasNext(hasNext);
+        setHasPrev(hasPrev);
+        setForumPostAnswers(items);
+      }
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function previous() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await paginator.previous();
+      if (res) {
+        const { hasPrev, hasNext, items } = res;
+        setHasPrev(hasPrev);
+        setHasNext(hasNext);
+        setForumPostAnswers(items);
+      }
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function first() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { hasNext, hasPrev, items } = await paginator.fetchPage(0);
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setForumPostAnswers(items);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function refetch() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const currentPage = paginator.getCurrentPageIndex();
+      const { hasNext, hasPrev, items } =
+        await paginator.fetchPage(currentPage);
+
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setForumPostAnswers(items);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return {
+    loading,
+    error,
+    forumPostAnswers,
+    next,
+    previous,
+    first,
+    refetch,
+    reset: () => paginator.reset(),
+    pageIndex: paginator.getCurrentPageIndex(),
+    hasPrev,
+    hasNext,
+  };
+}
+
+export function useUserProfile(userId: string) {
+  const [userProfileLoading, setUserProfileLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfileError, setUserProfileError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function getUserProfile() {
+      if (userId) {
+        try {
+          const userProfileSnap = await getDoc(
+            doc(db, COLLECTIONS.users, userId),
+          );
+          const author = userProfileSnap.data() as UserProfile;
+          setUserProfile({ id: userProfileSnap.id, ...author });
+        } catch (error) {
+          console.error(error);
+          setUserProfileError(error);
+        } finally {
+          setUserProfileLoading(false);
+        }
+      }
+    }
+
+    getUserProfile();
+  }, [userId]);
+
+  return {
+    userProfile,
+    userProfileLoading,
+    userProfileError,
   };
 }

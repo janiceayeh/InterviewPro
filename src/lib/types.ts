@@ -98,6 +98,7 @@ export interface ForumPost {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   isAnswered: boolean;
+  hasAcceptedAnswer: boolean;
 }
 
 export interface ForumCategory {
@@ -110,16 +111,15 @@ export interface ForumCategory {
   postCount: number;
 }
 
-export interface ForumAnswer {
+export interface ForumPostAnswer {
   id: string;
   postId: string;
   content: string;
   authorId: string;
-  votes: number;
-  replies: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   isAccepted: boolean;
+  isEdited: boolean;
 }
 
 export interface ForumPostView {
@@ -167,3 +167,4 @@ export type ApiResponse<D> = {
 };
 
 export type ForumPostSortBy = "recent" | "popular" | "unanswered";
+export type ForumPostAnswerSortBy = "recent" | "accepted" | "relevant";

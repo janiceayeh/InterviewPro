@@ -71,12 +71,8 @@ function useForumPostCreate() {
         ...data,
         authorId: user?.uid,
         createdAt: serverTimestamp() as Timestamp,
-        answers: 0,
-        views: 0,
-        votes: 0,
         isAnswered: false,
-        isLocked: false,
-        isPinned: false,
+        hasAcceptedAnswer: false,
       } satisfies Partial<ForumPost>);
 
       return { ok: true, newPost };

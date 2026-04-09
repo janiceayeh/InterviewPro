@@ -16,6 +16,7 @@ import PageLoading from "@/components/page-loading";
 import { toast } from "sonner";
 import { ForumPostSortBy } from "@/lib/types";
 import ForumPostCard from "@/components/forum/ForumPostCard";
+import PaginationButtons from "@/components/pagination-buttons/PaginationButtons";
 
 export default function ForumPage() {
   const { user } = useAuth();
@@ -213,20 +214,12 @@ export default function ForumPage() {
 
             {/* Pagination Buttons */}
             {!noForumPosts && (
-              <div className="w-full flex justify-center items-center">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    disabled={!hasPrev}
-                    onClick={previous}
-                  >
-                    Previous
-                  </Button>
-                  <Button disabled={!hasNext} onClick={next}>
-                    Next
-                  </Button>
-                </div>
-              </div>
+              <PaginationButtons
+                previous={previous}
+                hasNext={hasNext}
+                hasPrev={hasPrev}
+                next={next}
+              />
             )}
           </motion.div>
 
