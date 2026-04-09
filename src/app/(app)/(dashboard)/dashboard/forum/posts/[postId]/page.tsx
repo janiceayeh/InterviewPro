@@ -94,10 +94,8 @@ export default function PostDetailPage() {
     hasPrev,
     loading: forumPostAnswersLoading,
     next,
-    pageIndex,
     previous,
     refetch,
-    reset,
   } = useForumPostAnswers(postId);
 
   const { forumPostAnswersCount } = useForumPostAnswersCount(postId);
@@ -262,6 +260,7 @@ export default function PostDetailPage() {
                     refetch();
                     forumPostGet(postId);
                   }}
+                  refetchAnswers={refetch}
                 />
               ))}
 

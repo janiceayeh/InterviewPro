@@ -32,6 +32,7 @@ import {
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/lib/constants";
 import { ForumPost, ForumPostAnswer } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 const AnswerSchema = z.object({
   content: z
@@ -117,6 +118,7 @@ type Props = {
   answer?: ForumPostAnswer;
   onUpdate?: () => void;
   onCreate?: (answerId: string) => void;
+  onCancel?: () => void;
 };
 export default function ForumPostAnswerForm({
   postId,
@@ -124,13 +126,15 @@ export default function ForumPostAnswerForm({
   answer,
   onUpdate,
   onCreate,
+  onCancel,
 }: Props) {
+  const router = useRouter();
   const [isSubmittingAnswer, setIsSubmitting] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(AnswerSchema),
     defaultValues: {
-      content: "",
+      content: answer?.content ?? "",
     },
   });
 
@@ -150,7 +154,7 @@ export default function ForumPostAnswerForm({
           toast.error(`Failed to update answer: ${error.message}`);
         }
         if (ok) {
-          toast.error("Update successful");
+          toast.success("Update successful");
           form.reset();
           onUpdate?.();
         }
@@ -198,6 +202,7 @@ export default function ForumPostAnswerForm({
                   <div className="flex gap-2 justify-between items-center">
                     <div className="flex gap-2">
                       <Button
+                        type="submit"
                         size="sm"
                         disabled={isSubmittingAnswer || !answerContent.trim()}
                       >
@@ -206,11 +211,16 @@ export default function ForumPostAnswerForm({
                         )}
                         Answer
                       </Button>
-                      <Link href={routes.forum()}>
-                        <Button variant="outline" size="sm">
-                          Cancel
-                        </Button>
-                      </Link>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          onCancel ? onCancel() : router.push(routes.forum())
+                        }
+                      >
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 </div>

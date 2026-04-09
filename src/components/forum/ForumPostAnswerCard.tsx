@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import ForumPostAnswerForm from "./ForumPostAnswerForm";
 
 async function acceptAnswer(answer: ForumPostAnswer) {
   try {
@@ -60,18 +61,21 @@ type Props = {
   post: ForumPost;
   userId: string;
   onAcceptAnswer: () => void;
+  refetchAnswers: () => void;
 };
 export default function ForumPostAnswerCard({
   answer,
   userId,
   post,
   onAcceptAnswer,
+  refetchAnswers,
 }: Props) {
   const { userProfile: author, userProfileLoading: authorLoading } =
     useUserProfile(answer?.authorId);
   const [isAcceptingAnswer, setIsAcceptingAnswer] = useState(false);
   const isAnswerAuthor = userId === answer?.authorId;
   const isPostAuthor = userId === post?.authorId;
+  const [isEditingAnswer, setIsEditingAnswer] = useState<boolean>(false);
 
   async function handleAcceptAnswer() {
     try {
@@ -91,6 +95,21 @@ export default function ForumPostAnswerCard({
     } finally {
       setIsAcceptingAnswer(false);
     }
+  }
+
+  if (isEditingAnswer) {
+    return (
+      <ForumPostAnswerForm
+        postId={post?.id}
+        userId={userId}
+        answer={answer}
+        onUpdate={() => {
+          setIsEditingAnswer(false);
+          refetchAnswers();
+        }}
+        onCancel={() => setIsEditingAnswer(false)}
+      />
+    );
   }
 
   return (
@@ -163,6 +182,14 @@ export default function ForumPostAnswerCard({
                   <Loader2 className="size-4 mr-2 animate-spin text-primary" />
                 )}
                 {isAcceptingAnswer ? "Accepting..." : "Accept answer"}
+              </button>
+            )}
+            {isAnswerAuthor && (
+              <button
+                className="hover:text-primary transition-colors cursor-pointer"
+                onClick={() => setIsEditingAnswer(true)}
+              >
+                Edit
               </button>
             )}
           </div>
