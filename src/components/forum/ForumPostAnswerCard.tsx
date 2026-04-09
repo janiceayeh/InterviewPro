@@ -31,6 +31,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
+import { ForumPostAnswerVoteButton } from "./ForumPostAnswerVoteButton";
 
 async function acceptAnswer(answer: ForumPostAnswer) {
   try {
@@ -193,9 +194,7 @@ export default function ForumPostAnswerCard({
               )}
             </div>
             <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-              <button className="hover:text-primary transition-colors">
-                Like
-              </button>
+              <ForumPostAnswerVoteButton answer={answer} />
               <button className="hover:text-primary transition-colors">
                 Share
               </button>

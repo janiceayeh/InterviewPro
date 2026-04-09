@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,7 +19,6 @@ import PaginationButtons from "@/components/pagination-buttons/PaginationButtons
 
 export default function ForumPage() {
   const { user } = useAuth();
-  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState<ForumPostSortBy>("recent");
   const [searchQuery, setSearchQuery] = useState("");

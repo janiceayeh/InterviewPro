@@ -14,6 +14,7 @@ export const COLLECTIONS = {
   forumPostAnswers: "forum-post-answers",
   forumPostViews: "forum-post-views",
   forumPostVotes: "forum-post-votes",
+  forumPostAnswerVotes: "forum-post-answer-votes",
 };
 
 export const InterviewSessionEvaluationSchema = z.object({

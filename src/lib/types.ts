@@ -63,7 +63,6 @@ export interface InterviewTip {
   keyTakeaways: string[];
   examples: string[];
   viewsCount?: number;
-  helpfulCount: number | null;
   status: "draft" | "published";
   createdAt: Timestamp;
 }
@@ -134,6 +133,14 @@ export interface ForumPostVote {
   createdAt: Timestamp;
   userId: string;
   postId: string;
+  voteType: "upvote" | "downvote";
+}
+
+export interface ForumPostAnswerVote {
+  id: string;
+  createdAt: Timestamp;
+  userId: string;
+  answerId: string;
   voteType: "upvote" | "downvote";
 }
 

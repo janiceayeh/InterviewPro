@@ -1,7 +1,7 @@
 "use client";
 
 import { ThumbsUp, ThumbsDown } from "lucide-react";
-import { ForumPost, ForumPostVote } from "@/lib/types";
+import { ForumPostAnswer, ForumPostAnswerVote } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/context/auth-context";
@@ -20,14 +20,14 @@ import { COLLECTIONS } from "@/lib/constants";
 import { db } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 
-function useForumPostVote({ post }: { post: ForumPost }) {
+function useForumPostAnswerVote({ answer }: { answer: ForumPostAnswer }) {
   const { user } = useAuth();
   const [voteCount, setVoteCount] = useState({ upvote: 0, downvote: 0 });
   const [voteLoading, setVoteLoading] = useState(true);
   const [voteCountLoading, setVoteCountLoading] = useState(true);
-  const [vote, setVote] = useState<ForumPostVote | null>(null);
+  const [vote, setVote] = useState<ForumPostAnswerVote | null>(null);
 
-  async function doVote(voteType: ForumPostVote["voteType"]) {
+  async function doVote(voteType: ForumPostAnswerVote["voteType"]) {
     try {
       if (vote?.voteType === voteType) {
         return;
@@ -46,16 +46,16 @@ function useForumPostVote({ post }: { post: ForumPost }) {
         }));
       }
       // deterministic doc id ensures single doc per (post,user)
-      const deterministicId = `${post.id}_${user.uid}`;
-      const ref = doc(db, COLLECTIONS.forumPostVotes, deterministicId);
+      const deterministicId = `${answer.id}_${user.uid}`;
+      const ref = doc(db, COLLECTIONS.forumPostAnswerVotes, deterministicId);
       // Use merge so it creates if missing, updates otherwise.
 
-      const newVote: ForumPostVote = {
+      const newVote: ForumPostAnswerVote = {
         id: deterministicId,
-        postId: post.id,
+        answerId: answer.id,
         userId: user?.uid,
         voteType: voteType,
-        createdAt: post.createdAt ?? (serverTimestamp() as Timestamp),
+        createdAt: answer.createdAt ?? (serverTimestamp() as Timestamp),
       };
 
       // set optimistic vote
@@ -75,13 +75,13 @@ function useForumPostVote({ post }: { post: ForumPost }) {
 
   useEffect(() => {
     async function getVote() {
-      if (user && post) {
+      if (user && answer) {
         try {
-          const deterministicId = `${post.id}_${user.uid}`;
+          const deterministicId = `${answer.id}_${user.uid}`;
           const voteSnap = await getDoc(
-            doc(db, COLLECTIONS.forumPostVotes, deterministicId),
+            doc(db, COLLECTIONS.forumPostAnswerVotes, deterministicId),
           );
-          const vote = voteSnap.data() as ForumPostVote;
+          const vote = voteSnap.data() as ForumPostAnswerVote;
           setVote(vote ?? null);
           setVoteLoading(false);
         } catch (error) {
@@ -90,31 +90,31 @@ function useForumPostVote({ post }: { post: ForumPost }) {
       }
     }
     getVote();
-  }, [post, user]);
+  }, [answer, user]);
 
   useEffect(() => {
     async function getVoteCount() {
-      if (post) {
+      if (answer) {
         try {
           const upVoteSnap = await getCountFromServer(
             query(
-              collection(db, COLLECTIONS.forumPostVotes),
-              where("postId", "==", post.id),
+              collection(db, COLLECTIONS.forumPostAnswerVotes),
+              where("answerId", "==", answer.id),
               where(
                 "voteType",
                 "==",
-                "upvote" satisfies ForumPostVote["voteType"],
+                "upvote" satisfies ForumPostAnswerVote["voteType"],
               ),
             ),
           );
           const downVoteSnap = await getCountFromServer(
             query(
-              collection(db, COLLECTIONS.forumPostVotes),
-              where("postId", "==", post.id),
+              collection(db, COLLECTIONS.forumPostAnswerVotes),
+              where("answerId", "==", answer.id),
               where(
                 "voteType",
                 "==",
-                "downvote" satisfies ForumPostVote["voteType"],
+                "downvote" satisfies ForumPostAnswerVote["voteType"],
               ),
             ),
           );
@@ -130,7 +130,7 @@ function useForumPostVote({ post }: { post: ForumPost }) {
       }
     }
     getVoteCount();
-  }, [post]);
+  }, [answer]);
 
   return {
     doVote,
@@ -141,11 +141,11 @@ function useForumPostVote({ post }: { post: ForumPost }) {
 }
 
 interface Props {
-  post: ForumPost;
+  answer: ForumPostAnswer;
 }
 
-export function ForumPostVoteButton({ post }: Props) {
-  const { doVote, vote, voteCount } = useForumPostVote({ post });
+export function ForumPostAnswerVoteButton({ answer }: Props) {
+  const { doVote, vote, voteCount } = useForumPostAnswerVote({ answer });
 
   return (
     <div className="flex items-center gap-2">
