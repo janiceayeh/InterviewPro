@@ -195,9 +195,6 @@ export default function ForumPostAnswerCard({
             </div>
             <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
               <ForumPostAnswerVoteButton answer={answer} />
-              <button className="hover:text-primary transition-colors">
-                Share
-              </button>
               {isPostAuthor && (
                 <button
                   className="hover:text-primary transition-colors cursor-pointer flex items-center"

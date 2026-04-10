@@ -98,6 +98,7 @@ export interface ForumPost {
   updatedAt: Timestamp;
   isAnswered: boolean;
   hasAcceptedAnswer: boolean;
+  isEdited?: boolean;
 }
 
 export interface ForumCategory {

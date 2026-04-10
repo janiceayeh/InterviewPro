@@ -5,6 +5,8 @@ export const routes = {
   mockInterview: () => "/dashboard/mock-interview",
   forum: () => "/dashboard/forum",
   newForumPost: () => "/dashboard/forum/new",
+  editForumPost: ({ postId }: { postId: string }) =>
+    `/dashboard/forum/edit/${postId}`,
   forumPost: ({ postId }: { postId: string }) =>
     `/dashboard/forum/posts/${postId}`,
   mockInterviewHistory: () => "/dashboard/mock-interview/history",
