@@ -101,6 +101,15 @@ export interface ForumPost {
   isEdited?: boolean;
 }
 
+export interface ForumPostFlag {
+  id: string;
+  createdAt: Timestamp;
+  userId: string;
+  postId: string;
+  flagCategory: string;
+  flagValue: string; //value of the flag object
+}
+
 export interface ForumCategory {
   id: string;
   name: string;
@@ -120,6 +129,15 @@ export interface ForumPostAnswer {
   updatedAt: Timestamp;
   isAccepted: boolean;
   isEdited: boolean;
+}
+
+export interface ForumPostAnswerFlag {
+  id: string;
+  createdAt: Timestamp;
+  userId: string;
+  answerId: string;
+  flagCategory: string;
+  flagValue: string; //value of the flag object
 }
 
 export interface ForumPostView {
@@ -176,3 +194,7 @@ export type ApiResponse<D> = {
 
 export type ForumPostSortBy = "recent" | "popular" | "unanswered";
 export type ForumPostAnswerSortBy = "recent" | "accepted" | "relevant";
+export type ForumFlagsOptions = {
+  flagType: "post" | "answer";
+  id: string;
+};

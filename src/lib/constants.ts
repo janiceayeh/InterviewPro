@@ -15,6 +15,8 @@ export const COLLECTIONS = {
   forumPostViews: "forum-post-views",
   forumPostVotes: "forum-post-votes",
   forumPostAnswerVotes: "forum-post-answer-votes",
+  forumPostFlags: "forum-post-flags",
+  forumPostAnswerFlags: "forum-post-answer-flags",
 };
 
 export const InterviewSessionEvaluationSchema = z.object({
@@ -115,3 +117,185 @@ export const forumCategories: ForumCategory[] = [
     postCount: 0,
   },
 ];
+
+export const FORUM_POST_FLAGS = [
+  {
+    category: "Content policy violations",
+    items: [
+      {
+        category: "Content policy violations",
+        label: "Spam",
+        value: "spam",
+        description: "Unsolicited, repetitive, or promotional content",
+      },
+      {
+        category: "Content policy violations",
+        label: "Self-promotion",
+        value: "self_promotion",
+        description:
+          "Excessive promotion of a product, service, or personal project",
+      },
+      {
+        category: "Content policy violations",
+        label: "Copyright infringement",
+        value: "copyright_infringement",
+        description: "Reposting copyrighted material without permission",
+      },
+      {
+        category: "Content policy violations",
+        label: "Misinformation",
+        value: "misinformation",
+        description: "False or misleading factual claims",
+      },
+    ],
+  },
+  {
+    category: "Safety & abuse",
+    items: [
+      {
+        category: "Safety & abuse",
+        label: "Hate speech",
+        value: "hate_speech",
+        description: "Attacks or demeaning language against a protected group",
+      },
+      {
+        category: "Safety & abuse",
+        label: "Harassment / bullying",
+        value: "harassment",
+        description: "Targeted insults, threats, or doxxing",
+      },
+      {
+        category: "Safety & abuse",
+        label: "Violent content",
+        value: "violent_content",
+        description: "Graphic violence or threats of harm",
+      },
+      {
+        category: "Safety & abuse",
+        label: "Sexual content",
+        value: "sexual_content",
+        description: "Explicit sexual material or sexual solicitation",
+      },
+      {
+        category: "Safety & abuse",
+        label: "Child sexual content",
+        value: "child_sexual_content",
+        description: "Sexual content involving minors — remove immediately",
+      },
+    ],
+  },
+  {
+    category: "Legal & privacy",
+    items: [
+      {
+        category: "Legal & privacy",
+        label: "Illicit behavior",
+        value: "illicit_behavior",
+        description:
+          "Instructions or facilitation of illegal activity (drugs, hacking, etc.)",
+      },
+      {
+        category: "Legal & privacy",
+        label: "Privacy violation",
+        value: "privacy_violation",
+        description: "Sharing private/personal information without consent",
+      },
+      {
+        category: "Legal & privacy",
+        label: "Defamation",
+        value: "defamation",
+        description: "False statements harming someone's reputation",
+      },
+    ],
+  },
+  {
+    category: "Quality & relevance",
+    items: [
+      {
+        category: "Quality & relevance",
+        label: "Off-topic",
+        value: "off_topic",
+        description: "Not related to the forum's subject",
+      },
+      {
+        category: "Quality & relevance",
+        label: "Low-effort / gibberish",
+        value: "low_effort",
+        description:
+          "Unreadable, nonsensical, or extremely short without value",
+      },
+      {
+        category: "Quality & relevance",
+        label: "Duplicate",
+        value: "duplicate",
+        description: "Repeats an existing thread or post",
+      },
+      {
+        category: "Quality & relevance",
+        label: "Misplaced content",
+        value: "misplaced_content",
+        description: "Belongs in another forum or category",
+      },
+    ],
+  },
+  {
+    category: "Formatting & usability",
+    items: [
+      {
+        category: "Formatting & usability",
+        label: "Broken links / attachments",
+        value: "broken_links",
+        description: "Linked resources are dead or attachments are corrupted",
+      },
+      {
+        category: "Formatting & usability",
+        label: "Spammy formatting",
+        value: "spammy_formatting",
+        description: "Excessive emojis, ALL CAPS, or repeated characters",
+      },
+      {
+        category: "Formatting & usability",
+        label: "Needs clarification",
+        value: "needs_clarification",
+        description: "Unclear or missing critical details; request to edit",
+      },
+    ],
+  },
+];
+
+// {
+//   category: "Action",
+//   items: [
+//     {
+//       category: "Action",
+//       label: "Needs review",
+//       value: "needs_review",
+//       description: "Requires moderator attention",
+//     },
+//     {
+//       category: "Action",
+//       label: "Remove immediately",
+//       value: "remove_immediately",
+//       description:
+//         "Urgent removal required (e.g., threats, child sexual content)",
+//     },
+//     {
+//       category: "Action",
+//       label: "Warn user",
+//       value: "warn_user",
+//       description: "User should receive a warning",
+//     },
+//     {
+//       category: "Action",
+//       label: "Temporary suspension",
+//       value: "temporary_suspension",
+//       description: "Recommend short-term account suspension",
+//     },
+//     {
+//       category: "Action",
+//       label: "Permanent ban",
+//       value: "permanent_ban",
+//       description: "Recommend account termination",
+//     },
+//   ],
+// },

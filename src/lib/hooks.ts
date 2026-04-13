@@ -4,14 +4,18 @@ import {
   NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION,
 } from "@/lib/constants";
 import {
+  addDoc,
   collection,
   doc,
+  getCountFromServer,
   getDoc,
   getDocs,
   limit,
   orderBy,
   query,
+  serverTimestamp,
   startAfter,
+  Timestamp,
   where,
 } from "firebase/firestore";
 import {
@@ -23,6 +27,9 @@ import {
   ForumPostSortBy,
   ForumPostAnswer,
   ForumPostAnswerSortBy,
+  ForumPostFlag,
+  ForumPostAnswerFlag,
+  ForumFlagsOptions,
 } from "./types";
 import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
 import { db } from "./firebase";
@@ -725,5 +732,127 @@ export function useUserProfile(userId: string) {
     userProfile,
     userProfileLoading,
     userProfileError,
+  };
+}
+
+export function useForumFlags() {
+  const [flags, setFlags] = useState<(ForumPostFlag | ForumPostAnswerFlag)[]>(
+    [],
+  );
+  const [flagsLoading, setFlagsLoading] = useState(false);
+  const [flagsError, setFlagsError] = useState<Error | null>(null);
+  const [flagsCount, setFlagsCount] = useState(0);
+
+  async function flagsGetAll(options: ForumFlagsOptions) {
+    try {
+      setFlagsLoading(true);
+      const isPostFlag = options.flagType === "post";
+
+      const flagsSnap = await getDocs(
+        query(
+          collection(
+            db,
+            isPostFlag
+              ? COLLECTIONS.forumPostFlags
+              : COLLECTIONS.forumPostAnswerFlags,
+          ),
+          where(isPostFlag ? "postId" : "answerId", "==", options.id),
+          orderBy("createdAt", "desc"),
+        ),
+      );
+      const flags = flagsSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ForumPostFlag[];
+
+      setFlags(flags);
+    } catch (error) {
+      console.error(error);
+      setFlagsError(error as Error);
+    } finally {
+      setFlagsLoading(false);
+    }
+  }
+
+  async function flagsGetCount(options: ForumFlagsOptions) {
+    try {
+      setFlagsLoading(true);
+      const isPostFlag = options.flagType === "post";
+      const countSnap = await getCountFromServer(
+        query(
+          collection(
+            db,
+            isPostFlag
+              ? COLLECTIONS.forumPostFlags
+              : COLLECTIONS.forumPostAnswerFlags,
+          ),
+          where(isPostFlag ? "postId" : "answerId", "==", options.id),
+        ),
+      );
+      setFlagsCount(countSnap.data().count ?? 0);
+    } catch (error) {
+      console.error(error);
+      setFlagsError(error);
+    } finally {
+      setFlagsLoading(false);
+    }
+  }
+
+  return {
+    flags,
+    flagsLoading,
+    flagsGetAll,
+    flagsError,
+    flagsGetCount,
+    flagsCount,
+  };
+}
+
+export function useFlagPost() {
+  const [isFlaggingPost, setIsFlaggingPost] = useState(false);
+  const [flagPostError, setFlagPostError] = useState<Error | null>(null);
+
+  async function flagPost(
+    options: ForumFlagsOptions & {
+      flagCategory: string;
+      flagValue: string;
+      id: string;
+      userId: string;
+    },
+  ) {
+    try {
+      setIsFlaggingPost(true);
+      const isQuestion = options.flagType === "post";
+      const newFlag = await addDoc(
+        collection(
+          db,
+          isQuestion
+            ? COLLECTIONS.forumPostFlags
+            : COLLECTIONS.forumPostAnswerFlags,
+        ),
+
+        {
+          flagCategory: options.flagCategory,
+          flagValue: options.flagValue,
+          [isQuestion ? "postId" : "answerId"]: options.id,
+          userId: options.userId,
+          createdAt: serverTimestamp() as Timestamp,
+        } satisfies Omit<ForumPostFlag | ForumPostAnswerFlag, "id">,
+      );
+
+      return { ok: true, newFlag };
+    } catch (error) {
+      console.error(error);
+      setFlagPostError(error);
+      return { error: error as Error };
+    } finally {
+      setIsFlaggingPost(false);
+    }
+  }
+
+  return {
+    isFlaggingPost,
+    flagPostError,
+    flagPost,
   };
 }

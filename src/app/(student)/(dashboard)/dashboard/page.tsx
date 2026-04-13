@@ -54,7 +54,7 @@ const features = [
   {
     title: "Interview Tips",
     description:
-      "Access curated tips from industry experts and ask questions to deepen your understanding.",
+      "Access curated tips and ask questions to deepen your understanding.",
     icon: Lightbulb,
     href: routes.tips(),
     gradient: "from-chart-3 to-chart-5",

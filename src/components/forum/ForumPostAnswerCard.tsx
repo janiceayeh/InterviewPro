@@ -1,4 +1,12 @@
-import { Loader2, User, Check, DotIcon, Trash2Icon } from "lucide-react";
+import {
+  Loader2,
+  User,
+  Check,
+  DotIcon,
+  Trash2Icon,
+  EditIcon,
+  FlagIcon,
+} from "lucide-react";
 import { ForumPost, ForumPostAnswer } from "@/lib/types";
 import ms from "ms";
 import { useUserProfile } from "@/lib/hooks";
@@ -32,6 +40,7 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { ForumPostAnswerVoteButton } from "./ForumPostAnswerVoteButton";
+import ReportPostDialog from "./ReportPostDialog";
 
 async function acceptAnswer(answer: ForumPostAnswer) {
   try {
@@ -91,6 +100,7 @@ export default function ForumPostAnswerCard({
   const [isEditingAnswer, setIsEditingAnswer] = useState<boolean>(false);
   const [answerConfirmDelete, setAnswerConfirmDelete] = useState(false);
   const [answerDeleting, setAnswerDeleting] = useState(false);
+  const [reportPostDialogOpen, setReportPostDialogOpen] = useState(false);
 
   async function handleAcceptAnswer() {
     try {
@@ -209,20 +219,26 @@ export default function ForumPostAnswerCard({
               )}
               {isAnswerAuthor && (
                 <button
-                  className="hover:text-primary transition-colors cursor-pointer"
+                  className="hover:text-primary transition-colors cursor-pointer flex items-center gap-1"
                   onClick={() => setIsEditingAnswer(true)}
                 >
-                  Edit
+                  <EditIcon className="w-3 h-3 md:w-4 md:h-4" /> Edit
                 </button>
               )}
               {isAnswerAuthor && (
                 <button
-                  className="hover:text-primary transition-colors cursor-pointer text-destructive"
+                  className="hover:text-primary transition-colors cursor-pointer text-destructive flex items-center gap-1"
                   onClick={() => setAnswerConfirmDelete(true)}
                 >
-                  Delete
+                  <Trash2Icon className="w-3 h-3 md:w-4 md:h-4" /> Delete
                 </button>
               )}
+              <button
+                className="hover:text-primary transition-colors cursor-pointer text-destructive flex items-center gap-1"
+                onClick={() => setReportPostDialogOpen(true)}
+              >
+                <FlagIcon className="w-3 h-3 md:w-4 md:h-4" /> Report
+              </button>
             </div>
           </div>
         </div>
@@ -260,6 +276,15 @@ export default function ForumPostAnswerCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Report Post Dialog */}
+      <ReportPostDialog
+        onOpenChange={setReportPostDialogOpen}
+        open={reportPostDialogOpen}
+        flagType="answer"
+        id={answer?.id}
+        userId={userId}
+      />
     </>
   );
 }

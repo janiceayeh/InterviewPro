@@ -33,6 +33,8 @@ export const routes = {
   adminTips: () => "/admin/tips",
   adminUsers: () => "/admin/users",
   adminForumModeration: () => "/admin/forum-moderation",
+  adminForumPostAnswers: ({ postId }: { postId: string }) =>
+    `/admin/forum-moderation/${postId}/answers`,
   adminFeedback: () => "/admin/feedback",
   adminSettings: () => "/admin/settings",
   api: {

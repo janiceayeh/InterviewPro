@@ -8,7 +8,15 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/lib/context/auth-context";
 import type { ForumPost, UserProfile, ForumPostView } from "@/lib/types";
 import { toast } from "sonner";
-import { ChevronRight, Loader2, User, DotIcon, Trash2Icon } from "lucide-react";
+import {
+  ChevronRight,
+  Loader2,
+  User,
+  DotIcon,
+  Trash2Icon,
+  EditIcon,
+  FlagIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   deleteDoc,
@@ -43,6 +51,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import ReportPostDialog from "@/components/forum/ReportPostDialog";
 
 function useForumPost({ postId }: { postId: string }) {
   const [forumPostLoading, setForumPostLoading] = useState(false);
@@ -113,6 +122,7 @@ export default function PostDetailPage() {
 
   const [postConfirmDelete, setPostConfirmDelete] = useState(false);
   const [postDeleting, setPostDeleting] = useState(false);
+  const [reportPostDialogOpen, setReportPostDialogOpen] = useState(false);
 
   const { forumPostAnswersCount } = useForumPostAnswersCount(postId);
 
@@ -234,19 +244,25 @@ export default function PostDetailPage() {
               <ForumPostViewCount post={forumPost} />
               {isPostAuthor && (
                 <Link href={routes.editForumPost({ postId: forumPost?.id })}>
-                  <button className="hover:text-primary transition-colors cursor-pointer">
-                    Edit
+                  <button className="hover:text-primary transition-colors cursor-pointer flex items-center gap-1">
+                    <EditIcon className="w-3 h-3 md:w-4 md:h-4" /> Edit
                   </button>
                 </Link>
               )}
               {isPostAuthor && (
                 <button
-                  className="hover:text-primary transition-colors cursor-pointer text-destructive"
+                  className="hover:text-primary transition-colors cursor-pointer text-destructive flex items-center gap-1"
                   onClick={() => setPostConfirmDelete(true)}
                 >
-                  Delete
+                  <Trash2Icon className="w-3 h-3 md:w-4 md:h-4" /> Delete
                 </button>
               )}
+              <button
+                className="hover:text-primary transition-colors cursor-pointer text-destructive flex items-center gap-1"
+                onClick={() => setReportPostDialogOpen(true)}
+              >
+                <FlagIcon className="w-3 h-3 md:w-4 md:h-4" /> Report
+              </button>
             </div>
           </div>
 
@@ -357,6 +373,15 @@ export default function PostDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Report Post Dialog */}
+      <ReportPostDialog
+        onOpenChange={setReportPostDialogOpen}
+        open={reportPostDialogOpen}
+        flagType="post"
+        id={postId}
+        userId={user?.uid}
+      />
     </>
   );
 }
