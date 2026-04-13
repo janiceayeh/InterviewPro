@@ -18,16 +18,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { SubmitEventHandler, useEffect, useState } from "react";
-import {
-  query,
-  getDocs,
-  collection,
-  setDoc,
-  doc,
-  serverTimestamp,
-  Timestamp,
-} from "firebase/firestore";
+import { SubmitEventHandler, useState } from "react";
+import { setDoc, doc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/context/auth-context";

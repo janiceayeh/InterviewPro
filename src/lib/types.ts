@@ -198,3 +198,7 @@ export type ForumFlagsOptions = {
   flagType: "post" | "answer";
   id: string;
 };
+
+export type DeleteUserResponseDto = {
+  ok: boolean;
+};

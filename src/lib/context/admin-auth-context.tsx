@@ -11,13 +11,14 @@ import {
 } from "firebase/auth";
 import { AdminRole, ApiResponse, IsAdminResponseDto } from "../types";
 import { routes } from "../routes";
+import { toast } from "sonner";
 
 interface AdminUser extends User {
   role?: AdminRole;
 }
 
 interface AdminAuthContextType {
-  user: AdminUser | null;
+  admin: AdminUser | null;
   isLoading: boolean;
   error: string | null;
   role: AdminRole | null;
@@ -72,18 +73,20 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       const { ok, error, isAdminData } = await isAdmin(user?.email);
       if (error) {
         setError(error.message);
+        toast.error(error.message);
       }
 
       if (ok) {
         if (isAdminData.error) {
           setError(isAdminData.error);
+          toast.error(isAdminData.error);
         } else {
           setUser({ ...user, role: isAdminData.data.role });
-          setLoading(false);
         }
       }
     });
 
+    setLoading(false);
     return () => unsubscribe();
   }, []);
 
@@ -121,7 +124,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value: AdminAuthContextType = {
-    user,
+    admin: user,
     isLoading: loading,
     error,
     role: user?.role || null,

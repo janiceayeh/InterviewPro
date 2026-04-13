@@ -124,7 +124,8 @@ export default function PostDetailPage() {
   const [postDeleting, setPostDeleting] = useState(false);
   const [reportPostDialogOpen, setReportPostDialogOpen] = useState(false);
 
-  const { forumPostAnswersCount } = useForumPostAnswersCount(postId);
+  const { forumPostAnswersCount, forumPostAnswersCountLoading } =
+    useForumPostAnswersCount(postId);
 
   const isPostAuthor = user?.uid === forumPost?.authorId;
 
@@ -292,10 +293,15 @@ export default function PostDetailPage() {
             className="space-y-4 py-4 border-t border-border"
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-foreground text-sm">
-                {forumPostAnswersCount}{" "}
-                {forumPostAnswersCount === 1 ? "Comment" : "Comments"}
-              </h3>
+              {forumPostAnswersCountLoading ? (
+                <Loader2 className="size-4 mr-2 animate-spin text-primary" />
+              ) : (
+                <h3 className="font-semibold text-foreground text-sm">
+                  {forumPostAnswersCount}{" "}
+                  {forumPostAnswersCount === 1 ? "Comment" : "Comments"}
+                </h3>
+              )}
+
               {/* TODO: Sort answers */}
               {/* <Button variant="ghost" size="sm" className="text-xs h-7">
               Popular ▼

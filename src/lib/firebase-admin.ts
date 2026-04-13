@@ -10,9 +10,11 @@ function getServiceAccount(): admin.ServiceAccount {
 }
 
 if (!admin.apps.length) {
+  console.log(getServiceAccount());
   admin.initializeApp({
     credential: admin.credential.cert(getServiceAccount()),
   });
 }
 
 export const dbAdmin = admin.firestore();
+export const fbApp = admin.app();

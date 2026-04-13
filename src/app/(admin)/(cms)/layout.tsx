@@ -8,20 +8,20 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function CMSLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAdminAuth();
+  const { admin, isLoading } = useAdminAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isLoading && !admin) {
       router.push(routes.adminLogin());
     }
-  }, [user, isLoading]);
+  }, [admin, isLoading]);
 
   if (isLoading) {
     return <PageLoading />;
   }
 
-  if (!user) {
+  if (!admin) {
     return null;
   }
 

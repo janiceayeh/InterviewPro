@@ -52,12 +52,6 @@ const menuItems = [
     permission: "manage_forum",
   },
   {
-    label: "Feedback",
-    icon: MessageCircle,
-    href: routes.adminFeedback(),
-    permission: "manage_feedback",
-  },
-  {
     label: "Settings",
     icon: Settings,
     href: routes.adminSettings(),

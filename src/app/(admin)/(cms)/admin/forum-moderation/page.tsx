@@ -1,10 +1,9 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Eye, Flag } from "lucide-react";
+import { Search, Trash2, Eye, Trash2Icon, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -24,6 +23,21 @@ import PostAuthorName from "@/components/admin/PostAuthorName";
 import FlagButton from "@/components/admin/FlagButton";
 import { ForumPost } from "@/lib/types";
 import { ForumFlagsSheet } from "@/components/admin/ForumFlagsSheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { deleteDoc, doc } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/constants";
+import { db } from "@/lib/firebase";
+import ForumPostAnswersCount from "@/components/forum/ForumPostAnswersCount";
 
 export default function ForumModerationPage() {
   const {
@@ -41,8 +55,25 @@ export default function ForumModerationPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPost, setSelectedPost] = useState<ForumPost | null>(null);
   const [openPostsSheet, setOpenPostsSheet] = useState(false);
+  const [postConfirmDelete, setPostConfirmDelete] = useState(false);
+  const [postDeleting, setPostDeleting] = useState(false);
 
   const noForumPosts = forumPosts?.length === 0;
+
+  async function deletePost(postId: string) {
+    try {
+      setPostDeleting(true);
+      await deleteDoc(doc(db, COLLECTIONS.forumPosts, postId));
+      refetch();
+      setPostConfirmDelete(false);
+      toast.success("Post deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to delete post: ${(error as Error).message}`);
+    } finally {
+      setPostDeleting(false);
+    }
+  }
 
   useEffect(() => {
     first();
@@ -131,7 +162,7 @@ export default function ForumModerationPage() {
                       {post.category}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {"post.answers"}
+                      <ForumPostAnswersCount post={post} />
                     </TableCell>
                     <TableCell>
                       <FlagButton
@@ -145,13 +176,17 @@ export default function ForumModerationPage() {
                     </TableCell>
 
                     <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      {/* <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <Eye className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        onClick={() => {
+                          setSelectedPost(post);
+                          setPostConfirmDelete(true);
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -180,6 +215,36 @@ export default function ForumModerationPage() {
           id={selectedPost?.id}
         />
       )}
+
+      {/* Confirm Delete Post */}
+      <AlertDialog open={postConfirmDelete} onOpenChange={setPostConfirmDelete}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+              <Trash2Icon />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete Post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this post. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" disabled={postDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => deletePost(selectedPost.id)}
+              disabled={postDeleting}
+            >
+              {postDeleting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

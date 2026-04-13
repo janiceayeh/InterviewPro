@@ -47,5 +47,6 @@ export const routes = {
     }) => `/api/evaluate-interview/${category}/${interviewSessionId}`,
     copilot: () => "/api/copilot",
     isAdmin: ({ email }: { email: string }) => `/api/users/${email}/is-admin`,
+    deleteUser: ({ email }: { email: string }) => `/api/users/${email}/delete`,
   },
 };

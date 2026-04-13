@@ -11,7 +11,14 @@ import {
 import { Card } from "@/components/ui/card";
 import PaginationButtons from "@/components/pagination-buttons/PaginationButtons";
 import { useForumPostAnswers } from "@/lib/hooks";
-import { Check, ChevronRight, Search } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  Loader2,
+  Search,
+  Trash2,
+  Trash2Icon,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +32,20 @@ import { ForumFlagsSheet } from "@/components/admin/ForumFlagsSheet";
 import { ForumPostAnswer } from "@/lib/types";
 import FlagButton from "@/components/admin/FlagButton";
 import PostAuthorName from "@/components/admin/PostAuthorName";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { doc, deleteDoc } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/constants";
+import { db } from "@/lib/firebase";
 
 export default function ForumPostAnswersPage() {
   const [openAnswersSheet, setOpenAnswersSheet] = useState(false);
@@ -40,7 +61,6 @@ export default function ForumPostAnswersPage() {
     next,
     previous,
     refetch,
-    reset,
   } = useForumPostAnswers(postId);
 
   const noForumPostAnswers = forumPostAnswers?.length === 0;
@@ -49,10 +69,27 @@ export default function ForumPostAnswersPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<ForumPostAnswer | null>(
     null,
   );
+  const [answerConfirmDelete, setAnswerConfirmDelete] = useState(false);
+  const [answerDeleting, setAnswerDeleting] = useState(false);
 
   const filteredPostAnswers = forumPostAnswers?.filter((p) =>
     p.content.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  async function deleteAnswer(answerId: string) {
+    try {
+      setAnswerDeleting(true);
+      await deleteDoc(doc(db, COLLECTIONS.forumPostAnswers, answerId));
+      refetch();
+      setAnswerConfirmDelete(false);
+      toast.success("Answer deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to delete answer: ${(error as Error).message}`);
+    } finally {
+      setAnswerDeleting(false);
+    }
+  }
 
   useEffect(() => {
     first();
@@ -169,15 +206,19 @@ export default function ForumPostAnswersPage() {
                       />
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        {/* <Eye className="h-4 w-4" /> */}
-                      </Button>
+                      {/* <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Eye className="h-4 w-4" />
+                      </Button> */}
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        onClick={() => {
+                          setSelectedAnswer(answer);
+                          setAnswerConfirmDelete(true);
+                        }}
                       >
-                        {/* <Trash2 className="h-4 w-4" /> */}
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -204,6 +245,39 @@ export default function ForumPostAnswersPage() {
           id={selectedAnswer?.id}
         />
       )}
+
+      {/* Confirm Delete Answer */}
+      <AlertDialog
+        open={answerConfirmDelete}
+        onOpenChange={setAnswerConfirmDelete}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+              <Trash2Icon />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete Answer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this answer. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" disabled={answerDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => deleteAnswer(selectedAnswer.id)}
+              disabled={answerDeleting}
+            >
+              {answerDeleting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
