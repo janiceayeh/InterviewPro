@@ -20,16 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Alert } from "@/components/ui/alert";
-import { Trash2, Plus, Check } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Trash2, Plus } from "lucide-react";
 import { useAdminAuth } from "@/lib/context/admin-auth-context";
 import { toast } from "sonner";
 
@@ -47,7 +38,7 @@ const roleDescriptions = {
 };
 
 export default function SettingsPage() {
-  const { user, role } = useAdminAuth();
+  const { admin, role } = useAdminAuth();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingAdmin, setIsAddingAdmin] = useState(false);
@@ -117,7 +108,7 @@ export default function SettingsPage() {
   };
 
   const handleRemoveAdmin = (email: string) => {
-    if (email === user?.email) {
+    if (email === admin?.email) {
       toast.error("You can't remove your own account");
       return;
     }
@@ -149,7 +140,7 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <div>
             <Label className="text-muted-foreground text-sm">Email</Label>
-            <p className="text-foreground font-medium">{user?.email}</p>
+            <p className="text-foreground font-medium">{admin?.email}</p>
           </div>
           <div>
             <Label className="text-muted-foreground text-sm">Role</Label>
@@ -281,25 +272,25 @@ export default function SettingsPage() {
                   </td>
                 </tr>
               ) : (
-                admins.map((admin) => (
+                admins.map((a) => (
                   <tr
-                    key={admin.id}
+                    key={a.id}
                     className="border-b border-border/30 hover:bg-muted/50"
                   >
                     <td className="py-3 text-foreground font-medium">
-                      {admin.email}
+                      {a.email}
                     </td>
                     <td className="py-3">
-                      <Badge className={roleColor[admin.role]}>
-                        {admin.role.replace("-", " ")}
+                      <Badge className={roleColor[a.role]}>
+                        {a.role.replace("-", " ")}
                       </Badge>
                     </td>
                     <td className="py-3 text-muted-foreground text-sm">
-                      {admin.createdAt}
+                      {a.createdAt}
                     </td>
                     {role === "super-admin" && (
                       <td className="py-3 text-right">
-                        {admin.email === user?.email ? (
+                        {a.email === admin?.email ? (
                           <Badge variant="outline" className="text-xs">
                             Current
                           </Badge>
@@ -308,7 +299,7 @@ export default function SettingsPage() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                            onClick={() => handleRemoveAdmin(admin.email)}
+                            onClick={() => handleRemoveAdmin(a.email)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

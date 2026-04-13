@@ -12,7 +12,7 @@ import {
   increment,
   QueryConstraint,
 } from "firebase/firestore";
-import type { ForumPost, ForumAnswer } from "@/lib/types";
+import type { ForumPost, ForumPostAnswer } from "@/lib/types";
 
 export async function getForumPosts(filters?: {
   category?: string;
@@ -84,7 +84,9 @@ export async function getForumPostById(
   } as ForumPost;
 }
 
-export async function getForumAnswers(postId: string): Promise<ForumAnswer[]> {
+export async function getForumAnswers(
+  postId: string,
+): Promise<ForumPostAnswer[]> {
   const q = query(
     collection(db, "forumAnswers"),
     where("postId", "==", postId),
@@ -99,7 +101,7 @@ export async function getForumAnswers(postId: string): Promise<ForumAnswer[]> {
     ...doc.data(),
     createdAt: doc.data().createdAt?.toDate?.() || new Date(),
     updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
-  })) as ForumAnswer[];
+  })) as ForumPostAnswer[];
 }
 
 export async function voteOnPost(

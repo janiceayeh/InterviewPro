@@ -9,8 +9,6 @@ import {
   Lightbulb,
   Users,
   MessageSquare,
-  MessageCircle,
-  CreditCard,
   Settings,
   LogOut,
   ChevronDown,
@@ -61,7 +59,7 @@ const menuItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { user, logout, hasPermission, role } = useAdminAuth();
+  const { admin, logout, hasPermission, role } = useAdminAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const visibleItems = menuItems.filter((item) =>
@@ -114,7 +112,7 @@ export function AdminSidebar() {
                   isCollapsed && "px-2 justify-center",
                 )}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
+                <Icon className="h-4 w-4 shrink-0" />
                 {!isCollapsed && <span>{item.label}</span>}
               </Button>
             </Link>
@@ -130,7 +128,7 @@ export function AdminSidebar() {
               Logged in as
             </p>
             <p className="text-xs text-muted-foreground truncate mb-2">
-              {user?.email}
+              {admin?.email}
             </p>
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-success"></div>

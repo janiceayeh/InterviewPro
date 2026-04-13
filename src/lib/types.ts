@@ -65,6 +65,7 @@ export interface InterviewTip {
   viewsCount?: number;
   status: "draft" | "published";
   createdAt: Timestamp;
+  helpfulCount?: number; // not a doc field but a derived one.
 }
 
 export interface InterviewTipHelpful {
