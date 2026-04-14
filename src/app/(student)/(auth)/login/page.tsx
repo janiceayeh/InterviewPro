@@ -50,7 +50,7 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
       toast.success("Welcome!");
-      router.push("/dashboard");
+      router.push(routes.dashboard());
     } catch (error) {
       toast.error("Failed to sign in with Google");
     } finally {
@@ -62,7 +62,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
+          <Link href={routes.home()} className="inline-flex items-center gap-2">
             <div className="size-10 rounded-xl bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">
                 IP
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -102,7 +102,7 @@ export default function LoginPage() {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   <Link
-                    href="/forgot-password"
+                    href={routes.userForgotPassword()}
                     className="text-sm text-primary hover:underline"
                   >
                     Forgot password?
@@ -174,7 +174,7 @@ export default function LoginPage() {
             <p className="text-sm text-muted-foreground">
               {"Don't have an account? "}
               <Link
-                href="/signup"
+                href={routes.userSignup()}
                 className="text-primary font-medium hover:underline"
               >
                 Sign up

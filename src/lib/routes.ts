@@ -1,6 +1,8 @@
 export const routes = {
   home: () => "/",
   userLogin: () => "/login",
+  userSignup: () => "/signup",
+  userForgotPassword: () => "/forgot-password",
   dashboard: () => "/dashboard",
   mockInterview: () => "/dashboard/mock-interview",
   forum: () => "/dashboard/forum",
@@ -27,7 +29,7 @@ export const routes = {
   copilot: () => "/dashboard/copilot",
   tips: () => "/dashboard/tips",
   adminDashboard: () => "/admin/dashboard",
-  adminResetPassword: () => "/admin/reset-password",
+  adminForgotPassword: () => "/admin/forgot-password",
   adminLogin: () => "/admin/login",
   adminInterviewQuestions: () => "/admin/interview-questions",
   adminTips: () => "/admin/tips",

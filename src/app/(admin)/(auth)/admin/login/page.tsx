@@ -123,7 +123,7 @@ export default function AdminLoginPage() {
 
           {/* Forgot Password Link */}
           <div className="mt-6 pt-6 border-t border-border/30">
-            <Link href={routes.adminResetPassword()}>
+            <Link href={routes.adminForgotPassword()}>
               <Button
                 variant="ghost"
                 className="w-full text-primary hover:text-primary/80"
