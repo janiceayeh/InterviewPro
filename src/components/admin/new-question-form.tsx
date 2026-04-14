@@ -147,7 +147,7 @@ export function NewQuestionForm({
   const { roles: industryRoles, rolesLoading } = useRoles();
 
   const allRoles = industryRoles?.reduce<string[]>(
-    (acc, r) => [...acc, ...r.roles],
+    (acc, r) => [...acc, ...(r?.roles ?? [])],
     [],
   );
 

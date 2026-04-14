@@ -19,6 +19,7 @@ import {
   InterviewSession,
   InterviewQuestion,
   UserProfile,
+  UserLastAnsweredInterviewQuestion,
 } from "@/lib/types";
 import { useAuth } from "@/lib/context/auth-context";
 
@@ -26,25 +27,14 @@ import {
   addDoc,
   collection,
   doc,
-  DocumentData,
-  documentId,
-  DocumentSnapshot,
   getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
   serverTimestamp,
   updateDoc,
-  startAfter,
   Timestamp,
-  where,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import {
-  COLLECTIONS,
-  NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION,
-} from "@/lib/constants";
+import { COLLECTIONS } from "@/lib/constants";
 import { toast } from "sonner";
 import PageLoading from "@/components/page-loading";
 import { routes } from "@/lib/routes";
@@ -139,9 +129,25 @@ export default function InterviewSessionPage() {
         ? (userProfile.totalPractiseTime ?? 0) + interviewSessionTotalTimeSpent
         : interviewSessionTotalTimeSpent;
 
+      //save last answered question
+      const deterministicId = `${user.uid}_${category}`;
+      await setDoc(
+        doc(
+          db,
+          COLLECTIONS.userLastAnsweredInterviewQuestions,
+          deterministicId,
+        ),
+        {
+          createdAt: serverTimestamp() as Timestamp,
+          questionId: lastAnsweredQuestionId,
+          userId: user.uid,
+          questionCategory: category,
+        } satisfies Omit<UserLastAnsweredInterviewQuestion, "id">,
+        { merge: true },
+      );
+
       // update user profile with metadata
-      updateDoc(doc(db, COLLECTIONS.users, user.uid), {
-        lastAnsweredQuestionId: lastAnsweredQuestionId,
+      await updateDoc(doc(db, COLLECTIONS.users, user.uid), {
         interviewSessionsCompleted: interviewSessionsCompleted,
         totalPractiseTime: totalPractiseTime,
       } satisfies Partial<UserProfile>);
@@ -208,8 +214,6 @@ export default function InterviewSessionPage() {
       const lastAnsweredQuestionId = questions[questions.length - 1].id;
       await saveInterviewMetaData({ lastAnsweredQuestionId });
 
-      //TODO:
-      //3. Send Question and responses to AI for grading and results
       router.push(
         routes.mockInterviewResults({
           category,
@@ -492,9 +496,4 @@ export default function InterviewSessionPage() {
       </AnimatePresence>
     </div>
   );
-}
-function startAfterDocument(
-  lastDocSnap: DocumentSnapshot<DocumentData, DocumentData>,
-): import("@firebase/firestore").QueryConstraint {
-  throw new Error("Function not implemented.");
 }

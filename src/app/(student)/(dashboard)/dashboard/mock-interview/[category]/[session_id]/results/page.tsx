@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  RotateCcw,
 } from "lucide-react";
 import {
   RadarChart,
@@ -37,7 +36,12 @@ import { COLLECTIONS, TInterviewSessionEvaluation } from "@/lib/constants";
 import { toast } from "sonner";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { InterviewSession } from "@/lib/types";
+import {
+  ApiResponse,
+  InterviewSession,
+  StudentPersonalisedEvaluationResponseDto,
+} from "@/lib/types";
+import { getIdToken } from "firebase/auth";
 
 interface QuestionScore {
   questionId: string;
@@ -49,6 +53,33 @@ interface QuestionScore {
 type QuestionScoreWithQuestion = QuestionScore & {
   question: string;
   answer: string;
+};
+
+const getStudentPersonalisedAnalytics = async ({
+  userId,
+  idToken,
+}: {
+  userId: string;
+  idToken: string;
+}) => {
+  try {
+    const response = await fetch(routes.api.studentPersonalisedAnalytics(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        uid: userId,
+        authorization: idToken,
+      },
+    });
+
+    const data: ApiResponse<StudentPersonalisedEvaluationResponseDto> =
+      await response?.json();
+
+    return { ok: true, data };
+  } catch (err) {
+    console.error(err);
+    return { error: err as Error };
+  }
 };
 
 export default function ResultsPage() {
@@ -103,12 +134,19 @@ export default function ResultsPage() {
             },
           );
 
-          if (!response.ok)
+          if (!response.ok) {
             throw new Error("Failed to evaluate interview session");
+          }
 
           const result: TInterviewSessionEvaluation = await response.json();
 
           setEvaluation(result);
+
+          // Fire student personalised analytics action
+          const res = await getStudentPersonalisedAnalytics({
+            userId: user?.uid,
+            idToken: await getIdToken(user),
+          });
         }
       } catch (error) {
         console.error(error);
@@ -158,12 +196,12 @@ export default function ResultsPage() {
   const radarData = [
     {
       subject: "Communication",
-      value: evaluation?.categoryBreakdown.communication,
+      value: evaluation?.categoryBreakdown?.communication,
     },
-    { subject: "Relevance", value: evaluation?.categoryBreakdown.relevance },
-    { subject: "Structure", value: evaluation?.categoryBreakdown.structure },
-    { subject: "Depth", value: evaluation?.categoryBreakdown.depth },
-    { subject: "Confidence", value: evaluation?.categoryBreakdown.confidence },
+    { subject: "Relevance", value: evaluation?.categoryBreakdown?.relevance },
+    { subject: "Structure", value: evaluation?.categoryBreakdown?.structure },
+    { subject: "Depth", value: evaluation?.categoryBreakdown?.depth },
+    { subject: "Confidence", value: evaluation?.categoryBreakdown?.confidence },
   ];
 
   const barData = evaluation?.questionScores.map((qs, index) => ({

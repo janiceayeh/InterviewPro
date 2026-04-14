@@ -51,7 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function getUserProfile() {
     if (user) {
       const profileDoc = await getDoc(doc(db, COLLECTIONS.users, user.uid));
-      setUserProfile(profileDoc.data() as UserProfile);
+      setUserProfile({
+        id: profileDoc.id,
+        ...profileDoc.data(),
+      } as UserProfile);
     }
   }
 

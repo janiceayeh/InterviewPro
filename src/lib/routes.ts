@@ -48,5 +48,6 @@ export const routes = {
     copilot: () => "/api/copilot",
     isAdmin: ({ email }: { email: string }) => `/api/users/${email}/is-admin`,
     deleteUser: ({ email }: { email: string }) => `/api/users/${email}/delete`,
+    studentPersonalisedAnalytics: () => "/api/analytics/overview",
   },
 };

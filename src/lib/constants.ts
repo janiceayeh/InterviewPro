@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ForumCategory } from "./types";
+import { ForumCategory, StudentPersonalisedAnalytics } from "./types";
 
 export const COLLECTIONS = {
   users: "users",
@@ -17,6 +17,8 @@ export const COLLECTIONS = {
   forumPostAnswerVotes: "forum-post-answer-votes",
   forumPostFlags: "forum-post-flags",
   forumPostAnswerFlags: "forum-post-answer-flags",
+  studentPersonalisedAnalytics: "student-personalised-analytics",
+  userLastAnsweredInterviewQuestions: "user-last-answered-interview-questions",
 };
 
 export const InterviewSessionEvaluationSchema = z.object({
@@ -45,7 +47,7 @@ export type TInterviewSessionEvaluation = z.infer<
   typeof InterviewSessionEvaluationSchema
 >;
 
-export const NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION = 3;
+export const NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION = 5;
 
 export const INTERVIEW_TIP_CATEGORIES = [
   { value: "Preparation", label: "Preparation" },
@@ -299,3 +301,26 @@ export const FORUM_POST_FLAGS = [
 //     },
 //   ],
 // },
+
+export const DEFAULT_STUDENT_PERSONALISED_ANALYTICS: StudentPersonalisedAnalytics =
+  {
+    userId: "",
+    overallReadinessScore: 0,
+    totalInterviewsTaken: 0,
+    averageScore: 0,
+    categoryScores: {},
+    progressTrend: [],
+    recommendations: [
+      {
+        title: "Get Started with Your First Interview",
+        description:
+          "Take your first mock interview to begin tracking your progress.",
+        priority: "high" as const,
+        actionItems: [
+          "Start a behavioral interview",
+          "Try a technical interview",
+          "Practice with the AI copilot",
+        ],
+      },
+    ],
+  };

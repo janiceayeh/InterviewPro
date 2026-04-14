@@ -10,7 +10,6 @@ function getServiceAccount(): admin.ServiceAccount {
 }
 
 if (!admin.apps.length) {
-  console.log(getServiceAccount());
   admin.initializeApp({
     credential: admin.credential.cert(getServiceAccount()),
   });
@@ -18,3 +17,16 @@ if (!admin.apps.length) {
 
 export const dbAdmin = admin.firestore();
 export const fbApp = admin.app();
+
+export async function verifyLoggedInUser(options: {
+  idToken: string;
+  userId: string;
+}) {
+  try {
+    const decoded = await fbApp.auth().verifyIdToken(options.idToken, true);
+    const isLoggedIn = options.userId === decoded.uid;
+    return { ok: true, isLoggedIn };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}

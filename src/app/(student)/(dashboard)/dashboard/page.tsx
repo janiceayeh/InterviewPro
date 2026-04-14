@@ -16,6 +16,7 @@ import PageLoading from "@/components/page-loading";
 import { routes } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
+import { PersonalisedAnalytics } from "@/components/dashboard/personalised-analytics";
 
 function secondsToHMS(seconds: number) {
   const sign = seconds < 0 ? -1 : 1;
@@ -132,12 +133,12 @@ export default function DashboardPage() {
                 <div className="relative h-full overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
                   {/* Gradient Background */}
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}
+                    className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}
                   />
 
                   {/* Icon */}
                   <div
-                    className={`inline-flex items-center justify-center size-14 rounded-xl bg-gradient-to-br ${feature.gradient} mb-6`}
+                    className={`inline-flex items-center justify-center size-14 rounded-xl bg-linear-to-br ${feature.gradient} mb-6`}
                   >
                     <Icon className="size-7 text-primary-foreground" />
                   </div>
@@ -173,7 +174,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Quick Stats */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -213,6 +214,16 @@ export default function DashboardPage() {
             <div className="text-sm text-muted-foreground">Average Score</div>
           </div>
         </div>
+      </motion.div> */}
+
+      {/* Personalized Analytics */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-12"
+      >
+        <PersonalisedAnalytics />
       </motion.div>
 
       <div className="flex justify-center mt-5">

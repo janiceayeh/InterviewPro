@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import {
   COLLECTIONS,
+  DEFAULT_STUDENT_PERSONALISED_ANALYTICS,
   NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION,
 } from "@/lib/constants";
 import {
@@ -30,11 +31,13 @@ import {
   ForumPostFlag,
   ForumPostAnswerFlag,
   ForumFlagsOptions,
+  StudentPersonalisedAnalytics,
+  InterviewSession,
+  UserLastAnsweredInterviewQuestion,
 } from "./types";
 import { PAGE_SIZE, Paginator, QueryBuilder } from "./paginator";
 import { db } from "./firebase";
 import { toast } from "sonner";
-import { useAuth } from "./context/auth-context";
 
 export function useInterviewQuestions() {
   const [loading, setLoading] = useState(false);
@@ -44,18 +47,20 @@ export function useInterviewQuestions() {
   const [hasPrev, setHasPrev] = useState<boolean>(false);
 
   const paginator = useMemo(() => {
+    const pageSize = 50;
     const builder: QueryBuilder = (colRef, cursor) => {
       const clauses = [
         orderBy("createdAt", "desc"),
         // orderBy("category", "asc"),
         cursor ? startAfter(cursor) : undefined,
-        limit(PAGE_SIZE),
+        limit(pageSize),
       ].filter(Boolean) as any[];
       return query(colRef, ...clauses);
     };
     return new Paginator<InterviewQuestion>(
       COLLECTIONS.interviewQuestions,
       builder,
+      pageSize,
     );
   }, []);
 
@@ -413,12 +418,28 @@ export function useMockInterviewQuestions({
       setQuestionsLoading(true);
       (async () => {
         try {
-          const lastQuestionDocSnap = userProfile.lastAnsweredQuestionId
+          const deterministicId = `${userProfile.id}_${questionCategory}`;
+          const lastAnsweredSnap = await getDoc(
+            doc(
+              db,
+              COLLECTIONS.userLastAnsweredInterviewQuestions,
+              deterministicId,
+            ),
+          );
+
+          const lastAnswered = lastAnsweredSnap.exists()
+            ? ({
+                id: lastAnsweredSnap.id,
+                ...lastAnsweredSnap.data(),
+              } as UserLastAnsweredInterviewQuestion)
+            : null;
+
+          const lastAnsweredQuestion = lastAnswered
             ? await getDoc(
                 doc(
                   db,
                   COLLECTIONS.interviewQuestions,
-                  userProfile.lastAnsweredQuestionId,
+                  lastAnswered.questionId,
                 ),
               )
             : null;
@@ -435,10 +456,10 @@ export function useMockInterviewQuestions({
                   "published" satisfies InterviewQuestion["status"],
                 ),
                 orderBy("createdAt", "desc"),
-                ...(lastQuestionDocSnap
-                  ? [startAfter(lastQuestionDocSnap)]
+                ...(lastAnsweredQuestion
+                  ? [startAfter(lastAnsweredQuestion)]
                   : []),
-                limit(NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION), // TODO: change me to the desired number of questions for each session.
+                limit(NUMBER_OF_QUESTIONS_PER_INTERVIEW_SESSION),
               ],
             ),
           );
@@ -447,6 +468,7 @@ export function useMockInterviewQuestions({
             id: doc.id,
             ...doc.data(),
           })) as InterviewQuestion[];
+
           setQuestions(questions);
         } catch (error) {
           console.error(error);
@@ -475,6 +497,7 @@ export function useForumPosts(options?: {
   const [hasPrev, setHasPrev] = useState<boolean>(false);
 
   const paginator = useMemo(() => {
+    const pageSize = 5;
     const builder: QueryBuilder = (colRef, cursor) => {
       const clauses = [
         options?.category && options.category !== "all"
@@ -486,11 +509,11 @@ export function useForumPosts(options?: {
           ? orderBy("answers", "asc")
           : undefined,
         cursor ? startAfter(cursor) : undefined,
-        limit(5),
+        limit(pageSize),
       ].filter(Boolean) as any[];
       return query(colRef, ...clauses);
     };
-    return new Paginator<ForumPost>(COLLECTIONS.forumPosts, builder);
+    return new Paginator<ForumPost>(COLLECTIONS.forumPosts, builder, pageSize);
   }, [options]);
 
   async function next() {
@@ -596,6 +619,7 @@ export function useForumPostAnswers(
   const [hasPrev, setHasPrev] = useState<boolean>(false);
 
   const paginator = useMemo(() => {
+    const pageSize = 5;
     const builder: QueryBuilder = (colRef, cursor) => {
       const clauses = [
         where("postId", "==", postId),
@@ -604,13 +628,14 @@ export function useForumPostAnswers(
           ? orderBy("isAccepted", "desc")
           : undefined,
         cursor ? startAfter(cursor) : undefined,
-        limit(5),
+        limit(pageSize),
       ].filter(Boolean) as any[];
       return query(colRef, ...clauses);
     };
     return new Paginator<ForumPostAnswer>(
       COLLECTIONS.forumPostAnswers,
       builder,
+      pageSize,
     );
   }, [options]);
 
@@ -854,5 +879,162 @@ export function useFlagPost() {
     isFlaggingPost,
     flagPostError,
     flagPost,
+  };
+}
+
+export function useStudentPersonalisedAnalytics() {
+  const [analytics, setAnalytics] =
+    useState<StudentPersonalisedAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+
+  const fetchAnalytics = async (options: { userId: string }) => {
+    try {
+      setAnalyticsLoading(true);
+      const snap = await getDoc(
+        doc(db, COLLECTIONS.studentPersonalisedAnalytics, options.userId),
+      );
+
+      if (snap.exists()) {
+        setAnalytics({
+          id: snap.id,
+          ...(snap.data() as StudentPersonalisedAnalytics),
+        });
+      } else {
+        setAnalytics(DEFAULT_STUDENT_PERSONALISED_ANALYTICS);
+      }
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
+      setAnalyticsError(err.message);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  return {
+    fetchAnalytics,
+    analytics,
+    analyticsLoading,
+    analyticsError,
+  };
+}
+
+export function useInterviewSessions({ userId }: { userId: string }) {
+  const [interviewSessionsLoading, setInterviewSessionsLoading] =
+    useState(false);
+  const [interviewSessionsError, setInterviewSessionsError] = useState<
+    string | null
+  >(null);
+  const [interviewSessions, setInterviewSessions] = useState<
+    InterviewSession[]
+  >([]);
+  const [hasNext, setHasNext] = useState<boolean>(false);
+  const [hasPrev, setHasPrev] = useState<boolean>(false);
+
+  const paginator = useMemo(() => {
+    const pageSize = 50;
+    const builder: QueryBuilder = (colRef, cursor) => {
+      const clauses = [
+        where("userId", "==", userId),
+        where("isCompleted", "==", true),
+        orderBy("createdAt", "desc"),
+        cursor ? startAfter(cursor) : undefined,
+        limit(pageSize),
+      ].filter(Boolean) as any[];
+      return query(colRef, ...clauses);
+    };
+
+    return new Paginator<InterviewSession>(
+      COLLECTIONS.interviewSessions,
+      builder,
+      pageSize,
+    );
+  }, [userId]);
+
+  async function next() {
+    try {
+      setInterviewSessionsLoading(true);
+      setInterviewSessionsError(null);
+
+      const res = await paginator.next();
+      if (res) {
+        const { hasNext, hasPrev, items } = res;
+        setHasNext(hasNext);
+        setHasPrev(hasPrev);
+        setInterviewSessions(items);
+      }
+    } catch (error) {
+      setInterviewSessionsError((error as Error).message);
+    } finally {
+      setInterviewSessionsLoading(false);
+    }
+  }
+
+  async function previous() {
+    try {
+      setInterviewSessionsLoading(true);
+      setInterviewSessionsError(null);
+
+      const res = await paginator.previous();
+      if (res) {
+        const { hasPrev, hasNext, items } = res;
+        setHasPrev(hasPrev);
+        setHasNext(hasNext);
+        setInterviewSessions(items);
+      }
+    } catch (error) {
+      setInterviewSessionsError((error as Error).message);
+    } finally {
+      setInterviewSessionsLoading(false);
+    }
+  }
+
+  async function first() {
+    try {
+      setInterviewSessionsLoading(true);
+      setInterviewSessionsError(null);
+
+      const { hasNext, hasPrev, items } = await paginator.fetchPage(0);
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setInterviewSessions(items);
+    } catch (error) {
+      setInterviewSessionsError((error as Error).message);
+    } finally {
+      setInterviewSessionsLoading(false);
+    }
+  }
+
+  async function refetch() {
+    try {
+      setInterviewSessionsLoading(true);
+      setInterviewSessionsError(null);
+
+      const currentPage = paginator.getCurrentPageIndex();
+      const { hasNext, hasPrev, items } =
+        await paginator.fetchPage(currentPage);
+
+      setHasNext(hasNext);
+      setHasPrev(hasPrev);
+      setInterviewSessions(items);
+    } catch (error) {
+      setInterviewSessionsError((error as Error).message);
+    } finally {
+      setInterviewSessionsLoading(false);
+    }
+  }
+
+  return {
+    interviewSessionsLoading,
+    interviewSessionsError,
+    interviewSessions,
+    next,
+    previous,
+    first,
+    refetch,
+    reset: () => paginator.reset(),
+    pageIndex: paginator.getCurrentPageIndex(),
+    hasPrev,
+    hasNext,
   };
 }

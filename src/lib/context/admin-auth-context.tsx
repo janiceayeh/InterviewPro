@@ -84,9 +84,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           setUser({ ...user, role: isAdminData.data.role });
         }
       }
+
+      setLoading(false);
     });
 
-    setLoading(false);
     return () => unsubscribe();
   }, []);
 

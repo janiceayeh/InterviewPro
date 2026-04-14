@@ -15,7 +15,6 @@ export interface UserProfile {
   firstname: string;
   lastname: string;
   role: string;
-  lastAnsweredQuestionId: string | undefined;
   interviewSessionsCompleted: number | undefined;
   totalPractiseTime: number | undefined; // in seconds
 }
@@ -164,6 +163,32 @@ export interface ForumPostAnswerVote {
   voteType: "upvote" | "downvote";
 }
 
+export interface StudentPersonalisedAnalytics {
+  id?: string;
+  overallReadinessScore: number;
+  totalInterviewsTaken: number;
+  averageScore: number;
+  categoryScores: Record<string, { average: number; count: number }>;
+  progressTrend: Array<{ date: string; score: number }>;
+  recommendations: Array<{
+    title: string;
+    description: string;
+    priority: "high" | "medium" | "low";
+    actionItems: string[];
+  }>;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  userId: string;
+}
+
+export interface UserLastAnsweredInterviewQuestion {
+  id: string;
+  userId: string;
+  questionCategory: string;
+  questionId: string;
+  createdAt: Timestamp;
+}
+
 // ------------
 
 export interface InterviewSessionQA {
@@ -202,4 +227,8 @@ export type ForumFlagsOptions = {
 
 export type DeleteUserResponseDto = {
   ok: boolean;
+};
+
+export type StudentPersonalisedEvaluationResponseDto = {
+  evaluation: StudentPersonalisedAnalytics | null;
 };
