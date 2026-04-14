@@ -27,8 +27,8 @@ import { useRouter } from "next/navigation";
 import PageLoading from "@/components/page-loading";
 import { COLLECTIONS } from "@/lib/constants";
 import { routes } from "@/lib/routes";
-import { UserProfile } from "firebase/auth";
 import { useRoles } from "@/lib/hooks";
+import { UserProfile } from "@/lib/types";
 
 export default function RolesPage() {
   const [field, setField] = useState<string>("");
@@ -57,7 +57,7 @@ export default function RolesPage() {
       {
         role,
         field,
-        createAt: serverTimestamp() as Timestamp,
+        createdAt: serverTimestamp() as Timestamp,
       } satisfies Partial<UserProfile>,
       { merge: true },
     );
@@ -118,7 +118,7 @@ export default function RolesPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Select your field</Label>
+                <Label>Select your field</Label>
                 <Combobox
                   onValueChange={(value: string) => {
                     setField(value);
@@ -139,7 +139,7 @@ export default function RolesPage() {
                 </Combobox>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Select your role</Label>
+                <Label>Select your role</Label>
                 <Combobox
                   onValueChange={(value: string) => {
                     setRole(value);

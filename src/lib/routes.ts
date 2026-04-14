@@ -4,6 +4,7 @@ export const routes = {
   userSignup: () => "/signup",
   userForgotPassword: () => "/forgot-password",
   dashboard: () => "/dashboard",
+  userProfile: () => "/dashboard/profile",
   mockInterview: () => "/dashboard/mock-interview",
   forum: () => "/dashboard/forum",
   newForumPost: () => "/dashboard/forum/new",

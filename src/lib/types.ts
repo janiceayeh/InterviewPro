@@ -10,6 +10,7 @@ import { TInterviewSessionEvaluation } from "./constants";
 export interface UserProfile {
   id: string;
   createdAt: Timestamp;
+  updatedAt?: Timestamp;
   email: string;
   field: string;
   firstname: string;
@@ -17,6 +18,8 @@ export interface UserProfile {
   role: string;
   interviewSessionsCompleted: number | undefined;
   totalPractiseTime: number | undefined; // in seconds
+  about?: string;
+  targetCompanies?: string[];
 }
 
 export interface InterviewQuestion {

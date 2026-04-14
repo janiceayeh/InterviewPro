@@ -295,7 +295,7 @@ export default function ForumPostForm({ post }: Props) {
                       placeholder="Add a helpful tag..."
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
                           tagHandleAdd();

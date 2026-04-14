@@ -9,7 +9,6 @@ import {
   Lightbulb,
   Users,
   MessageSquare,
-  Settings,
   LogOut,
   ChevronDown,
 } from "lucide-react";
@@ -49,12 +48,12 @@ const menuItems = [
     href: routes.adminForumModeration(),
     permission: "manage_forum",
   },
-  {
-    label: "Settings",
-    icon: Settings,
-    href: routes.adminSettings(),
-    permission: "manage_admins",
-  },
+  // {
+  //   label: "Settings",
+  //   icon: Settings,
+  //   href: routes.adminSettings(),
+  //   permission: "manage_admins",
+  // },
 ];
 
 export function AdminSidebar() {

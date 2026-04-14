@@ -122,19 +122,19 @@ export function DashboardNav() {
                       Plans & Billing
                     </Link>
                   </DropdownMenuItem> */}
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild className="cursor-pointer">
                     <Link
-                      href="/dashboard/settings"
+                      href={routes.userProfile()}
                       className="flex items-center gap-2"
                     >
-                      <Settings className="size-4" />
-                      Settings
+                      <User className="size-4" />
+                      Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-destructive focus:text-destructive"
+                    className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
                   >
                     <LogOut className="size-4" />
                     Log out
