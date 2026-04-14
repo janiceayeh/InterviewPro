@@ -18,15 +18,6 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { PersonalisedAnalytics } from "@/components/dashboard/personalised-analytics";
 
-function secondsToHMS(seconds: number) {
-  const sign = seconds < 0 ? -1 : 1;
-  seconds = Math.abs(Math.floor(seconds));
-  const h = Math.floor(seconds / 3600) * sign;
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return { hours: h, minutes: m, seconds: s };
-}
-
 const features = [
   {
     title: "Mock Interview Prep",
@@ -84,8 +75,6 @@ const item = {
 export default function DashboardPage() {
   const { user, userProfile, loading: userLoading, getUserProfile } = useAuth();
   const firstName = userProfile?.firstname || user.displayName.split(" ")[0];
-
-  const practiseTime = secondsToHMS(userProfile?.totalPractiseTime ?? 0);
 
   //TODO:
   // 1. Display average scores
@@ -151,16 +140,6 @@ export default function DashboardPage() {
                     {feature.description}
                   </p>
 
-                  {/* Stats */}
-                  <div className="flex gap-6 mb-6">
-                    {/* {feature.stats.map((stat) => (
-                      <div key={stat.label}>
-                        <div className="text-lg font-bold text-foreground">{stat.value}</div>
-                        <div className="text-xs text-muted-foreground">{stat.label}</div>
-                      </div>
-                    ))} */}
-                  </div>
-
                   {/* CTA */}
                   <div className="flex items-center gap-2 text-primary font-medium">
                     <span>Get started</span>
@@ -225,15 +204,6 @@ export default function DashboardPage() {
       >
         <PersonalisedAnalytics />
       </motion.div>
-
-      <div className="flex justify-center mt-5">
-        <Link href={routes.mockInterviewHistory()}>
-          <Button variant="default" size="lg" className="h-12 px-8">
-            View Mock Interview History
-            <ArrowRight className="ml-2 size-4" />
-          </Button>
-        </Link>
-      </div>
     </div>
   );
 }

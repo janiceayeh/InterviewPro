@@ -173,12 +173,12 @@ export default function MockInterviewPage() {
                       >
                         <Icon className="size-6 text-primary-foreground" />
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="size-4" />
                           {category.duration}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                     <CardTitle className="mt-4">{category.title}</CardTitle>
                     <CardDescription>{category.description}</CardDescription>

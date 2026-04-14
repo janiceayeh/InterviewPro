@@ -47,10 +47,20 @@ const priorityConfig = {
   low: { color: "secondary", icon: CheckCircle2, label: "Suggestion" },
 };
 
+function secondsToHMS(seconds: number) {
+  const sign = seconds < 0 ? -1 : 1;
+  seconds = Math.abs(Math.floor(seconds));
+  const h = Math.floor(seconds / 3600) * sign;
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return { hours: h, minutes: m, seconds: s };
+}
+
 export function PersonalisedAnalytics() {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { analytics, analyticsError, analyticsLoading, fetchAnalytics } =
     useStudentPersonalisedAnalytics();
+  const practiseTime = secondsToHMS(userProfile?.totalPractiseTime ?? 0);
 
   useEffect(() => {
     if (user) {
@@ -129,7 +139,7 @@ export function PersonalisedAnalytics() {
                   <Award className="size-5 text-primary" />
                   Interview Readiness Score
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mt-2">
                   Your overall preparation level for interviews
                 </CardDescription>
               </div>
@@ -234,6 +244,22 @@ export function PersonalisedAnalytics() {
                     className="h-2"
                   />
                 </div>
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-foreground">
+                      Practice Time
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center size-12 rounded-lg bg-accent/20">
+                      <Clock className="size-6 text-accent" />
+                    </div>
+                    <div className="text-2xl font-bold text-foreground">
+                      {practiseTime.hours}h:{practiseTime.minutes}m:
+                      {practiseTime.seconds}s
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -271,17 +297,18 @@ export function PersonalisedAnalytics() {
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "var(--background)",
+                        border: "1px solid var(--border)",
                       }}
-                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                      labelStyle={{ color: "var(--foreground)" }}
                     />
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--primary))" }}
+                      stroke="var(--primary)"
+                      strokeWidth={2.5}
+                      dot={{ fill: "var(--primary)", r: 5 }}
+                      activeDot={{ r: 7 }}
                       isAnimationActive={true}
                       name="Score"
                     />
@@ -329,14 +356,14 @@ export function PersonalisedAnalytics() {
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "var(--background)",
+                        border: "1px solid var(--border)",
                       }}
-                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                      labelStyle={{ color: "var(--foreground)" }}
                     />
                     <Bar
                       dataKey="score"
-                      fill="hsl(var(--primary))"
+                      fill="var(--chart-2)"
                       name="Average Score"
                     />
                   </BarChart>
@@ -433,13 +460,13 @@ export function PersonalisedAnalytics() {
                 Your latest interview sessions
               </CardDescription>
             </div>
-            <Button asChild variant="outline" size="sm">
+            <Button variant="default" asChild>
               <Link
                 href={routes.mockInterviewHistory()}
                 className="flex items-center gap-2"
               >
-                View All
-                <ArrowRight className="size-4" />
+                View all
+                <ArrowRight className="ml-2 size-4" />
               </Link>
             </Button>
           </CardHeader>
