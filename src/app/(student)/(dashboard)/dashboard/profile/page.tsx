@@ -70,7 +70,7 @@ export default function StudentProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [targetCompanyInput, setTargetCompanyInput] = useState("");
+  // const [targetCompanyInput, setTargetCompanyInput] = useState("");
   const { roles: industryRoles, rolesLoading } = useRoles();
   const fields = industryRoles.map((roleObject) => roleObject.category);
 

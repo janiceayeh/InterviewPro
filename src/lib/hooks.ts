@@ -1038,3 +1038,326 @@ export function useInterviewSessions({ userId }: { userId: string }) {
     hasNext,
   };
 }
+
+export function useTotalUsers() {
+  const [totalUsersLoading, setTotalUsersLoading] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalUsersError, setTotalUsersError] = useState<Error | null>(null);
+
+  async function getTotalUsers() {
+    try {
+      setTotalUsersLoading(true);
+      const countSnap = await getCountFromServer(
+        query(collection(db, COLLECTIONS.users)),
+      );
+      const totalUsers = countSnap.data().count ?? 0;
+      setTotalUsers(totalUsers);
+      return { ok: true, totalUsers };
+    } catch (error) {
+      console.error(error);
+      setTotalUsersError(error);
+      return { error: error as Error };
+    } finally {
+      setTotalUsersLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getTotalUsers();
+  }, []);
+
+  return {
+    getTotalUsers,
+    totalUsersLoading,
+    totalUsers,
+    totalUsersError,
+  };
+}
+
+export function useTotalInterviews() {
+  const [totalInterviewsLoading, setTotalInterviewsLoading] = useState(false);
+  const [totalInterviews, setTotalInterviews] = useState(0);
+  const [totalInterviewsError, setTotalInterviewsError] =
+    useState<Error | null>(null);
+
+  async function getTotalInterviews() {
+    try {
+      setTotalInterviewsLoading(true);
+      const countSnap = await getCountFromServer(
+        query(collection(db, COLLECTIONS.interviewSessions)),
+      );
+      const totalInterviews = countSnap.data().count ?? 0;
+      setTotalInterviews(totalInterviews);
+      return { ok: true, totalInterviews };
+    } catch (error) {
+      console.error(error);
+      setTotalInterviewsError(error);
+      return { error: error as Error };
+    } finally {
+      setTotalInterviewsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getTotalInterviews();
+  }, []);
+
+  return {
+    getTotalInterviews,
+    totalInterviewsLoading,
+    totalInterviews,
+    totalInterviewsError,
+  };
+}
+
+export function useInterviewCompletionRate() {
+  const [interviewCompletionRateLoading, setInterviewCompletionRateLoading] =
+    useState(false);
+  const [interviewCompletionRate, setInterviewCompletionRate] = useState(0);
+  const [interviewCompletionRateError, setInterviewCompletionRateError] =
+    useState<Error | null>(null);
+
+  const { getTotalInterviews } = useTotalInterviews();
+
+  async function getInterviewCompletionRate() {
+    try {
+      setInterviewCompletionRateLoading(true);
+      const countSnap = await getCountFromServer(
+        query(
+          collection(db, COLLECTIONS.interviewSessions),
+          where("isCompleted", "==", true),
+        ),
+      );
+      const completedInterviews = countSnap.data().count ?? 0;
+      const { ok, error, totalInterviews } = await getTotalInterviews();
+      if (error) {
+        setInterviewCompletionRateError(error);
+        return { error };
+      }
+      if (ok) {
+        const completionRate = Math.round(
+          (completedInterviews / totalInterviews) * 100,
+        );
+        setInterviewCompletionRate(completionRate);
+        return { ok: true, completionRate };
+      }
+    } catch (error) {
+      console.error(error);
+      setInterviewCompletionRateError(error);
+      return { error: error as Error };
+    } finally {
+      setInterviewCompletionRateLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getInterviewCompletionRate();
+  }, []);
+
+  return {
+    getInterviewCompletionRate,
+    interviewCompletionRateLoading,
+    interviewCompletionRate,
+    interviewCompletionRateError,
+  };
+}
+
+export function useTotalForumPosts() {
+  const [totalForumPostsLoading, setTotalForumPostsLoading] = useState(false);
+  const [totalForumPosts, setTotalForumPosts] = useState(0);
+  const [totalForumPostsError, setTotalForumPostsError] =
+    useState<Error | null>(null);
+
+  async function getTotalForumPosts() {
+    try {
+      setTotalForumPostsLoading(true);
+      const countSnap = await getCountFromServer(
+        query(collection(db, COLLECTIONS.forumPosts)),
+      );
+      const totalForumPosts = countSnap.data().count ?? 0;
+      setTotalForumPosts(totalForumPosts);
+      return { ok: true, totalForumPosts };
+    } catch (error) {
+      console.error(error);
+      setTotalForumPostsError(error);
+      return { error: error as Error };
+    } finally {
+      setTotalForumPostsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getTotalForumPosts();
+  }, []);
+
+  return {
+    getTotalForumPosts,
+    totalForumPostsLoading,
+    totalForumPosts,
+    totalForumPostsError,
+  };
+}
+
+export function useTotalQuestions() {
+  const [totalQuestionsLoading, setTotalQuestionsLoading] = useState(false);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [totalQuestionsError, setTotalQuestionsError] = useState<Error | null>(
+    null,
+  );
+
+  async function getTotalQuestions() {
+    try {
+      setTotalQuestionsLoading(true);
+      const countSnap = await getCountFromServer(
+        query(collection(db, COLLECTIONS.interviewQuestions)),
+      );
+      const totalQuestions = countSnap.data().count ?? 0;
+      setTotalQuestions(totalQuestions);
+      return { ok: true, totalQuestions };
+    } catch (error) {
+      console.error(error);
+      setTotalQuestionsError(error);
+      return { error: error as Error };
+    } finally {
+      setTotalQuestionsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getTotalQuestions();
+  }, []);
+
+  return {
+    getTotalQuestions,
+    totalQuestionsLoading,
+    totalQuestions,
+    totalQuestionsError,
+  };
+}
+
+type MonthlyUsers = { month: string; count: number };
+export function useMonthlyUserCounts() {
+  const [monthlyUsersLoading, setMonthlyUsersLoading] = useState(true);
+  const [monthlyUsersError, setMonthlyUsersError] = useState<string | null>(
+    null,
+  );
+  const [monthlyUsers, setMonthlyUsers] = useState<MonthlyUsers[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchCounts() {
+      setMonthlyUsersLoading(true);
+      setMonthlyUsersError(null);
+
+      try {
+        const now = new Date();
+        // build 6 month buckets including current month
+        const buckets: { start: Date; end: Date; key: string }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+          const end = new Date(
+            d.getFullYear(),
+            d.getMonth() + 1,
+            1,
+            0,
+            0,
+            0,
+            0,
+          );
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; // YYYY-MM
+          buckets.push({ start, end, key });
+        }
+
+        // run count queries sequentially to avoid hitting quotas; parallel is possible
+        const results: MonthlyUsers[] = [];
+        for (const b of buckets) {
+          const q = query(
+            collection(db, COLLECTIONS.users),
+            where("createdAt", ">=", Timestamp.fromDate(b.start)),
+            where("createdAt", "<", Timestamp.fromDate(b.end)),
+          );
+          const aggregate = await getCountFromServer(q);
+          results.push({ month: b.key, count: aggregate.data().count });
+        }
+
+        if (!mounted) return;
+        setMonthlyUsers(results);
+      } catch (err) {
+        if (!mounted) return;
+        setMonthlyUsersError((err as Error).message);
+      } finally {
+        if (!mounted) return;
+        setMonthlyUsersLoading(false);
+      }
+    }
+
+    fetchCounts();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return { monthlyUsersLoading, monthlyUsersError, monthlyUsers }; // data ordered oldest -> newest (6 months)
+}
+
+type InterviewsByCategory = {
+  category: InterviewQuestion["category"];
+  count: number;
+};
+export function useCompletedInterviewsByCategoryCount() {
+  const [
+    completedInterviewsByCategoryLoading,
+    setCompletedInterviewsByCategoryLoading,
+  ] = useState(false);
+  const [
+    completedInterviewsByCategoryError,
+    setCompletedInterviewsByCategoryError,
+  ] = useState<Error | null>(null);
+  const [completedInterviewsByCategory, setCompletedInterviewsByCategory] =
+    useState<InterviewsByCategory[]>([]);
+
+  async function getCompletedInterviewsByCategory() {
+    try {
+      setCompletedInterviewsByCategoryLoading(true);
+      const categories = ["technical", "situational", "general", "behavioral"];
+      const result: InterviewsByCategory[] = [];
+      for (const category of categories) {
+        const countSnap = await getCountFromServer(
+          query(
+            collection(db, COLLECTIONS.interviewSessions),
+            where("isCompleted", "==", true),
+            where("interviewCategory", "==", category),
+          ),
+        );
+
+        result.push({
+          category: category as InterviewsByCategory["category"],
+          count: countSnap.data().count ?? 0,
+        });
+      }
+
+      setCompletedInterviewsByCategory(result);
+
+      return { ok: true, completedInterviewsByCategory: result };
+    } catch (error) {
+      console.error(error);
+      setCompletedInterviewsByCategoryError(error);
+      return { error: error as Error };
+    } finally {
+      setCompletedInterviewsByCategoryLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getCompletedInterviewsByCategory();
+  }, []);
+
+  return {
+    completedInterviewsByCategoryLoading,
+    completedInterviewsByCategoryError,
+    completedInterviewsByCategory,
+    getCompletedInterviewsByCategory,
+  };
+}
