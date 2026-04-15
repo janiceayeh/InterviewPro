@@ -38,7 +38,7 @@ export function ForumFlagsSheet({ open, onOpenChange, flagType, id }: Props) {
       flagType,
       id,
     });
-  }, []);
+  }, [flagType, id]);
 
   useEffect(() => {
     if (!flagsLoading && flagsError) {
