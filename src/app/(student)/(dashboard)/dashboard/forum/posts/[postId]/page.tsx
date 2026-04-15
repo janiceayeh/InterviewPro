@@ -187,8 +187,8 @@ export default function PostDetailPage() {
 
   return (
     <>
-      <div className="flex justify-center   py-10 w-full">
-        <div className="min-w-lg max-w-lg">
+      <div className="flex justify-center py-10 w-full">
+        <div className="px-6 md:px-0 md:min-w-lg md:max-w-lg">
           <Link href={routes.forum()}>
             <Button
               variant="link"

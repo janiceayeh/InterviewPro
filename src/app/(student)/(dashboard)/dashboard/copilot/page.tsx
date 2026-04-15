@@ -226,101 +226,105 @@ export default function CopilotPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-1rem)] flex gap-0 bg-background">
+    <div className="h-[calc(100dvh-5rem)] flex gap-0 bg-background">
       {/* Sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: -256 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -256 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 md:relative md:z-0 md:inset-auto w-64 bg-background border-r border-border flex flex-col"
-          >
-            <div className="p-4 space-y-2">
-              <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="size-5 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  Interview Copilot
-                </span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">
-                Practice with AI
-              </h1>
-              <p className="text-muted-foreground text-xs">
-                Chat with our AI interviewer for real-time practice and feedback
-              </p>
-              <div className="flex items-center  ">
-                {messages.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={requestSummary}
-                      disabled={isLoading}
-                    >
-                      <FileText className="size-4 mr-2" />
-                      Summary
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Sidebar Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              {/* New Chat Button */}
-              <Button
-                onClick={startNewSession}
-                className="w-full gap-2 bg-primary hover:bg-primary/90"
-              >
-                <Plus className="size-4" />
-                New Chat
-              </Button>
-            </div>
-
-            {/* Chat List */}
-            <div className="flex-1 overflow-y-auto space-y-1 p-4">
-              {isLoadingHistory ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="size-4 animate-spin text-primary" />
+          <>
+            <motion.div
+              initial={{ opacity: 0, x: -256 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -256 }}
+              transition={{ duration: 0.2 }}
+              className="fixed top-16 left-0 bottom-0 z-50 w-64 bg-background border-r border-border flex flex-col overflow-hidden"
+            >
+              <div className="p-4 space-y-2 border-t">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="size-5 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    Interview Copilot
+                  </span>
                 </div>
-              ) : chatHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No chat history yet
+                <h1 className="text-xl font-bold text-foreground">
+                  Practice with AI
+                </h1>
+                <p className="text-muted-foreground text-xs">
+                  Chat with our AI interviewer for real-time practice and
+                  feedback
                 </p>
-              ) : (
-                chatHistory.map((chat) => (
-                  <motion.div
-                    key={chat.id}
-                    onClick={() => loadChat(chat)}
-                    whileHover={{ x: 4 }}
-                    className={cn(
-                      "w-full text-left py-1 px-2 rounded-lg transition-colors group cursor-pointer",
-                      currentChatId === chat.id
-                        ? "bg-primary/10 border border-primary/30"
-                        : "hover:bg-muted border border-transparent",
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {chat.title}
-                        </p>
-                      </div>
+                <div className="flex items-center">
+                  {messages.length > 0 && (
+                    <div className="flex items-center gap-2">
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                        onClick={(e) => deleteChat(chat.id, e)}
+                        variant="outline"
+                        size="sm"
+                        onClick={requestSummary}
+                        disabled={isLoading}
                       >
-                        <Trash2 className="size-3 text-destructive" />
+                        <FileText className="size-4  " />
+                        Summary
                       </Button>
                     </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
-          </motion.div>
+                  )}
+                </div>
+              </div>
+              {/* Sidebar Header */}
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                {/* New Chat Button */}
+                <Button
+                  onClick={startNewSession}
+                  className="w-full gap-2 bg-primary hover:bg-primary/90"
+                >
+                  <Plus className="size-4" />
+                  New Chat
+                </Button>
+              </div>
+
+              {/* Chat List */}
+              <div className="flex-1 overflow-y-auto space-y-1 p-4">
+                {isLoadingHistory ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                  </div>
+                ) : chatHistory.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No chat history yet
+                  </p>
+                ) : (
+                  chatHistory.map((chat) => (
+                    <motion.div
+                      key={chat.id}
+                      onClick={() => loadChat(chat)}
+                      whileHover={{ x: 4 }}
+                      className={cn(
+                        "w-full text-left py-1 px-2 rounded-lg transition-colors group cursor-pointer",
+                        currentChatId === chat.id
+                          ? "bg-primary/10 border border-primary/30"
+                          : "hover:bg-muted border border-transparent",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {chat.title}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          onClick={(e) => deleteChat(chat.id, e)}
+                        >
+                          <Trash2 className="size-3 text-destructive" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+            <div className="w-64 h-100vh"></div>
+          </>
         )}
       </AnimatePresence>
 
@@ -337,6 +341,16 @@ export default function CopilotPage() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col w-full">
+        <div className="p-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden"
+          >
+            <Menu className="size-4" />
+          </Button>
+        </div>
         {/* Chat Container */}
         <div className="flex-1 flex flex-col overflow-hidden mx-auto md:min-w-4xl md:max-w-4xl">
           {/* Messages */}

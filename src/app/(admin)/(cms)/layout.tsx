@@ -26,10 +26,15 @@ export default function CMSLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <AdminSidebar />
-      <main className="flex-1 ml-64 transition-all duration-300">
-        <div className="min-h-screen bg-background/50 p-8">{children}</div>
+      <main
+        className="transition-all duration-300 min-w-0 ml-auto"
+        style={{ width: "calc(100% - var(--sidebar-width))" }}
+      >
+        <div className="p-8 bg-background/50 min-h-screen overflow-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
