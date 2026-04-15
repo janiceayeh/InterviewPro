@@ -12,6 +12,7 @@ import {
   Trash2Icon,
   Loader2,
   AlertCircle,
+  XIcon,
 } from "lucide-react";
 import {
   Table,
@@ -56,35 +57,6 @@ import PageLoading from "@/components/page-loading";
 import { InterviewTip } from "@/lib/types";
 import { useInterviewTips } from "@/lib/hooks";
 
-async function tipGetHelpfulCount(tipId: string) {
-  try {
-    const docSnap = await getCountFromServer(
-      query(
-        collection(db, COLLECTIONS.interviewTipHelpfuls),
-        where("tipId", "==", tipId),
-        where("isHelpful", "==", true),
-      ),
-    );
-    return { ok: true, tipHelpfulCount: docSnap.data().count };
-  } catch (error) {
-    return { error: error as Error };
-  }
-}
-
-async function tipGetViewsCount(tipId: string) {
-  try {
-    const docSnap = await getCountFromServer(
-      query(
-        collection(db, COLLECTIONS.interviewTipViews),
-        where("tipId", "==", tipId),
-      ),
-    );
-    return { ok: true, tipViewsCount: docSnap.data().count };
-  } catch (error) {
-    return { error: error as Error };
-  }
-}
-
 export default function TipsPage() {
   const {
     error,
@@ -97,6 +69,7 @@ export default function TipsPage() {
     hasNext,
     hasPrev,
     refetch,
+    search,
   } = useInterviewTips();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,10 +77,8 @@ export default function TipsPage() {
   const [tipConfirmDeleteOpen, setTipConfirmDeleteOpen] = useState(false);
   const [tipSelected, setTipSelected] = useState<InterviewTip | null>(null);
   const [tipDeleting, setTipDeleting] = useState(false);
-  const [filteredTips, setFilteredTips] = useState([]);
-  const [tipHelpfulCountLoading, setTipHelpfulCountLoading] = useState(false);
 
-  const noTipsFound = filteredTips.length === 0;
+  const noTipsFound = tips?.length === 0;
 
   async function deleteTip(tipId: string) {
     try {
@@ -123,50 +94,17 @@ export default function TipsPage() {
     }
   }
 
+  const handleClear = () => {
+    setSearchQuery("");
+    reset();
+    first();
+  };
+
   useEffect(() => {
     first();
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      setTipHelpfulCountLoading(true);
-      const filteredTips = tips
-        .filter(
-          (t) =>
-            t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            t.category.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-        .map(async (tip) => {
-          const {
-            error: helpfulErr,
-            ok: helpfulOk,
-            tipHelpfulCount,
-          } = await tipGetHelpfulCount(tip.id);
-          if (helpfulErr) {
-            console.error(helpfulErr);
-          } else if (helpfulOk) {
-            tip.helpfulCount = tipHelpfulCount;
-          }
-          const {
-            error: viewsErr,
-            ok: viewsOk,
-            tipViewsCount,
-          } = await tipGetViewsCount(tip.id);
-          if (viewsErr) {
-            console.error(viewsErr);
-          } else if (viewsOk) {
-            tip.viewsCount = tipViewsCount;
-          }
-          return tip;
-        });
-      Promise.all(filteredTips).then((tips) => {
-        setTipHelpfulCountLoading(false);
-        setFilteredTips(tips);
-      });
-    })();
-  }, [tips, searchQuery]);
-
-  if (loading || tipHelpfulCountLoading) return <PageLoading />;
+  if (loading) return <PageLoading />;
   return (
     <div className="space-y-6">
       {/* Error Alert */}
@@ -205,14 +143,30 @@ export default function TipsPage() {
       </div>
 
       {/* Search */}
-      <div className="relative">
+      <div className="relative max-w-lg">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search tips..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              search({ searchTerm: searchQuery });
+            }
+          }}
         />
+
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+          >
+            <XIcon className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -238,7 +192,7 @@ export default function TipsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTips.map((tip) => (
+              tips?.map((tip) => (
                 <TableRow
                   key={tip.id}
                   className="border-border/30 hover:bg-muted/50"

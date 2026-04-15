@@ -33,12 +33,14 @@ export default function ForumPage() {
     error,
     refetch,
     search,
+    reset,
   } = useForumPosts({ category: selectedCategory, sortBy: sortBy });
 
   const noForumPosts = forumPosts?.length === 0;
 
   const handleClear = () => {
     setSearchQuery("");
+    reset();
     first();
   };
 

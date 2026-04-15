@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Eye, Trash2Icon, Loader2 } from "lucide-react";
+import { Search, Trash2, Eye, Trash2Icon, Loader2, XIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -49,8 +49,9 @@ export default function ForumModerationPage() {
     previous,
     refetch,
     first,
-    reset,
+    search,
     error,
+    reset,
   } = useForumPosts();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPost, setSelectedPost] = useState<ForumPost | null>(null);
@@ -59,6 +60,12 @@ export default function ForumModerationPage() {
   const [postDeleting, setPostDeleting] = useState(false);
 
   const noForumPosts = forumPosts?.length === 0;
+
+  const handleClear = () => {
+    setSearchQuery("");
+    reset();
+    first();
+  };
 
   async function deletePost(postId: string) {
     try {
@@ -86,10 +93,6 @@ export default function ForumModerationPage() {
     }
   }, [loading, error]);
 
-  const filteredPosts = forumPosts?.filter((p) =>
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   if (loading) {
     return <PageLoading />;
   }
@@ -110,14 +113,30 @@ export default function ForumModerationPage() {
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative max-w-lg">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search forum posts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                search({ searchTerm: searchQuery });
+              }
+            }}
           />
+
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+            >
+              <XIcon className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {/* Table */}
@@ -136,14 +155,14 @@ export default function ForumModerationPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPosts.length === 0 ? (
+              {forumPosts?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
                     <div className="text-muted-foreground">No posts found</div>
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPosts.map((post) => (
+                forumPosts?.map((post) => (
                   <TableRow
                     key={post.id}
                     className="border-border/30 hover:bg-muted/50"
