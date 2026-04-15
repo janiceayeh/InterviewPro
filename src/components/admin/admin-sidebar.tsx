@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { routes } from "@/lib/routes";
 
 const menuItems = [
@@ -64,6 +64,15 @@ export function AdminSidebar() {
   const visibleItems = menuItems.filter((item) =>
     hasPermission(item.permission),
   );
+
+  useEffect(() => {
+    // set CSS variable on root of layout (the aside element or documentElement)
+    const root = document.documentElement; // or target a wrapper element if preferred
+    root.style.setProperty("--sidebar-width", isCollapsed ? "5rem" : "16rem"); // w-20 = 5rem, w-64 = 16rem
+    return () => {
+      // optional cleanup
+    };
+  }, [isCollapsed]);
 
   return (
     <aside

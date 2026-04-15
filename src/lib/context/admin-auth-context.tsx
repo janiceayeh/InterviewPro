@@ -70,6 +70,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
       const { ok, error, isAdminData } = await isAdmin(user?.email);
       if (error) {
         setError(error.message);

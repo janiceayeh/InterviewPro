@@ -497,7 +497,7 @@ export function useForumPosts(options?: {
   const [hasPrev, setHasPrev] = useState<boolean>(false);
 
   const paginator = useMemo(() => {
-    const pageSize = 5;
+    const pageSize = 50;
     const builder: QueryBuilder = (colRef, cursor) => {
       const clauses = [
         options?.category && options.category !== "all"
@@ -589,6 +589,56 @@ export function useForumPosts(options?: {
     }
   }
 
+  async function search(params: { searchTerm: string }) {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const builder: QueryBuilder = (colRef, cursor) => {
+        const clauses = [
+          options?.category && options.category !== "all"
+            ? where("category", "==", options.category)
+            : undefined,
+          options?.sortBy === "recent"
+            ? orderBy("createdAt", "desc")
+            : undefined,
+          options?.sortBy === "popular" ? orderBy("views", "desc") : undefined,
+          options?.sortBy === "unanswered"
+            ? orderBy("answers", "asc")
+            : undefined,
+          cursor ? startAfter(cursor) : undefined,
+        ].filter(Boolean) as any[];
+        return query(colRef, ...clauses);
+      };
+
+      paginator.buildQuery = builder;
+
+      const currentPage = paginator.getCurrentPageIndex();
+      const { items } = await paginator.fetchPage(currentPage);
+
+      const normalisedSearchTerm = (params.searchTerm ?? "")
+        .trim()
+        .toLowerCase();
+
+      const filteredItems = items.filter(
+        (item) =>
+          item.title.trim().toLowerCase().includes(normalisedSearchTerm) ||
+          item.content.trim().toLowerCase().includes(normalisedSearchTerm) ||
+          item.tags.some((t) =>
+            t.trim().toLowerCase().includes(normalisedSearchTerm),
+          ),
+      );
+
+      setHasNext(false);
+      setHasPrev(false);
+      setForumPosts(filteredItems);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     loading,
     error,
@@ -601,6 +651,7 @@ export function useForumPosts(options?: {
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev,
     hasNext,
+    search,
   };
 }
 

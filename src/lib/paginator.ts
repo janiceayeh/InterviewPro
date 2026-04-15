@@ -20,7 +20,7 @@ export class Paginator<D> {
   private collectionPath: string;
   private pageSnapshots: (QueryDocumentSnapshot<DocumentData> | null)[] = [];
   private currentPage = 0;
-  private buildQuery: QueryBuilder;
+  public buildQuery: QueryBuilder;
 
   constructor(
     collectionPath: string,

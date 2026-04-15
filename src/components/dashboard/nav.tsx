@@ -187,7 +187,7 @@ export function DashboardNav() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md">
+      {/* <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -209,7 +209,7 @@ export function DashboardNav() {
             );
           })}
         </div>
-      </nav>
+      </nav> */}
     </>
   );
 }

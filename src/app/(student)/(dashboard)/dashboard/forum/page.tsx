@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CategoryFilter } from "@/components/forum/category-filter";
 import { useAuth } from "@/lib/context/auth-context";
-import { Plus } from "lucide-react";
+import { Plus, XIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { routes } from "@/lib/routes";
 import { useForumPosts } from "@/lib/hooks";
@@ -32,11 +32,10 @@ export default function ForumPage() {
     forumPosts,
     error,
     refetch,
+    search,
   } = useForumPosts({ category: selectedCategory, sortBy: sortBy });
 
   const noForumPosts = forumPosts?.length === 0;
-
-  const handleSearch = async (query: string) => {};
 
   const handleClear = () => {
     setSearchQuery("");
@@ -110,7 +109,7 @@ export default function ForumPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="hidden md:block space-y-4 md:space-y-6"
+            className="md:block space-y-4 md:space-y-6"
           >
             {/* Create Post Card */}
             <Card className="p-4 md:p-6 sticky top-24">
@@ -180,9 +179,26 @@ export default function ForumPage() {
             <div className="relative">
               <Input
                 placeholder="Search for questions"
-                onChange={(e) => handleSearch(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-4 text-sm rounded-full"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    search({ searchTerm: searchQuery });
+                  }
+                }}
               />
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+                >
+                  <XIcon />
+                </button>
+              )}
             </div>
 
             {/* Posts Feed */}

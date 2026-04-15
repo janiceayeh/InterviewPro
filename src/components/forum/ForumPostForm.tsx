@@ -335,7 +335,7 @@ export default function ForumPostForm({ post }: Props) {
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-4">
+        <div className="px-2 flex gap-4">
           <Button
             type="submit"
             size="lg"
