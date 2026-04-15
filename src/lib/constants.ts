@@ -19,6 +19,7 @@ export const COLLECTIONS = {
   forumPostAnswerFlags: "forum-post-answer-flags",
   studentPersonalisedAnalytics: "student-personalised-analytics",
   userLastAnsweredInterviewQuestions: "user-last-answered-interview-questions",
+  copilotChats: "copilot-chats",
 };
 
 export const InterviewSessionEvaluationSchema = z.object({

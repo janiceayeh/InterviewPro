@@ -52,5 +52,9 @@ export const routes = {
     isAdmin: ({ email }: { email: string }) => `/api/users/${email}/is-admin`,
     deleteUser: ({ email }: { email: string }) => `/api/users/${email}/delete`,
     studentPersonalisedAnalytics: () => "/api/analytics/overview",
+    saveCopilotChat: () => "/api/copilot-chat/save",
+    getCopilotChatHistory: () => "/api/copilot-chat/history",
+    deleteCopilotChat: ({ chatId }: { chatId: string }) =>
+      `/api/copilot-chat/delete?id=${chatId}`,
   },
 };

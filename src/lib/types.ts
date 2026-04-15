@@ -4,6 +4,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { TInterviewSessionEvaluation } from "./constants";
+import { UIDataTypes, UIMessage, UITools } from "ai";
 
 //collections
 
@@ -192,6 +193,16 @@ export interface UserLastAnsweredInterviewQuestion {
   createdAt: Timestamp;
 }
 
+export interface CopilotChat {
+  userId: string;
+  title: string;
+  messages: UIMessage<unknown, UIDataTypes, UITools>[];
+  messageCount: number;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  id: string;
+}
+
 // ------------
 
 export interface InterviewSessionQA {
@@ -235,3 +246,21 @@ export type DeleteUserResponseDto = {
 export type StudentPersonalisedEvaluationResponseDto = {
   evaluation: StudentPersonalisedAnalytics | null;
 };
+
+export type SaveCopilotChatResponseDto = {
+  chat: CopilotChat | null;
+};
+
+export interface SaveCopilotChatRequestDto {
+  chatId?: string;
+  title: string;
+  messages: UIMessage[];
+}
+
+export interface GetCopilotChatHistoryResponseDto {
+  chatHistory: CopilotChat[] | null;
+}
+
+export interface DeleteCopilotChatResponseDto {
+  success: boolean;
+}
