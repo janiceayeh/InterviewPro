@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Eye, Trash2Icon, Loader2 } from "lucide-react";
+import { Search, Trash2, Eye, Trash2Icon, Loader2, XIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -43,6 +43,8 @@ export default function UsersPage() {
     hasNext,
     hasPrev,
     refetch,
+    search,
+    reset,
   } = useUserProfiles();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,11 +52,13 @@ export default function UsersPage() {
   const [userDeleting, setUserDeleting] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
-  const filteredUsers = userProfiles?.filter((u) =>
-    u?.email?.toLowerCase()?.includes(searchQuery.toLowerCase()),
-  );
+  const noUsersFound = userProfiles?.length === 0;
 
-  const noUsersFound = filteredUsers.length === 0;
+  const handleClear = () => {
+    setSearchQuery("");
+    reset();
+    first();
+  };
 
   async function removeUser(user: UserProfile) {
     try {
@@ -105,14 +109,30 @@ export default function UsersPage() {
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative max-w-lg">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search users by email or name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                search({ searchTerm: searchQuery });
+              }
+            }}
           />
+
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+            >
+              <XIcon className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {/* Table */}
@@ -137,7 +157,7 @@ export default function UsersPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.map((user) => (
+                userProfiles?.map((user) => (
                   <TableRow
                     key={user.id}
                     className="border-border/30 hover:bg-muted/50"

@@ -5,7 +5,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Edit2, Plus, Search, Trash2Icon, Loader2 } from "lucide-react";
+import {
+  Trash2,
+  Edit2,
+  Plus,
+  Search,
+  Trash2Icon,
+  Loader2,
+  XIcon,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -56,6 +64,7 @@ export default function InterviewQuestionsPage() {
     hasNext,
     hasPrev,
     refetch,
+    search,
   } = useInterviewQuestions();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,11 +75,11 @@ export default function InterviewQuestionsPage() {
     useState<InterviewQuestion | null>(null);
   const [questionDeleting, setQuestionDeleting] = useState(false);
 
-  const filteredQuestions = questions.filter(
-    (q) =>
-      q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      q.category.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const handleClear = () => {
+    setSearchQuery("");
+    reset();
+    first();
+  };
 
   const difficultyColor = {
     easy: "bg-emerald-500/20 text-emerald-700",
@@ -78,7 +87,7 @@ export default function InterviewQuestionsPage() {
     hard: "bg-red-500/20 text-red-700",
   };
 
-  const noQuestionsFound = filteredQuestions.length === 0;
+  const noQuestionsFound = questions?.length === 0;
 
   async function deleteQuestion(questionId: string) {
     try {
@@ -140,14 +149,30 @@ export default function InterviewQuestionsPage() {
       </div>
 
       {/* Search */}
-      <div className="relative">
+      <div className="relative max-w-lg">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search questions or categories..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              search({ searchTerm: searchQuery });
+            }
+          }}
         />
+
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+          >
+            <XIcon className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -174,7 +199,7 @@ export default function InterviewQuestionsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredQuestions.map((question) => (
+              questions?.map((question) => (
                 <TableRow
                   key={question.id}
                   className="border-border/30 hover:bg-muted/50"

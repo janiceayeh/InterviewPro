@@ -137,6 +137,46 @@ export function useInterviewQuestions() {
     }
   }
 
+  async function search(params: { searchTerm: string }) {
+    if (!params.searchTerm) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const builder: QueryBuilder = (colRef, cursor) => {
+        const clauses = [
+          orderBy("createdAt", "desc"),
+          // orderBy("category", "asc"),
+          cursor ? startAfter(cursor) : undefined,
+        ].filter(Boolean) as any[];
+        return query(colRef, ...clauses);
+      };
+
+      paginator.reset();
+      const currentPage = paginator.getCurrentPageIndex();
+      const { items } = await paginator.fetchPage(currentPage, builder);
+
+      const normalisedSearchTerm = (params.searchTerm ?? "")
+        .trim()
+        .toLowerCase();
+
+      const filteredItems = items?.filter(
+        (item) =>
+          item.question.trim().toLowerCase().includes(normalisedSearchTerm) ||
+          item.category.trim().toLowerCase().includes(normalisedSearchTerm),
+      );
+
+      setHasNext(false);
+      setHasPrev(false);
+      setQuestions(filteredItems);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     loading,
     error,
@@ -149,9 +189,62 @@ export function useInterviewQuestions() {
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev,
     hasNext,
+    search,
   };
 }
 
+async function tipGetHelpfulCount(tipId: string) {
+  try {
+    const docSnap = await getCountFromServer(
+      query(
+        collection(db, COLLECTIONS.interviewTipHelpfuls),
+        where("tipId", "==", tipId),
+        where("isHelpful", "==", true),
+      ),
+    );
+    return { ok: true, tipHelpfulCount: docSnap.data().count };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
+
+async function tipGetViewsCount(tipId: string) {
+  try {
+    const docSnap = await getCountFromServer(
+      query(
+        collection(db, COLLECTIONS.interviewTipViews),
+        where("tipId", "==", tipId),
+      ),
+    );
+    return { ok: true, tipViewsCount: docSnap.data().count };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
+
+async function attachTipMetadata(tip: InterviewTip) {
+  const {
+    error: helpfulErr,
+    ok: helpfulOk,
+    tipHelpfulCount,
+  } = await tipGetHelpfulCount(tip.id);
+  if (helpfulErr) {
+    console.error(helpfulErr);
+  } else if (helpfulOk) {
+    tip.helpfulCount = tipHelpfulCount;
+  }
+  const {
+    error: viewsErr,
+    ok: viewsOk,
+    tipViewsCount,
+  } = await tipGetViewsCount(tip.id);
+  if (viewsErr) {
+    console.error(viewsErr);
+  } else if (viewsOk) {
+    tip.viewsCount = tipViewsCount;
+  }
+  return tip;
+}
 export function useInterviewTips(options?: { hideDraft: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,7 +277,7 @@ export function useInterviewTips(options?: { hideDraft: boolean }) {
         const { hasNext, hasPrev, items } = res;
         setHasNext(hasNext);
         setHasPrev(hasPrev);
-        setTips(items);
+        setTips(await Promise.all(items.map(attachTipMetadata)));
       }
     } catch (error) {
       setError((error as Error).message);
@@ -203,7 +296,7 @@ export function useInterviewTips(options?: { hideDraft: boolean }) {
         const { hasPrev, hasNext, items } = res;
         setHasPrev(hasPrev);
         setHasNext(hasNext);
-        setTips(items);
+        setTips(await Promise.all(items.map(attachTipMetadata)));
       }
     } catch (error) {
       setError((error as Error).message);
@@ -220,7 +313,7 @@ export function useInterviewTips(options?: { hideDraft: boolean }) {
       const { hasNext, hasPrev, items } = await paginator.fetchPage(0);
       setHasNext(hasNext);
       setHasPrev(hasPrev);
-      setTips(items);
+      setTips(await Promise.all(items.map(attachTipMetadata)));
     } catch (error) {
       setError((error as Error).message);
     } finally {
@@ -239,7 +332,54 @@ export function useInterviewTips(options?: { hideDraft: boolean }) {
 
       setHasNext(hasNext);
       setHasPrev(hasPrev);
-      setTips(items);
+      setTips(await Promise.all(items.map(attachTipMetadata)));
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function search(params: { searchTerm: string }) {
+    if (!params.searchTerm) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const builder: QueryBuilder = (colRef, cursor) => {
+        const clauses = [
+          options?.hideDraft
+            ? where(
+                "status",
+                "==",
+                "published" satisfies InterviewTip["status"],
+              )
+            : undefined,
+          orderBy("createdAt", "desc"),
+          cursor ? startAfter(cursor) : undefined,
+        ].filter(Boolean) as any[];
+        return query(colRef, ...clauses);
+      };
+
+      paginator.reset();
+      const currentPage = paginator.getCurrentPageIndex();
+      const { items } = await paginator.fetchPage(currentPage, builder);
+
+      const normalisedSearchTerm = (params.searchTerm ?? "")
+        .trim()
+        .toLowerCase();
+
+      const filteredItems = items.filter(
+        (item) =>
+          item.category?.trim().toLowerCase().includes(normalisedSearchTerm) ||
+          item.content?.trim().toLowerCase().includes(normalisedSearchTerm) ||
+          item.title?.trim().toLowerCase().includes(normalisedSearchTerm),
+      );
+
+      setHasNext(false);
+      setHasPrev(false);
+      setTips(await Promise.all(filteredItems.map(attachTipMetadata)));
     } catch (error) {
       setError((error as Error).message);
     } finally {
@@ -259,6 +399,7 @@ export function useInterviewTips(options?: { hideDraft: boolean }) {
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev,
     hasNext,
+    search,
   };
 }
 
@@ -354,6 +495,54 @@ export function useUserProfiles() {
     }
   }
 
+  async function search(params: { searchTerm: string }) {
+    if (!params.searchTerm) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const builder: QueryBuilder = (colRef, cursor) => {
+        const clauses = [
+          orderBy("createdAt", "desc"),
+          cursor ? startAfter(cursor) : undefined,
+        ].filter(Boolean) as any[];
+        return query(colRef, ...clauses);
+      };
+
+      paginator.reset();
+      const currentPage = paginator.getCurrentPageIndex();
+      const { items } = await paginator.fetchPage(currentPage, builder);
+
+      const normalisedSearchTerm = (params.searchTerm ?? "")
+        .trim()
+        .toLowerCase();
+
+      const filteredItems = items?.filter(
+        (item) =>
+          item.firstname
+            ?.trim()
+            ?.toLowerCase()
+            ?.includes(normalisedSearchTerm) ||
+          item.lastname
+            ?.trim()
+            ?.toLowerCase()
+            ?.includes(normalisedSearchTerm) ||
+          item.email?.trim()?.toLowerCase()?.includes(normalisedSearchTerm) ||
+          item.role?.trim()?.toLowerCase()?.includes(normalisedSearchTerm) ||
+          item.field?.trim()?.toLowerCase()?.includes(normalisedSearchTerm),
+      );
+
+      setHasNext(false);
+      setHasPrev(false);
+      setUserProfiles(filteredItems);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     loading,
     error,
@@ -366,6 +555,7 @@ export function useUserProfiles() {
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev,
     hasNext,
+    search,
   };
 }
 
@@ -590,6 +780,8 @@ export function useForumPosts(options?: {
   }
 
   async function search(params: { searchTerm: string }) {
+    if (!params.searchTerm) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -611,10 +803,9 @@ export function useForumPosts(options?: {
         return query(colRef, ...clauses);
       };
 
-      paginator.buildQuery = builder;
-
+      paginator.reset();
       const currentPage = paginator.getCurrentPageIndex();
-      const { items } = await paginator.fetchPage(currentPage);
+      const { items } = await paginator.fetchPage(currentPage, builder);
 
       const normalisedSearchTerm = (params.searchTerm ?? "")
         .trim()
@@ -763,6 +954,49 @@ export function useForumPostAnswers(
     }
   }
 
+  async function search(params: { searchTerm: string }) {
+    if (!params.searchTerm) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const builder: QueryBuilder = (colRef, cursor) => {
+        const clauses = [
+          where("postId", "==", postId),
+          options?.sortBy === "recent"
+            ? orderBy("createdAt", "desc")
+            : undefined,
+          options?.sortBy === "accepted"
+            ? orderBy("isAccepted", "desc")
+            : undefined,
+          cursor ? startAfter(cursor) : undefined,
+        ].filter(Boolean) as any[];
+        return query(colRef, ...clauses);
+      };
+
+      paginator.reset();
+      const currentPage = paginator.getCurrentPageIndex();
+      const { items } = await paginator.fetchPage(currentPage, builder);
+
+      const normalisedSearchTerm = (params.searchTerm ?? "")
+        .trim()
+        .toLowerCase();
+
+      const filteredItems = items?.filter((item) =>
+        item?.content?.trim().toLowerCase().includes(normalisedSearchTerm),
+      );
+
+      setHasNext(false);
+      setHasPrev(false);
+      setForumPostAnswers(filteredItems);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     loading,
     error,
@@ -775,6 +1009,7 @@ export function useForumPostAnswers(
     pageIndex: paginator.getCurrentPageIndex(),
     hasPrev,
     hasNext,
+    search,
   };
 }
 

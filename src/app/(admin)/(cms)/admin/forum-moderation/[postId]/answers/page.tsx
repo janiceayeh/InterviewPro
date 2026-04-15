@@ -18,6 +18,7 @@ import {
   Search,
   Trash2,
   Trash2Icon,
+  XIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
@@ -61,6 +62,8 @@ export default function ForumPostAnswersPage() {
     next,
     previous,
     refetch,
+    search,
+    reset,
   } = useForumPostAnswers(postId);
 
   const noForumPostAnswers = forumPostAnswers?.length === 0;
@@ -72,9 +75,11 @@ export default function ForumPostAnswersPage() {
   const [answerConfirmDelete, setAnswerConfirmDelete] = useState(false);
   const [answerDeleting, setAnswerDeleting] = useState(false);
 
-  const filteredPostAnswers = forumPostAnswers?.filter((p) =>
-    p.content.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const handleClear = () => {
+    setSearchQuery("");
+    reset();
+    first();
+  };
 
   async function deleteAnswer(answerId: string) {
     try {
@@ -131,14 +136,30 @@ export default function ForumPostAnswersPage() {
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative max-w-lg">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search forum post answers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                search({ searchTerm: searchQuery });
+              }
+            }}
           />
+
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+            >
+              <XIcon className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {/* Table */}
@@ -158,7 +179,7 @@ export default function ForumPostAnswersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPostAnswers.length === 0 ? (
+              {forumPostAnswers?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
                     <div className="text-muted-foreground">
@@ -167,7 +188,7 @@ export default function ForumPostAnswersPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPostAnswers.map((answer) => (
+                forumPostAnswers?.map((answer) => (
                   <TableRow
                     key={answer.id}
                     className="border-border/30 hover:bg-muted/50"

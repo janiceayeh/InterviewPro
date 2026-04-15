@@ -39,10 +39,11 @@ export class Paginator<D> {
 
   async fetchPage(
     pageIndex: number,
+    buildQuery?: QueryBuilder,
   ): Promise<{ items: D[]; hasNext: boolean; hasPrev: boolean }> {
     const startCursor = this.pageSnapshots[pageIndex] ?? null;
     const colRef = this.getColRef();
-    const q = this.buildQuery(colRef, startCursor);
+    const q = (buildQuery || this.buildQuery)(colRef, startCursor);
     const snap = await getDocs(q);
 
     const items = snap.docs.map((d) => ({
