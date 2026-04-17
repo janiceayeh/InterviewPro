@@ -432,7 +432,7 @@ export default function ResultsPage() {
               {evaluation?.questionScores.map(
                 (qs: QuestionScoreWithQuestion, index) => (
                   <div
-                    key={qs.questionId}
+                    key={String(index)}
                     className="rounded-lg border border-border p-4 cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() =>
                       setExpandedQuestion(

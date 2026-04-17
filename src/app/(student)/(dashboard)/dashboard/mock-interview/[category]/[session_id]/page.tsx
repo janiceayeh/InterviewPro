@@ -229,7 +229,6 @@ export default function InterviewSessionPage() {
     currentIndex,
     questions,
     category,
-    router,
   ]);
 
   useEffect(() => {
@@ -253,7 +252,7 @@ export default function InterviewSessionPage() {
     if (timeLeft === 0 && isStarted && !isSubmitting) {
       handleNext();
     }
-  }, [timeLeft, isStarted, isSubmitting, handleNext]);
+  }, [timeLeft, isStarted, isSubmitting]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

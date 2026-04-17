@@ -135,7 +135,7 @@ export default function MockInterviewPage() {
         <div className="flex items-center gap-2 mb-2">
           <Lightbulb className="size-5 text-primary" />
           <span className="text-sm font-medium text-primary">
-            Mock Interview Prep
+            Mock Interview
           </span>
         </div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
