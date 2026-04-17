@@ -9,18 +9,15 @@ import {
   Lightbulb,
   ArrowRight,
   Sparkles,
-  Clock,
-  Target,
 } from "lucide-react";
 import PageLoading from "@/components/page-loading";
 import { routes } from "@/lib/routes";
-import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { PersonalisedAnalytics } from "@/components/dashboard/personalised-analytics";
 
 const features = [
   {
-    title: "Mock Interview Prep",
+    title: "Mock Interview",
     description:
       "Practice with timed interview questions and get AI-powered feedback on your responses.",
     icon: Mic,

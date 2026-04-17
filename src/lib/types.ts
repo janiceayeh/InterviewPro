@@ -20,7 +20,6 @@ export interface UserProfile {
   interviewSessionsCompleted: number | undefined;
   totalPractiseTime: number | undefined; // in seconds
   about?: string;
-  targetCompanies?: string[];
 }
 
 export interface InterviewQuestion {
@@ -112,16 +111,6 @@ export interface ForumPostFlag {
   postId: string;
   flagCategory: string;
   flagValue: string; //value of the flag object
-}
-
-export interface ForumCategory {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  icon: string;
-  color: string;
-  postCount: number;
 }
 
 export interface ForumPostAnswer {
@@ -238,6 +227,16 @@ export type ForumFlagsOptions = {
   flagType: "post" | "answer";
   id: string;
 };
+
+export interface ForumCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  color: string;
+  postCount: number;
+}
 
 export type DeleteUserResponseDto = {
   ok: boolean;
