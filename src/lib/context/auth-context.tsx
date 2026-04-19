@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // defines the state which this context provide
   return (
     <AuthContext.Provider
       value={{

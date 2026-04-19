@@ -61,12 +61,12 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // sign up user with createUserWithEmailAndPassword(). this creates a user account in firebase auth.
+      // sign up user with createUserWithEmailAndPassword(). creates a user account in firebase auth.
       // firbase defaults to only save email and password
       const userCredential = await signUp(email, password);
       const user = userCredential.user;
 
-      // save user meta data in the users document. the user record will hold additional information related to the user
+      // save user meta data in the users document. user record will hold additional information related to the user
       // update the Firebase Auth user profile displayName
       await updateProfile(user, {
         displayName: `${firstname} ${lastname}`,
