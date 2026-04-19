@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const _inter = Inter({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -36,6 +37,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+// object destructuring
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -46,6 +48,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         {children}
         <Toaster richColors />
+        <SpeedInsights />
       </body>
     </html>
   );
