@@ -22,6 +22,7 @@ import { Loader2, Check } from "lucide-react";
 import { updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { routes } from "@/lib/routes";
 
 export default function SignupPage() {
   // defining states to be used for capturing user signup info
@@ -100,7 +101,7 @@ export default function SignupPage() {
     try {
       await signInWithGoogle();
       toast.success("Welcome!");
-      router.push("/roles");
+      router.push(routes.studentRoleOnboarding());
     } catch (error) {
       toast.error("Failed to sign in with Google");
     } finally {
