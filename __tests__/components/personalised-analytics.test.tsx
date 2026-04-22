@@ -7,7 +7,6 @@ import { DEFAULT_STUDENT_PERSONALISED_ANALYTICS } from "@/lib/constants";
 import { StudentPersonalisedAnalytics } from "@/lib/types";
 import { useStudentPersonalisedAnalytics } from "@/lib/hooks";
 import { useAuth } from "@/lib/context/auth-context";
-import { getDoc } from "firebase/firestore";
 
 jest.mock("recharts", () => ({
   LineChart: ({ children }: any) => (

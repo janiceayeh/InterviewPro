@@ -14,6 +14,7 @@ import {
   deleteUser,
   type User,
   sendPasswordResetEmail,
+  updateProfile,
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -40,4 +41,5 @@ export {
   deleteUser,
   type User,
   sendPasswordResetEmail,
+  updateProfile,
 };

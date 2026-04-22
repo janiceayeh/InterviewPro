@@ -29,13 +29,17 @@ jest.mock("./src/lib/firebase", () => ({
     }
     return jest.fn(); // Unsubscribe function
   }),
+  updateProfile: jest.fn().mockName("updateProfileMock"),
 }));
 
 jest.mock("./src/lib/context/auth-context", () => ({
-  useAuth: jest.fn(() => ({
-    signIn: jest.fn(),
-    signInWithGoogle: jest.fn(),
-  })),
+  useAuth: jest
+    .fn(() => ({
+      signIn: jest.fn().mockName("signInMock"),
+      signUp: jest.fn().mockName("signUpMock"),
+      signInWithGoogle: jest.fn().mockName("signInWithGoogleMock"),
+    }))
+    .mockName("useAuthMock"),
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
@@ -57,8 +61,8 @@ jest.mock("firebase/firestore", () => ({
   collection: jest.fn(),
   query: jest.fn(),
   getDocs: jest.fn(),
-  setDoc: jest.fn(),
-  updateDoc: jest.fn(),
+  setDoc: jest.fn().mockName("setDoc"),
+  updateDoc: jest.fn().mockName("updateDoc"),
   deleteDoc: jest.fn(),
   where: jest.fn(),
   orderBy: jest.fn(),
@@ -78,23 +82,4 @@ Object.defineProperty(window, "matchMedia", {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
-});
-
-// Suppress console errors in tests
-const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === "string" &&
-      (args[0].includes("Warning: ReactDOM.render") ||
-        args[0].includes("Not implemented: HTMLFormElement.prototype.submit"))
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
-
-afterAll(() => {
-  console.error = originalError;
 });
