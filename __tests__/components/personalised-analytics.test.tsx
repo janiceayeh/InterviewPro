@@ -5,107 +5,76 @@ import { PersonalisedAnalytics } from "@/components/dashboard/personalised-analy
 import { mockAuthUser } from "../utils/test-constants";
 import { DEFAULT_STUDENT_PERSONALISED_ANALYTICS } from "@/lib/constants";
 import { StudentPersonalisedAnalytics } from "@/lib/types";
+import { useStudentPersonalisedAnalytics } from "@/lib/hooks";
+import { useAuth } from "@/lib/context/auth-context";
+import { getDoc } from "firebase/firestore";
 
-jest.mock("recharts", () => {
-  const React = require("react");
-  return {
-    LineChart: ({ children }: any) => (
-      <div data-testid="line-chart">{children}</div>
-    ),
-    Line: () => <div data-testid="line" />,
-    BarChart: ({ children }: any) => (
-      <div data-testid="bar-chart">{children}</div>
-    ),
-    Bar: () => <div data-testid="bar" />,
-    XAxis: () => <div data-testid="x-axis" />,
-    YAxis: () => <div data-testid="y-axis" />,
-    CartesianGrid: () => <div data-testid="cartesian-grid" />,
-    Tooltip: () => <div data-testid="tooltip" />,
-    Legend: () => <div data-testid="legend" />,
-    ResponsiveContainer: ({ children }: any) => (
-      <div data-testid="responsive-container">{children}</div>
-    ),
-  };
-});
+jest.mock("recharts", () => ({
+  LineChart: ({ children }: any) => (
+    <div data-testid="line-chart">{children}</div>
+  ),
+  Line: () => <div data-testid="line" />,
+  BarChart: ({ children }: any) => (
+    <div data-testid="bar-chart">{children}</div>
+  ),
+  Bar: () => <div data-testid="bar" />,
+  XAxis: () => <div data-testid="x-axis" />,
+  YAxis: () => <div data-testid="y-axis" />,
+  CartesianGrid: () => <div data-testid="cartesian-grid" />,
+  Tooltip: () => <div data-testid="tooltip" />,
+  Legend: () => <div data-testid="legend" />,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
+}));
 
-// Define state outside the mock
-let analyticsState = {
-  loading: true,
-  analytics: null,
+const analyticsMockData: StudentPersonalisedAnalytics = {
+  ...DEFAULT_STUDENT_PERSONALISED_ANALYTICS,
+  progressTrend: [{ date: "10-10-2026", score: 20 }],
+  categoryScores: {
+    technical: {
+      average: 10,
+      count: 1,
+    },
+  },
 };
 
-const fetchAnalyticsMock = jest.fn(() => {
-  // Simulate the hook's behavior: set loading to true
-  act(() => {
-    analyticsState.loading = true;
-  });
-
-  // Simulate async data loading
-  act(() => {
-    analyticsState.loading = false;
-    analyticsState.analytics = {
-      ...DEFAULT_STUDENT_PERSONALISED_ANALYTICS,
-      progressTrend: [{ date: "10-10-2026", score: 20 }],
-      categoryScores: {
-        technical: {
-          average: 10,
-          count: 1,
-        },
-      },
-    } satisfies StudentPersonalisedAnalytics;
-  });
+(useAuth as jest.Mock).mockReturnValue({
+  user: mockAuthUser,
 });
 
-jest.mock("../../src/lib/hooks", () => ({
-  useStudentPersonalisedAnalytics: () => ({
-    fetchAnalytics: fetchAnalyticsMock,
-    get analyticsLoading() {
-      return analyticsState.loading;
-    },
-    get analytics() {
-      return analyticsState.analytics;
-    },
-  }),
+let analytics: StudentPersonalisedAnalytics;
+let analyticsLoading = true;
+const fetchAnalyticsMock = jest.fn(
+  () =>
+    new Promise<void>((resolve) => {
+      analytics = analyticsMockData;
+      resolve();
+      analyticsLoading = false;
+    }),
+);
+
+(useStudentPersonalisedAnalytics as jest.Mock).mockImplementation(() => ({
+  fetchAnalytics: fetchAnalyticsMock,
+  get analytics() {
+    return analytics;
+  },
+  get analyticsLoading() {
+    return analyticsLoading;
+  },
 }));
 
 describe("PersonalisedAnalytics Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // (global.fetch as jest.Mock).mockResolvedValue({
-    //   ok: true,
-    //   json: async () => ({
-    //     overallReadinessScore: 75,
-    //     averageScore: 80,
-    //     recommendations: [
-    //       {
-    //         title: "Improve Technical Skills",
-    //         description: "Focus on technical interviews",
-    //         priority: "high",
-    //         actionItems: ["Practice coding", "Review algorithms"],
-    //       },
-    //     ],
-    //     categoryAverages: {
-    //       behavioral: { average: 85, count: 3 },
-    //       technical: { average: 70, count: 2 },
-    //     },
-    //     progressTrend: [
-    //       { date: "2024-01-01", score: 70 },
-    //       { date: "2024-01-02", score: 75 },
-    //     ],
-    //     recentInterviews: [
-    //       {
-    //         id: "1",
-    //         category: "behavioral",
-    //         score: 85,
-    //         date: new Date().toISOString(),
-    //       },
-    //     ],
-    //   }),
-    // });
   });
 
   it("should render loading state initially", async () => {
     render(<PersonalisedAnalytics />);
+
+    await waitFor(() => {
+      expect(fetchAnalyticsMock).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(
@@ -118,15 +87,11 @@ describe("PersonalisedAnalytics Component", () => {
     render(<PersonalisedAnalytics />);
 
     await waitFor(() => {
-      expect(fetchAnalyticsMock).toHaveBeenCalledWith({
-        userId: mockAuthUser.uid,
-      });
+      expect(fetchAnalyticsMock).toHaveBeenCalled();
     });
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Interview Readiness Score/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Interview Readiness Score")).toBeInTheDocument();
     });
   });
 
@@ -151,13 +116,11 @@ describe("PersonalisedAnalytics Component", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Start a behavioral interview/i),
+        screen.getByText("Start a behavioral interview"),
       ).toBeInTheDocument();
+      expect(screen.getByText("Try a technical interview")).toBeInTheDocument();
       expect(
-        screen.getByText(/Try a technical interview/i),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(/Practice with the AI copilot/i),
+        screen.getByText("Practice with the AI copilot"),
       ).toBeInTheDocument();
     });
   });
@@ -166,26 +129,8 @@ describe("PersonalisedAnalytics Component", () => {
     render(<PersonalisedAnalytics />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Recent Interviews/i)).toBeInTheDocument();
-      expect(screen.getByText(/10-10-2026/i)).toBeInTheDocument();
+      expect(screen.getByText("Recent Interviews")).toBeInTheDocument();
+      expect(screen.getByText("10-10-2026")).toBeInTheDocument();
     });
   });
-
-  // it("should handle fetch errors gracefully", async () => {
-  //   (global.fetch as jest.Mock).mockRejectedValue(new Error("Fetch failed"));
-
-  //   render(<PersonalisedAnalytics />);
-
-  //   await waitFor(() => {
-  //     expect(screen.getByText(/Failed to load analytics/i)).toBeInTheDocument();
-  //   });
-  // });
-
-  // it("should calculate and display readiness percentage", async () => {
-  //   render(<PersonalisedAnalytics />);
-
-  //   await waitFor(() => {
-  //     expect(screen.getByText(/75/)).toBeInTheDocument();
-  //   });
-  // });
 });

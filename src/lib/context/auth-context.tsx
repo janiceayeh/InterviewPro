@@ -42,13 +42,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Stores auth state and exposes it to children/page
-export function AuthProvider({ children }: { children: ReactNode }) {
+function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Fetches user profile from Firestore
-  async function getUserProfile() {
+  async function getUserProfile(user: User) {
     if (user) {
       const profileDoc = await getDoc(doc(db, COLLECTIONS.users, user.uid));
       setUserProfile({
@@ -60,19 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listens for Firebase Auth session changes. lets the user stay logged in after refresh
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        await getUserProfile(user);
+      }
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      getUserProfile();
-    }
-  }, [user]);
 
   const signIn = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password);
@@ -108,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         logout,
         deleteAccount,
-        getUserProfile,
+        getUserProfile: async () => await getUserProfile(user),
       }}
     >
       {children}
@@ -117,10 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 // Reads the context and returns context values
-export function useAuth() {
+function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
+
+export { AuthProvider, useAuth };
