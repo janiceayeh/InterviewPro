@@ -18,6 +18,7 @@ export default function DashboardLayout({
 }) {
   const { user, loading, userProfile } = useAuth();
   const router = useRouter();
+  const didRedirectRef = useRef(false);
 
   // navigates back to the login page if the user is not logged in
   useEffect(() => {
@@ -27,21 +28,20 @@ export default function DashboardLayout({
   }, [user, loading]);
 
   //Force navigates to the roles onboarding page when sign up wasn't completed
-  const didRedirectRef = useRef(false);
   useEffect(() => {
-    if (!userProfile?.role && !didRedirectRef.current) {
+    if (!loading && !didRedirectRef.current && user && !userProfile?.role) {
       didRedirectRef.current = true;
       toast.error("Please complete sign up");
       router.push(routes.studentRoleOnboarding());
     }
-  }, [userProfile?.role]);
+  }, [userProfile?.role, user, didRedirectRef.current, loading]);
 
   if (loading) {
     return <PageLoading />;
   }
 
   // prevents the brief flashing of dashboard page
-  if (!user || !userProfile?.role) {
+  if (loading && !(user || userProfile?.role)) {
     return null;
   }
 

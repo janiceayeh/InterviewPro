@@ -57,7 +57,7 @@ function secondsToHMS(seconds: number) {
 }
 
 export function PersonalisedAnalytics() {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, loading: userLoading } = useAuth();
   const { analytics, analyticsError, analyticsLoading, fetchAnalytics } =
     useStudentPersonalisedAnalytics();
   const practiseTime = secondsToHMS(userProfile?.totalPractiseTime ?? 0);
@@ -68,7 +68,7 @@ export function PersonalisedAnalytics() {
     }
   }, [user]);
 
-  if (analyticsLoading) {
+  if (userLoading || analyticsLoading) {
     return (
       <div
         data-testid="personalised-analytics-loading-skeleton"

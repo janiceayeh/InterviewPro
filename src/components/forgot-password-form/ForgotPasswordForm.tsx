@@ -21,8 +21,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, sendPasswordResetEmail } from "@/lib/firebase";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -154,6 +153,7 @@ export default function ForgotPasswordForm({ userType }: Props) {
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
                           <Input
+                            autoFocus
                             name="email"
                             type="email"
                             placeholder="Enter your email"

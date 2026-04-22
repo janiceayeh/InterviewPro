@@ -1,8 +1,16 @@
 import "@testing-library/jest-dom";
-import {
-  mockAuthUser,
-  mockUserProfile,
-} from "./__tests__/utils/test-constants";
+import { mockAuthUser } from "./__tests__/utils/test-constants";
+
+global.fetch = jest.fn();
+(global.Response as any) = jest.fn().mockImplementation((body, init) => ({
+  ok: true,
+  status: 200,
+  statusText: "OK",
+  headers: new Map(),
+  body: body,
+  text: jest.fn().mockResolvedValue(body),
+  json: jest.fn().mockResolvedValue(JSON.parse(body)),
+}));
 
 // Mock Firebase
 jest.mock("./src/lib/firebase", () => ({
@@ -23,15 +31,29 @@ jest.mock("./src/lib/firebase", () => ({
   }),
 }));
 
+jest.mock("./src/lib/context/auth-context", () => ({
+  useAuth: jest.fn(() => ({
+    signIn: jest.fn(),
+    signInWithGoogle: jest.fn(),
+  })),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// Mock useRouter
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+  })),
+}));
+
+jest.mock("./src/lib/hooks", () => ({
+  useStudentPersonalisedAnalytics: jest.fn(),
+}));
+
 // Mock Firebase Firestore
 jest.mock("firebase/firestore", () => ({
-  getDoc: jest.fn().mockResolvedValue({
-    id: mockUserProfile.id,
-    data: () => mockUserProfile,
-  }),
-  doc: jest.fn((_db, collection, docId) => ({
-    _key: { path: { segments: [collection, docId] } },
-  })),
+  getDoc: jest.fn(),
+  doc: jest.fn(),
   collection: jest.fn(),
   query: jest.fn(),
   getDocs: jest.fn(),
@@ -41,27 +63,6 @@ jest.mock("firebase/firestore", () => ({
   where: jest.fn(),
   orderBy: jest.fn(),
   limit: jest.fn(),
-}));
-
-// Mock next/router
-jest.mock("next/router", () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    pathname: "/",
-    query: {},
-    asPath: "/",
-  }),
-}));
-
-// Mock next/navigation
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    prefetch: jest.fn(),
-  }),
-  usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
 }));
 
 // Mock window.matchMedia
