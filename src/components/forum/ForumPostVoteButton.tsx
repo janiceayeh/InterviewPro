@@ -148,7 +148,10 @@ export function ForumPostVoteButton({ post }: Props) {
   const { doVote, vote, voteCount } = useForumPostVote({ post });
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className="flex items-center gap-2"
+      data-testid="forum-post-vote-button"
+    >
       <button
         className={cn(
           "flex items-center gap-1 hover:text-primary transition-colors cursor-pointer",

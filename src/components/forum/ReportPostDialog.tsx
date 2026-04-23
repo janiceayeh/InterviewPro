@@ -65,7 +65,12 @@ export default function ReportPostDialog({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+    <Sheet
+      open={open}
+      onOpenChange={onOpenChange}
+      modal={false}
+      data-testid="report-dialog"
+    >
       <form>
         <SheetContent className="sm:max-w-sm">
           <SheetHeader>

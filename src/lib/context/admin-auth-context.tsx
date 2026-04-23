@@ -8,6 +8,7 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   type User,
+  UserCredential,
 } from "firebase/auth";
 import { AdminRole, ApiResponse, IsAdminResponseDto } from "../types";
 import { routes } from "../routes";
@@ -22,7 +23,7 @@ interface AdminAuthContextType {
   isLoading: boolean;
   error: string | null;
   role: AdminRole | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
   sendResetEmail: (email: string) => Promise<void>;
   hasPermission: (permission: string) => boolean;
@@ -70,7 +71,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       const { ok, error, isAdminData } = await isAdmin(user?.email);
       if (error) {
         setError(error.message);
@@ -93,7 +97,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    return await signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = async () => {

@@ -98,7 +98,15 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const { user } = await signInWithGoogle();
+      // create a Firestore document(table) to save extra user info
+      const [firstname, lastname] = user.displayName.split(" ");
+      await setDoc(doc(db, "users", user.uid), {
+        firstname,
+        lastname,
+        email: user.email,
+        createdAt: new Date(),
+      });
       toast.success("Welcome!");
       router.push(routes.studentRoleOnboarding());
     } catch (error) {
