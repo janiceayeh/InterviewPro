@@ -20,6 +20,8 @@ import {
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { routes } from "@/lib/routes";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -48,7 +50,15 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const { user } = await signInWithGoogle();
+      // create a Firestore document(table) to save extra user info
+      const [firstname, lastname] = user.displayName.split(" ");
+      await setDoc(doc(db, "users", user.uid), {
+        firstname,
+        lastname,
+        email: user.email,
+        createdAt: new Date(),
+      });
       toast.success("Welcome!");
       router.push(routes.dashboard());
     } catch (error) {

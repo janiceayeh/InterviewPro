@@ -19,9 +19,8 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
-import { updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, updateProfile } from "@/lib/firebase";
 import { routes } from "@/lib/routes";
 
 export default function SignupPage() {
@@ -81,7 +80,7 @@ export default function SignupPage() {
         createdAt: new Date(),
       });
       toast.success("Account created successfully!");
-      router.push("/roles");
+      router.push(routes.studentRoleOnboarding());
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -99,7 +98,15 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const { user } = await signInWithGoogle();
+      // create a Firestore document(table) to save extra user info
+      const [firstname, lastname] = user.displayName.split(" ");
+      await setDoc(doc(db, "users", user.uid), {
+        firstname,
+        lastname,
+        email: user.email,
+        createdAt: new Date(),
+      });
       toast.success("Welcome!");
       router.push(routes.studentRoleOnboarding());
     } catch (error) {
@@ -142,7 +149,7 @@ export default function SignupPage() {
                 <Input
                   id="firstname"
                   type="text"
-                  placeholder="Jane"
+                  placeholder="Enter firstname"
                   value={firstname}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
@@ -155,7 +162,7 @@ export default function SignupPage() {
                 <Input
                   id="lastname"
                   type="text"
-                  placeholder="Doe"
+                  placeholder="Enter lastname"
                   value={lastname}
                   onChange={(e) => setLastName(e.target.value)}
                   required
@@ -168,7 +175,7 @@ export default function SignupPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder="Enter email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

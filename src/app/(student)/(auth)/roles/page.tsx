@@ -36,7 +36,7 @@ export default function RolesPage() {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const { roles: industryRoles, rolesLoading } = useRoles();
 
-  const { user } = useAuth();
+  const { user, getUserProfile } = useAuth();
   const router = useRouter();
 
   const fields = industryRoles.map((roleObject) => roleObject.category);
@@ -52,7 +52,7 @@ export default function RolesPage() {
   }
 
   async function saveRole(field: string, role: string) {
-    return setDoc(
+    return await setDoc(
       doc(db, COLLECTIONS.users, user.uid),
       {
         role,
@@ -70,6 +70,7 @@ export default function RolesPage() {
       try {
         setLoadingSubmit(true);
         await saveRole(field, role);
+        await getUserProfile();
         setLoadingSubmit(false);
         toast.success("Role saved successfully");
         router.push(routes.dashboard());

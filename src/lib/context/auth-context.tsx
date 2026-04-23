@@ -31,9 +31,9 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<UserCredential>;
   signUp: (email: string, password: string) => Promise<UserCredential>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<UserCredential>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
   getUserProfile: () => Promise<void>;
@@ -72,7 +72,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    return signInWithEmailAndPassword(auth, email, password);
   };
 
   const signUp = async (email: string, password: string) => {
@@ -80,11 +80,11 @@ function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    await signInWithPopup(auth, googleProvider);
+    return await signInWithPopup(auth, googleProvider);
   };
 
   const logout = async () => {
-    await signOut(auth);
+    return await signOut(auth);
   };
 
   const deleteAccount = async () => {

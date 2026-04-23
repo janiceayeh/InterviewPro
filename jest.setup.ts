@@ -18,24 +18,34 @@ jest.mock("./src/lib/firebase", () => ({
     currentUser: null,
   },
   db: {},
-  sendPasswordResetEmail: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn(),
-  signOut: jest.fn(),
-  onAuthStateChanged: jest.fn((authOrCallback, callback) => {
-    const cb = callback || authOrCallback;
-    if (typeof cb === "function") {
-      cb(mockAuthUser);
-    }
-    return jest.fn(); // Unsubscribe function
-  }),
+  sendPasswordResetEmail: jest.fn().mockName("sendPasswordResetEmailMock"),
+  signInWithEmailAndPassword: jest
+    .fn()
+    .mockName("signInWithEmailAndPasswordMock"),
+  createUserWithEmailAndPassword: jest
+    .fn()
+    .mockName("createUserWithEmailAndPasswordMock"),
+  signOut: jest.fn().mockName("signOutMock"),
+  onAuthStateChanged: jest
+    .fn((authOrCallback, callback) => {
+      const cb = callback || authOrCallback;
+      if (typeof cb === "function") {
+        cb(mockAuthUser);
+      }
+      return jest.fn(); // Unsubscribe function
+    })
+    .mockName("onAuthStateChangedMock"),
+  updateProfile: jest.fn().mockName("updateProfileMock"),
 }));
 
 jest.mock("./src/lib/context/auth-context", () => ({
-  useAuth: jest.fn(() => ({
-    signIn: jest.fn(),
-    signInWithGoogle: jest.fn(),
-  })),
+  useAuth: jest
+    .fn(() => ({
+      signIn: jest.fn().mockName("signInMock"),
+      signUp: jest.fn().mockName("signUpMock"),
+      signInWithGoogle: jest.fn().mockName("signInWithGoogleMock"),
+    }))
+    .mockName("useAuthMock"),
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
@@ -47,22 +57,39 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("./src/lib/hooks", () => ({
-  useStudentPersonalisedAnalytics: jest.fn(),
+  useStudentPersonalisedAnalytics: jest
+    .fn()
+    .mockName("useStudentPersonalisedAnalyticsMock"),
+  useUserProfile: jest.fn().mockName("useUserProfileMock"),
+  useFlagPost: jest.fn().mockName("useFlagPostMock"),
 }));
 
 // Mock Firebase Firestore
 jest.mock("firebase/firestore", () => ({
-  getDoc: jest.fn(),
-  doc: jest.fn(),
-  collection: jest.fn(),
-  query: jest.fn(),
-  getDocs: jest.fn(),
-  setDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  deleteDoc: jest.fn(),
-  where: jest.fn(),
-  orderBy: jest.fn(),
-  limit: jest.fn(),
+  getDoc: jest.fn().mockName("getDocMock"),
+  doc: jest.fn().mockName("docMock"),
+  collection: jest.fn().mockName("collectionMock"),
+  query: jest.fn().mockName("queryMock"),
+  getDocs: jest.fn().mockName("getDocsMock"),
+  setDoc: jest.fn().mockName("setDocMock"),
+  updateDoc: jest.fn().mockName("updateDocMock"),
+  deleteDoc: jest.fn().mockName("deleteDocMock"),
+  where: jest.fn().mockName("whereMock"),
+  orderBy: jest.fn().mockName("orderByMock"),
+  limit: jest.fn().mockName("limitMock"),
+  getCountFromServer: jest
+    .fn()
+    .mockResolvedValue({
+      data: jest.fn().mockName("getCountFromServerDataMock"),
+    })
+    .mockName("getCountFromServerMock"),
+}));
+
+jest.mock("sonner", () => ({
+  toast: {
+    success: jest.fn().mockName("toastSuccessMock"),
+    error: jest.fn().mockName("toastErrorMock"),
+  },
 }));
 
 // Mock window.matchMedia
@@ -78,23 +105,4 @@ Object.defineProperty(window, "matchMedia", {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
-});
-
-// Suppress console errors in tests
-const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === "string" &&
-      (args[0].includes("Warning: ReactDOM.render") ||
-        args[0].includes("Not implemented: HTMLFormElement.prototype.submit"))
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
-
-afterAll(() => {
-  console.error = originalError;
 });

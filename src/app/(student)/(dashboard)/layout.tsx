@@ -41,7 +41,7 @@ export default function DashboardLayout({
   }
 
   // prevents the brief flashing of dashboard page
-  if (loading && !(user || userProfile?.role)) {
+  if (!(user && userProfile?.role)) {
     return null;
   }
 
