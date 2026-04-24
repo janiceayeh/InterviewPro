@@ -8,21 +8,19 @@ import {
   type ReactNode,
 } from "react";
 import {
-  auth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   signInWithPopup,
-  googleProvider,
   deleteUser,
   type User,
-  db,
-} from "@/lib/firebase";
-import { UserCredential } from "firebase/auth";
+  UserCredential,
+} from "firebase/auth";
 import { UserProfile } from "@/lib/types";
 import { doc, getDoc } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/constants";
+import { auth, db, googleProvider } from "../firebase";
 
 // Describes what values and functions the auth context will expose to the app
 // Object type

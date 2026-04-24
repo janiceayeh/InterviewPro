@@ -5,8 +5,7 @@ import { routes } from "@/lib/routes";
 import SignupPage from "@/app/(student)/(auth)/signup/page";
 import { useAuth } from "@/lib/context/auth-context";
 import { useRouter } from "next/navigation";
-import { updateProfile } from "@/lib/firebase";
-import { UserCredential } from "firebase/auth";
+import { updateProfile, UserCredential } from "firebase/auth";
 import { setDoc } from "firebase/firestore";
 
 const passwordRequirements = [
@@ -54,8 +53,8 @@ describe("Signup Page", () => {
     const FirstnameInput = screen.getByPlaceholderText("Enter firstname");
     const LastnameInput = screen.getByPlaceholderText("Enter lastname");
 
-    await act(async () => await user.type(FirstnameInput, "John"));
-    await act(async () => await user.type(LastnameInput, "Doe"));
+    await user.type(FirstnameInput, "John");
+    await user.type(LastnameInput, "Doe");
 
     expect(SignupButton).toBeDisabled();
   });
@@ -71,10 +70,8 @@ describe("Signup Page", () => {
     expect(PasswordInput).toBeInTheDocument();
     expect(ConfirmPasswordInput).toBeInTheDocument();
 
-    await act(async () => await user.type(PasswordInput, "MyPasswordIsSecure"));
-    await act(
-      async () => await user.type(ConfirmPasswordInput, "Not_thesame_password"),
-    );
+    await user.type(PasswordInput, "MyPasswordIsSecure");
+    await user.type(ConfirmPasswordInput, "Not_thesame_password");
 
     expect(screen.getByText("Passwords do not match")).toBeInTheDocument();
   });
@@ -84,7 +81,7 @@ describe("Signup Page", () => {
     const user = userEvent.setup();
     const PasswordInput = screen.getByPlaceholderText("Create a password");
     expect(PasswordInput).toBeInTheDocument();
-    await act(async () => await user.type(PasswordInput, "My.."));
+    await user.type(PasswordInput, "My..");
     for (const requirementText of passwordRequirements) {
       expect(screen.getByText(requirementText)).toBeInTheDocument();
     }
@@ -95,9 +92,7 @@ describe("Signup Page", () => {
     const user = userEvent.setup();
     const PasswordInput = screen.getByPlaceholderText("Create a password");
     expect(PasswordInput).toBeInTheDocument();
-    await act(
-      async () => await user.type(PasswordInput, "MySup3RS3kURePaxxzzzxz"),
-    );
+    await user.type(PasswordInput, "MySup3RS3kURePaxxzzzxz");
     for (const requirementText of passwordRequirements) {
       expect(
         screen.getByText(requirementText).classList.contains("text-success"),
@@ -106,6 +101,8 @@ describe("Signup Page", () => {
   });
 
   it("should register user when all form requirements are met", async () => {
+    (updateProfile as jest.Mock).mockResolvedValue(undefined);
+
     let resolveSignUp: () => void;
     const singUpMock = jest
       .fn(
@@ -144,19 +141,18 @@ describe("Signup Page", () => {
 
     const password = "MySup3RS3kURePaxxzzzxz";
     const email = "john@wick.com";
-    await act(async () => {
-      await user.type(FirstnameInput, "Jonathan");
-      await user.type(LastnameInput, "Wick");
-      await user.type(EmailInput, email);
-      await user.type(PasswordInput, password);
-      await user.type(ConfirmPasswordInput, password);
-    });
+
+    await user.type(FirstnameInput, "Jonathan");
+    await user.type(LastnameInput, "Wick");
+    await user.type(EmailInput, email);
+    await user.type(PasswordInput, password);
+    await user.type(ConfirmPasswordInput, password);
 
     await waitFor(() => {
       expect(SignupButton).not.toBeDisabled();
     });
 
-    await act(async () => await user.click(SignupButton));
+    await user.click(SignupButton);
 
     await waitFor(() => {
       expect(SignupButton).toBeDisabled();

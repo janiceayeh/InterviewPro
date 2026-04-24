@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { render } from "../utils/test-utils";
 import ForgotPasswordPage from "@/app/(student)/(auth)/forgot-password/page";
 import { routes } from "@/lib/routes";
-import { sendPasswordResetEmail } from "@/lib/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 describe("Forgot Password Page", () => {
   beforeEach(() => {
@@ -50,7 +50,7 @@ describe("Forgot Password Page", () => {
     const user = userEvent.setup();
 
     //No email provided
-    await act(async () => await user.click(ResetLinkButton));
+    await user.click(ResetLinkButton);
     await waitFor(() => {
       const FormMessage = screen.getByText("A valid email is required");
       expect(FormMessage).toBeInTheDocument();
@@ -59,15 +59,15 @@ describe("Forgot Password Page", () => {
     });
 
     // Invalid email provided
-    await act(async () => await user.type(EmailInput, "invalid-email"));
-    await act(async () => await user.click(ResetLinkButton));
+    await user.type(EmailInput, "invalid-email");
+    await user.click(ResetLinkButton);
     await waitFor(() => {
       const FormMessage = screen.getByText("A valid email is required");
       expect(FormMessage).toBeInTheDocument();
     });
 
     //The error message disappears when a valid email is provided
-    await act(async () => await user.type(EmailInput, "test@email.com"));
+    await user.type(EmailInput, "test@email.com");
     await waitFor(() => {
       try {
         screen.getByText("A valid email is required");
@@ -88,8 +88,8 @@ describe("Forgot Password Page", () => {
     expect(EmailInput).toBeInTheDocument();
     const user = userEvent.setup();
 
-    await act(async () => await user.type(EmailInput, "test@email.com"));
-    await act(async () => await user.click(ResetLinkButton));
+    await user.type(EmailInput, "test@email.com");
+    await user.click(ResetLinkButton);
     await waitFor(() => {
       expect(sendPasswordResetEmail).toHaveBeenCalled();
 
@@ -122,8 +122,8 @@ describe("Forgot Password Page", () => {
       name: "Send Reset Link",
     });
 
-    await act(async () => await user.type(emailInput, "test@example.com"));
-    await act(async () => await user.click(submitButton));
+    await user.type(emailInput, "test@example.com");
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(submitButton).toBeDisabled();

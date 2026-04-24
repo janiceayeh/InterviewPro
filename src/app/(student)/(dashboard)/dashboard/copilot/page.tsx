@@ -15,7 +15,6 @@ import {
   User,
   Bot,
   Sparkles,
-  RotateCcw,
   FileText,
   Menu,
   Plus,
@@ -26,12 +25,12 @@ import { useAuth } from "@/lib/context/auth-context";
 import Markdown from "react-markdown";
 import { routes } from "@/lib/routes";
 import { toast } from "sonner";
-import { getIdToken } from "firebase/auth";
 import {
   ApiResponse,
   SaveCopilotChatResponseDto,
   GetCopilotChatHistoryResponseDto,
 } from "@/lib/types";
+import { getIdToken } from "firebase/auth";
 
 interface ChatSession {
   id: string;
@@ -86,7 +85,9 @@ export default function CopilotPage() {
 
   // Scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef?.current?.scrollIntoView) {
+      messagesEndRef?.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const loadChatHistory = async () => {

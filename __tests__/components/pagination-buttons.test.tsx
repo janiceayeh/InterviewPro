@@ -57,10 +57,10 @@ describe("Pagination Buttons", () => {
     const NextBtn = screen.getByRole("button", { name: "Next" });
 
     const PrevBtn = screen.getByRole("button", { name: "Previous" });
-    await act(async () => await user.click(NextBtn));
+    await user.click(NextBtn);
     await waitFor(() => expect(nextMock).toHaveBeenCalled());
 
-    await act(async () => await user.click(PrevBtn));
+    await user.click(PrevBtn);
     await waitFor(() => expect(previousMock).toHaveBeenCalled());
   });
 });

@@ -13,32 +13,14 @@ global.fetch = jest.fn();
 }));
 
 // Mock Firebase
-jest.mock("./src/lib/firebase", () => ({
+jest.mock("@/lib/firebase", () => ({
   auth: {
     currentUser: null,
   },
   db: {},
-  sendPasswordResetEmail: jest.fn().mockName("sendPasswordResetEmailMock"),
-  signInWithEmailAndPassword: jest
-    .fn()
-    .mockName("signInWithEmailAndPasswordMock"),
-  createUserWithEmailAndPassword: jest
-    .fn()
-    .mockName("createUserWithEmailAndPasswordMock"),
-  signOut: jest.fn().mockName("signOutMock"),
-  onAuthStateChanged: jest
-    .fn((authOrCallback, callback) => {
-      const cb = callback || authOrCallback;
-      if (typeof cb === "function") {
-        cb(mockAuthUser);
-      }
-      return jest.fn(); // Unsubscribe function
-    })
-    .mockName("onAuthStateChangedMock"),
-  updateProfile: jest.fn().mockName("updateProfileMock"),
 }));
 
-jest.mock("./src/lib/context/auth-context", () => ({
+jest.mock("@/lib/context/auth-context", () => ({
   useAuth: jest
     .fn(() => ({
       signIn: jest.fn().mockName("signInMock"),
@@ -51,21 +33,30 @@ jest.mock("./src/lib/context/auth-context", () => ({
 
 // Mock useRouter
 jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-  })),
+  useRouter: jest
+    .fn(() => ({
+      push: jest.fn(),
+    }))
+    .mockName("useRouterMock"),
+  useParams: jest.fn().mockName("useParamsMock"),
 }));
 
-jest.mock("./src/lib/hooks", () => ({
+jest.mock("@/lib/hooks", () => ({
   useStudentPersonalisedAnalytics: jest
     .fn()
     .mockName("useStudentPersonalisedAnalyticsMock"),
   useUserProfile: jest.fn().mockName("useUserProfileMock"),
   useFlagPost: jest.fn().mockName("useFlagPostMock"),
+  useMockInterviewQuestions: jest.fn().mockName("useMockInterviewQuestions"),
+}));
+
+jest.mock("@/lib/firebase", () => ({
+  cn: jest.fn().mockName("cnMock"),
 }));
 
 // Mock Firebase Firestore
 jest.mock("firebase/firestore", () => ({
+  addDoc: jest.fn().mockName("addDocMock"),
   getDoc: jest.fn().mockName("getDocMock"),
   doc: jest.fn().mockName("docMock"),
   collection: jest.fn().mockName("collectionMock"),
@@ -83,6 +74,32 @@ jest.mock("firebase/firestore", () => ({
       data: jest.fn().mockName("getCountFromServerDataMock"),
     })
     .mockName("getCountFromServerMock"),
+  serverTimestamp: jest.fn().mockName("serverTimestampMock"),
+}));
+
+jest.mock("firebase/auth", () => ({
+  sendPasswordResetEmail: jest.fn().mockName("sendPasswordResetEmailMock"),
+  signInWithEmailAndPassword: jest
+    .fn()
+    .mockName("signInWithEmailAndPasswordMock"),
+  createUserWithEmailAndPassword: jest
+    .fn()
+    .mockName("createUserWithEmailAndPasswordMock"),
+  signOut: jest.fn().mockName("signOutMock"),
+  onAuthStateChanged: jest
+    .fn((authOrCallback, callback) => {
+      const cb = callback || authOrCallback;
+      if (typeof cb === "function") {
+        cb(mockAuthUser);
+      }
+      return jest.fn();
+    })
+    .mockName("onAuthStateChangedMock"),
+  getIdToken: jest
+    .fn()
+    .mockResolvedValue("mock-token")
+    .mockName("getIdTokenMock"),
+  updateProfile: jest.fn().mockName("updateProfileMock"),
 }));
 
 jest.mock("sonner", () => ({

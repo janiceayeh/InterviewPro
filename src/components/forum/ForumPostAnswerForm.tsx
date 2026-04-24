@@ -185,8 +185,11 @@ export default function ForumPostAnswerForm({
   };
 
   return (
-    <Form {...form} data-testid="answer-form">
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        data-testid="forum-post-answer-form"
+      >
         <FormField
           control={form.control}
           name="content"

@@ -74,6 +74,7 @@ async function acceptAnswer(answer: ForumPostAnswer) {
 
     return { ok: true };
   } catch (error) {
+    console.error(error);
     return { error: error as Error };
   }
 }
@@ -229,6 +230,7 @@ export default function ForumPostAnswerCard({
                 <button
                   className="hover:text-primary transition-colors cursor-pointer text-destructive flex items-center gap-1"
                   onClick={() => setAnswerConfirmDelete(true)}
+                  data-testid="delete-btn"
                 >
                   <Trash2Icon className="w-3 h-3 md:w-4 md:h-4" /> Delete
                 </button>
@@ -267,6 +269,7 @@ export default function ForumPostAnswerCard({
               variant="destructive"
               onClick={() => deleteAnswer(answer.id)}
               disabled={answerDeleting}
+              data-testid="confirm-delete-btn"
             >
               {answerDeleting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

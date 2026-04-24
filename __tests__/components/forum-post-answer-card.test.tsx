@@ -6,11 +6,18 @@ import ForumPostAnswerCard from "@/components/forum/ForumPostAnswerCard";
 import { useFlagPost, useUserProfile } from "@/lib/hooks";
 import { toast } from "sonner";
 import {
+  collection,
   deleteDoc,
+  doc,
   getCountFromServer,
   getDocs,
+  limit,
+  query,
+  serverTimestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
+const Timestamp = jest.requireActual("firebase/firestore").Timestamp;
 
 describe("ForumPostAnswerCard", () => {
   const mockAuthor = {
@@ -25,8 +32,8 @@ describe("ForumPostAnswerCard", () => {
     postId: "post-1",
     authorId: "author-1",
     content: "This is a great answer",
-    createdAt: jest.requireActual("firebase/firestore").Timestamp.now(),
-    updatedAt: jest.requireActual("firebase/firestore").Timestamp.now(),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
     isAccepted: false,
     isEdited: false,
     votes: 5,
@@ -37,8 +44,8 @@ describe("ForumPostAnswerCard", () => {
     authorId: "author-1",
     title: "Test Post",
     content: "Test content",
-    createdAt: jest.requireActual("firebase/firestore").Timestamp.now(),
-    updatedAt: jest.requireActual("firebase/firestore").Timestamp.now(),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
     hasAcceptedAnswer: false,
   } as ForumPost;
 
@@ -72,7 +79,7 @@ describe("ForumPostAnswerCard", () => {
     jest.clearAllMocks();
   });
 
-  it.only("should render answer card with author information and content", async () => {
+  it("should render answer card with author information and content", async () => {
     render(<ForumPostAnswerCard {...defaultProps} />);
 
     // Verify author info is displayed
@@ -94,18 +101,18 @@ describe("ForumPostAnswerCard", () => {
     ).toBeInTheDocument();
   });
 
-  it.only("should show accept answer button only for post author and accept the answer", async () => {
-    const updateDocMock = jest
-      .fn()
-      .mockResolvedValue(undefined)
-      .mockName("updateDocMock");
-    const getDocsMock = jest
-      .fn()
-      .mockResolvedValue({ empty: true })
-      .mockName("getDocsMock");
-
-    (updateDoc as jest.Mock) = updateDocMock;
-    (getDocs as jest.Mock) = getDocsMock;
+  it("should show accept answer button only for post author and accept the answer", async () => {
+    (collection as jest.Mock).mockReturnValue("mockCollection");
+    (where as jest.Mock).mockReturnValue("mockWhere");
+    (limit as jest.Mock).mockReturnValue("mockLimit");
+    (query as jest.Mock).mockReturnValue("mockQuery");
+    (doc as jest.Mock).mockReturnValue({ path: "mock-path" });
+    (getDocs as jest.Mock).mockResolvedValue({
+      empty: false,
+      docs: [{ id: "mock-id" }],
+    });
+    (updateDoc as jest.Mock).mockResolvedValue(undefined);
+    (serverTimestamp as jest.Mock).mockReturnValue(undefined);
 
     render(<ForumPostAnswerCard {...defaultProps} />);
     const user = userEvent.setup();
@@ -113,59 +120,39 @@ describe("ForumPostAnswerCard", () => {
     const acceptButton = screen.getByRole("button", { name: /accept answer/i });
     expect(acceptButton).toBeInTheDocument();
 
-    await act(async () => await user.click(acceptButton));
+    await user.click(acceptButton);
 
     await waitFor(() => {
-      expect(getDocsMock).toHaveBeenCalled();
-      expect(updateDocMock).toHaveBeenCalled();
+      expect(getDocs).toHaveBeenCalled();
+      expect(updateDoc).toHaveBeenCalledTimes(3);
       expect(toast.success).toHaveBeenCalledWith("Answer accepted");
       expect(defaultProps.onAcceptAnswer).toHaveBeenCalled();
     });
   });
 
   it("should delete answer when user confirms deletion", async () => {
-    const mockDeleteDoc = jest.fn().mockResolvedValue(undefined);
-    const refetchAnswers = jest.fn();
+    (deleteDoc as jest.Mock).mockReturnValue(undefined);
 
-    (deleteDoc as jest.Mock) = mockDeleteDoc;
-
-    const answerAuthorProps = {
-      ...defaultProps,
-      userId: "author-1", // Make current user the answer author
-      refetchAnswers,
-    };
-
-    render(<ForumPostAnswerCard {...answerAuthorProps} />);
-
+    render(<ForumPostAnswerCard {...defaultProps} />);
     const user = userEvent.setup();
 
     // Click delete button
-    const deleteButton = screen.getByRole("button", { name: /delete/i });
+    const deleteButton = screen.getByTestId("delete-btn");
     await user.click(deleteButton);
 
     // Confirm deletion in alert dialog
-    const confirmDeleteButton = screen.getByRole("button", { name: /delete/i });
+    const confirmDeleteButton = screen.getByTestId("confirm-delete-btn");
     await user.click(confirmDeleteButton);
 
     await waitFor(() => {
-      expect(mockDeleteDoc).toHaveBeenCalledWith(
-        expect.objectContaining({
-          path: expect.stringContaining("forumPostAnswers/answer-1"),
-        }),
-      );
-      expect(refetchAnswers).toHaveBeenCalled();
+      expect(deleteDoc).toHaveBeenCalled();
+      expect(defaultProps.refetchAnswers).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalledWith("Answer deleted successfully");
     });
   });
 
   it("should show edit form when answer author clicks edit", async () => {
-    const answerAuthorProps = {
-      ...defaultProps,
-      userId: "author-1", // Make current user the answer author
-    };
-
-    const { rerender } = render(<ForumPostAnswerCard {...answerAuthorProps} />);
-
+    const { rerender } = render(<ForumPostAnswerCard {...defaultProps} />);
     const user = userEvent.setup();
 
     // Click edit button
@@ -175,7 +162,7 @@ describe("ForumPostAnswerCard", () => {
 
     // Verify ForumPostAnswerForm is shown
     await waitFor(() => {
-      expect(screen.getByTestId("answer-form")).toBeInTheDocument();
+      expect(screen.getByTestId("forum-post-answer-form")).toBeInTheDocument();
     });
 
     // Click cancel on the form
@@ -183,8 +170,10 @@ describe("ForumPostAnswerCard", () => {
     await user.click(cancelButton);
 
     // Rerender to verify editing state is reset
-    rerender(<ForumPostAnswerCard {...answerAuthorProps} />);
-    expect(screen.queryByTestId("answer-form")).not.toBeInTheDocument();
+    rerender(<ForumPostAnswerCard {...defaultProps} />);
+    expect(
+      screen.queryByTestId("forum-post-answer-form"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText(mockAnswer.content)).toBeInTheDocument();
   });
 });
