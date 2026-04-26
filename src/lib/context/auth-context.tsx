@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -21,6 +22,7 @@ import { UserProfile } from "@/lib/types";
 import { doc, getDoc } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/constants";
 import { auth, db, googleProvider } from "../firebase";
+import { toast } from "sonner";
 
 // Describes what values and functions the auth context will expose to the app
 // Object type
@@ -39,29 +41,54 @@ interface AuthContextType {
 // Creates the context. user info
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function getUserProfile(user: User) {
+  if (user) {
+    try {
+      const profileDoc = await getDoc(doc(db, COLLECTIONS.users, user.uid));
+      if (profileDoc?.exists) {
+        return {
+          ok: true,
+          userProfile: {
+            id: profileDoc.id,
+            ...profileDoc.data(),
+          } as UserProfile,
+        };
+      } else {
+        return { error: new Error("User profile does not exist") };
+      }
+    } catch (error) {
+      console.error(error);
+      return { error: error as Error };
+    }
+  }
+
+  return { error: new Error("Provide user") };
+}
+
 // Stores auth state and exposes it to children/page
 function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetches user profile from Firestore
-  async function getUserProfile(user: User) {
-    if (user) {
-      const profileDoc = await getDoc(doc(db, COLLECTIONS.users, user.uid));
-      setUserProfile({
-        id: profileDoc.id,
-        ...profileDoc.data(),
-      } as UserProfile);
+  const fetchAndSetUserProfile = async (user: User) => {
+    setLoading(true);
+    const { ok, error, userProfile } = await getUserProfile(user);
+    if (error) {
+      toast.error(error.message);
     }
-  }
+    if (ok) {
+      setUserProfile(userProfile);
+    }
+    setLoading(false);
+  };
 
   // Listens for Firebase Auth session changes. lets the user stay logged in after refresh
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        await getUserProfile(user);
+      setUser(user);
+      if (user && !userProfile) {
+        await fetchAndSetUserProfile(user);
       }
       setLoading(false);
     });
@@ -92,6 +119,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // defines the state which this context provide
+
   return (
     <AuthContext.Provider
       value={{
@@ -103,7 +131,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         logout,
         deleteAccount,
-        getUserProfile: async () => await getUserProfile(user),
+        getUserProfile: async () => await fetchAndSetUserProfile(user),
       }}
     >
       {children}

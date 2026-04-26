@@ -73,13 +73,6 @@ export default function DashboardPage() {
   const { user, userProfile, loading: userLoading, getUserProfile } = useAuth();
   const firstName = userProfile?.firstname || user.displayName.split(" ")[0];
 
-  //TODO:
-  // 1. Display average scores
-
-  useEffect(() => {
-    if (!userLoading) getUserProfile();
-  }, [userLoading]);
-
   if (userLoading) {
     return <PageLoading />;
   }

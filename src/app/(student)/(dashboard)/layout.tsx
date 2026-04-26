@@ -20,21 +20,21 @@ export default function DashboardLayout({
   const router = useRouter();
   const didRedirectRef = useRef(false);
 
-  // navigates back to the login page if the user is not logged in
   useEffect(() => {
-    if (!loading && !user) {
-      router.push(routes.userLogin());
+    if (!loading) {
+      // navigates back to the login page if the user is not logged in
+      if (!user) {
+        router.push(routes.userLogin());
+      } else {
+        // navigates to the roles onboarding page when sign up wasn't completed
+        if (!userProfile?.role && !didRedirectRef.current) {
+          didRedirectRef.current = true;
+          toast.error("Please complete sign up");
+          router.push(routes.studentRoleOnboarding());
+        }
+      }
     }
-  }, [user, loading]);
-
-  //Force navigates to the roles onboarding page when sign up wasn't completed
-  useEffect(() => {
-    if (!loading && !didRedirectRef.current && user && !userProfile?.role) {
-      didRedirectRef.current = true;
-      toast.error("Please complete sign up");
-      router.push(routes.studentRoleOnboarding());
-    }
-  }, [userProfile?.role, user, didRedirectRef.current, loading]);
+  }, [userProfile?.role, user?.uid, loading]);
 
   if (loading) {
     return <PageLoading />;
