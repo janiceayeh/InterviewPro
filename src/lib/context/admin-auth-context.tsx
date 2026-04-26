@@ -2,17 +2,18 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
+
+import { AdminRole, ApiResponse, IsAdminResponseDto } from "../types";
+import { routes } from "../routes";
+import { toast } from "sonner";
 import {
+  UserCredential,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
   type User,
-  UserCredential,
 } from "firebase/auth";
-import { AdminRole, ApiResponse, IsAdminResponseDto } from "../types";
-import { routes } from "../routes";
-import { toast } from "sonner";
 
 interface AdminUser extends User {
   role?: AdminRole;

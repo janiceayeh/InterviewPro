@@ -20,8 +20,9 @@ import {
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 import { doc, setDoc } from "firebase/firestore";
-import { db, updateProfile } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { routes } from "@/lib/routes";
+import { updateProfile } from "firebase/auth";
 
 export default function SignupPage() {
   // defining states to be used for capturing user signup info
@@ -82,6 +83,7 @@ export default function SignupPage() {
       toast.success("Account created successfully!");
       router.push(routes.studentRoleOnboarding());
     } catch (error: unknown) {
+      console.error(error);
       if (
         error instanceof Error &&
         error.message.includes("email-already-in-use")

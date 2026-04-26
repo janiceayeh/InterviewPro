@@ -21,7 +21,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { auth, sendPasswordResetEmail } from "@/lib/firebase";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -34,6 +33,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { routes } from "@/lib/routes";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 const ForgotPasswordFormSchema = z.object({
   email: z.email("A valid email is required"),

@@ -4,9 +4,10 @@ import { render } from "../utils/test-utils";
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { routes } from "@/lib/routes";
-import { signInWithEmailAndPassword } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/auth-context";
+import { mockAuthUser } from "../utils/test-constants";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 describe("Student Login Page", () => {
   beforeEach(() => {
@@ -64,7 +65,7 @@ describe("Student Login Page", () => {
     });
     expect(SigninButton).toBeInTheDocument();
 
-    await act(async () => await user.click(SigninButton));
+    await user.click(SigninButton);
     await waitFor(() => {
       expect(signInWithEmailAndPassword).not.toHaveBeenCalled();
     });
@@ -101,9 +102,9 @@ describe("Student Login Page", () => {
 
     const email = "test@example.com";
     const password = "v3RySEcur3Pazzword";
-    await act(async () => await user.type(EmailInput, email));
-    await act(async () => await user.type(PasswordInput, password));
-    await act(async () => await user.click(SigninButton));
+    await user.type(EmailInput, email);
+    await user.type(PasswordInput, password);
+    await user.click(SigninButton);
 
     await waitFor(() => expect(SigninButton).toBeDisabled());
 
@@ -116,17 +117,19 @@ describe("Student Login Page", () => {
   });
 
   it("should call signInWithGoogle when Google button is clicked", async () => {
-    let resolveSignInWithGoogle: () => void;
-    const signInWithGoogleMock = jest.fn(
-      () => new Promise<void>((res) => (resolveSignInWithGoogle = res)),
-    );
+    let resolveSignInWithGoogle: (_userCredential) => void;
+    const signInWithGoogleMock = jest
+      .fn(() => new Promise((res) => (resolveSignInWithGoogle = res)))
+      .mockName("signInWithGoogleMock");
 
     // Configure the mock for this specific test
     (useAuth as jest.Mock).mockReturnValue({
       signInWithGoogle: signInWithGoogleMock,
     });
 
-    const routerPushMock = jest.fn((_path) => undefined);
+    const routerPushMock = jest
+      .fn((_path) => undefined)
+      .mockName("routerPushMock");
     (useRouter as jest.Mock).mockReturnValue({
       push: routerPushMock,
     });
@@ -139,11 +142,11 @@ describe("Student Login Page", () => {
     });
     expect(GoogleButton).toBeInTheDocument();
 
-    await act(async () => await user.click(GoogleButton));
+    await user.click(GoogleButton);
 
     await waitFor(() => expect(GoogleButton).toBeDisabled());
 
-    resolveSignInWithGoogle!();
+    resolveSignInWithGoogle!({ user: mockAuthUser });
 
     await waitFor(() => {
       expect(signInWithGoogleMock).toHaveBeenCalled();
