@@ -70,6 +70,7 @@ function useForumPostCreate() {
   const forumPostCreate = async (data: ForumPostFormData) => {
     try {
       setForumPostCreateLoading(true);
+
       const newPost = await addDoc(collection(db, COLLECTIONS.forumPosts), {
         ...data,
         authorId: user?.uid,

@@ -38,6 +38,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   ApiResponse,
+  EvaluateInterviewResponseDto,
   InterviewSession,
   StudentPersonalisedEvaluationResponseDto,
 } from "@/lib/types";
@@ -129,7 +130,11 @@ export default function ResultsPage() {
             routes.api.evaluateInterview({ category, interviewSessionId }),
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                uid: user?.uid,
+                authorization: await getIdToken(user),
+              },
               body: JSON.stringify({ userId: user?.uid }),
             },
           );
@@ -138,9 +143,10 @@ export default function ResultsPage() {
             throw new Error("Failed to evaluate interview session");
           }
 
-          const result: TInterviewSessionEvaluation = await response.json();
+          const result: ApiResponse<EvaluateInterviewResponseDto> =
+            await response.json();
 
-          setEvaluation(result);
+          setEvaluation(result.data.evaluation);
 
           // Fire student personalised analytics action
           const res = await getStudentPersonalisedAnalytics({
