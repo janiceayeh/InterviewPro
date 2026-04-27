@@ -70,9 +70,13 @@ npm run dev
 
 The app will be available at `http://localhost:3000`.
 
+The admin portal will be available at `http://localhost:3000/admin/login`.
+
 Deployed app available at `https://interview-pro-6daq.vercel.app`
 
-If you need access to the cloud firestore send me an email at: aa1382@student.le.ac.uk
+Deployed admin portal available at `https://interview-pro-6daq.vercel.app/adim/login`
+
+If you need access to the cloud firestore or admin cms send me an email at: aa1382@student.le.ac.uk
 
 ### Other Scripts
 

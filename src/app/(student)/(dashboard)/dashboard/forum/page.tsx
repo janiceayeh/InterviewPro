@@ -86,19 +86,17 @@ export default function ForumPage() {
                 />
 
                 <div className="flex gap-2 flex-wrap">
-                  {(["recent", "popular", "unanswered"] as const).map(
-                    (sort) => (
-                      <Button
-                        key={sort}
-                        variant={sortBy === sort ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSortBy(sort)}
-                        className="capitalize"
-                      >
-                        {sort}
-                      </Button>
-                    ),
-                  )}
+                  {(["recent", "popular"] as const).map((sort) => (
+                    <Button
+                      key={sort}
+                      variant={sortBy === sort ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSortBy(sort)}
+                      className="capitalize"
+                    >
+                      {sort}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </div>
