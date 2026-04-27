@@ -1,5 +1,4 @@
 import { COLLECTIONS } from "@/lib/constants";
-import { db, auth } from "@/lib/firebase";
 import { dbAdmin, verifyLoggedInUser } from "@/lib/firebase-admin";
 import {
   ApiResponse,

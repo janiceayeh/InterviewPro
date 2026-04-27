@@ -61,6 +61,8 @@ export default function InterviewSessionPage() {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [isStarted, setIsStarted] = useState(false);
   const [showTips, setShowTips] = useState(false);
+
+  // Loading states used to disable actions and show progress while saving data.
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentAnswerSaving, setCurrentAnswerSaving] = useState(false);
   const [interviewMetadataSaving, setInterviewMetadataSaving] = useState(false);
@@ -71,6 +73,8 @@ export default function InterviewSessionPage() {
     InterviewSession | undefined
   >();
   const [error, setError] = useState<string | undefined>();
+
+  // Fetch interview questions only after the user profile has loaded and before the interview starts.
   const { questions, questionsLoading } = useMockInterviewQuestions({
     userProfile: userProfile,
     questionCategory: category,
@@ -80,6 +84,8 @@ export default function InterviewSessionPage() {
 
   const currentQuestion: InterviewQuestion | undefined =
     questions[currentIndex];
+
+  // Progress is calculated using the current question position in the questions array.
   const progress = ((currentIndex + 1) / questions.length) * 100; // derived/ computed state
 
   async function saveAnswer({
@@ -87,6 +93,7 @@ export default function InterviewSessionPage() {
   }: {
     timeSpentOnQuestion: number;
   }) {
+    // Saves the user's answer to the current question.
     try {
       setCurrentAnswerSaving(true);
       if (interviewSession) {
@@ -121,15 +128,18 @@ export default function InterviewSessionPage() {
     try {
       setInterviewMetadataSaving(true);
 
+      // Update the user's total completed sessions.
       const interviewSessionsCompleted = userProfile?.interviewSessionsCompleted
         ? (userProfile.interviewSessionsCompleted ?? 0) + 1
         : 1;
 
+      // Add this session's time to the user's total practice time.
       const totalPractiseTime = userProfile?.totalPractiseTime
         ? (userProfile.totalPractiseTime ?? 0) + interviewSessionTotalTimeSpent
         : interviewSessionTotalTimeSpent;
 
-      //save last answered question
+      // Store the last answered question for this user and category.
+      // The deterministic ID prevents duplicate records for the same user and category.
       const deterministicId = `${user.uid}_${category}`;
       await setDoc(
         doc(
@@ -146,7 +156,7 @@ export default function InterviewSessionPage() {
         { merge: true },
       );
 
-      // update user profile with metadata
+      // Update the user's interview statistics.
       await updateDoc(doc(db, COLLECTIONS.users, user.uid), {
         interviewSessionsCompleted: interviewSessionsCompleted,
         totalPractiseTime: totalPractiseTime,
@@ -163,6 +173,8 @@ export default function InterviewSessionPage() {
   async function updateInterviewSession({ timeSpent }: { timeSpent: number }) {
     try {
       setInterviewSessionLoading(true);
+
+      // Mark the current interview session as completed.
       return updateDoc(
         doc(db, COLLECTIONS.interviewSessions, interviewSessionId),
         {
@@ -191,12 +203,17 @@ export default function InterviewSessionPage() {
     const updatedAnswers = [...answers, newAnswer];
     setAnswers(updatedAnswers);
 
-    // Save answer to interview-answers collection
+    // Calculate how long the user spent on this question.
     const timeSpentOnQuestion = (currentQuestion.timeLimit || 120) - timeLeft;
+
     setInterviewSessionTotalTimeSpent((t) => t + timeSpentOnQuestion);
+
+    // Save answer to interview-answers collection
     await saveAnswer({ timeSpentOnQuestion });
 
     if (currentIndex < questions.length - 1) {
+      // Move to the next question and reset question-specific UI state.
+
       setCurrentIndex((prev) => prev + 1);
       setCurrentAnswer("");
       setTimeLeft(questions[currentIndex + 1].timeLimit);
@@ -205,12 +222,11 @@ export default function InterviewSessionPage() {
       // saves to database and navigate to results
       setIsSubmitting(true);
 
-      // create interview session
+      // Complete the interview session and save final user metadata.
       await updateInterviewSession({
         timeSpent: interviewSessionTotalTimeSpent,
       });
 
-      // Save interview metadata to database
       const lastAnsweredQuestionId = questions[questions.length - 1].id;
       await saveInterviewMetaData({ lastAnsweredQuestionId });
 
@@ -247,7 +263,7 @@ export default function InterviewSessionPage() {
     return () => clearInterval(timer);
   }, [isStarted, currentQuestion, isSubmitting]); // if any of these values(state) change, run useEffect again
 
-  // automatically moves to the next question when the time runs out
+  // automatically submits and moves to the next question when the time runs out
   useEffect(() => {
     if (timeLeft === 0 && isStarted && !isSubmitting) {
       handleNext();

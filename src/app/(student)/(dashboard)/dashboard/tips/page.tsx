@@ -215,12 +215,6 @@ export default function TipsPage() {
                             Read full guide
                             <ChevronRight className="size-4 ml-1" />
                           </Button>
-                          {/* <Link href={`/dashboard/tips/${tip.id}/chat`}>
-                            <Button variant="ghost" size="sm">
-                              <MessageCircle className="size-4 mr-2" />
-                              Ask questions
-                            </Button>
-                          </Link> */}
                         </div>
                       </div>
                     </AccordionContent>
@@ -247,31 +241,7 @@ export default function TipsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="mt-12"
-      >
-        {/* <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardContent className="py-8">
-            <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-              <div className="flex items-center justify-center size-14 rounded-2xl bg-primary/10">
-                <MessageCircle className="size-7 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-foreground mb-2">
-                  Need Personalized Advice?
-                </h3>
-                <p className="text-muted-foreground">
-                  Chat with our AI interview coach for real-time practice and customized feedback.
-                </p>
-              </div>
-              <Link href="/dashboard/copilot">
-                <Button size="lg">
-                  Try Interview Copilot
-                  <ChevronRight className="size-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card> */}
-      </motion.div>
+      ></motion.div>
     </div>
   );
 }

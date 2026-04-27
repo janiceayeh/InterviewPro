@@ -103,6 +103,7 @@ export default function StudentProfilePage() {
     return field;
   }
 
+  /** This code is related to the TODO for adding target companies */
   // const targetCompanyHandleAdd = () => {
   //   if (
   //     targetCompanyInput.trim() &&
