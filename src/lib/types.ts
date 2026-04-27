@@ -263,3 +263,7 @@ export interface GetCopilotChatHistoryResponseDto {
 export interface DeleteCopilotChatResponseDto {
   success: boolean;
 }
+
+export interface EvaluateInterviewResponseDto {
+  evaluation: TInterviewSessionEvaluation;
+}

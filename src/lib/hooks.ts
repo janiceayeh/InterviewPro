@@ -106,7 +106,6 @@ export function useInterviewQuestions() {
     try {
       setLoading(true);
       setError(null);
-
       const { hasNext, hasPrev, items } = await paginator.fetchPage(0);
       setHasNext(hasNext);
       setHasPrev(hasPrev);

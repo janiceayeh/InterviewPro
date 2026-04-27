@@ -1,7 +1,9 @@
 import { COLLECTIONS, InterviewSessionEvaluationSchema } from "@/lib/constants";
 import { db } from "@/lib/firebase";
-import { dbAdmin } from "@/lib/firebase-admin";
+import { dbAdmin, verifyLoggedInUser } from "@/lib/firebase-admin";
 import {
+  ApiResponse,
+  EvaluateInterviewResponseDto,
   InterviewAnswer,
   InterviewQuestion,
   InterviewSession,
@@ -78,6 +80,43 @@ export async function POST(
   { params }: { params: Promise<{ category: string; session_id: string }> },
 ) {
   try {
+    const { headers } = req;
+    const userId = headers.get("uid");
+    const idToken = headers.get("authorization");
+
+    const { error, ok, isLoggedIn } = await verifyLoggedInUser({
+      userId,
+      idToken,
+    });
+
+    if (error) {
+      return Response.json(
+        {
+          error: error.message,
+          data: {
+            evaluation: null,
+          },
+        } satisfies ApiResponse<EvaluateInterviewResponseDto>,
+        {
+          status: 401,
+        },
+      );
+    }
+
+    if (ok && !isLoggedIn) {
+      return Response.json(
+        {
+          error: "Unauthorized",
+          data: {
+            evaluation: null,
+          },
+        } satisfies ApiResponse<EvaluateInterviewResponseDto>,
+        {
+          status: 401,
+        },
+      );
+    }
+
     const body = await req.json();
     const { error: dtoError, success, data: dto } = requestDto.safeParse(body);
 
@@ -209,7 +248,10 @@ export async function POST(
         evaluation: result.output,
       });
 
-      return Response.json(result.output);
+      return Response.json({
+        data: { evaluation: result.output },
+        error: null,
+      } satisfies ApiResponse<EvaluateInterviewResponseDto>);
     }
   } catch (error) {
     console.error(error);
