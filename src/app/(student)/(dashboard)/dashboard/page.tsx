@@ -142,49 +142,6 @@ export default function DashboardPage() {
         })}
       </motion.div>
 
-      {/* Quick Stats */}
-      {/* <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="mt-12 grid gap-4 sm:grid-cols-3"
-      >
-        <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center justify-center size-12 rounded-lg bg-primary/10">
-            <Target className="size-6 text-primary" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-foreground">
-              {userProfile?.interviewSessionsCompleted ?? 0}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Interviews Completed
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center justify-center size-12 rounded-lg bg-accent/20">
-            <Clock className="size-6 text-accent" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-foreground">
-              {practiseTime.hours}h:{practiseTime.minutes}m:
-              {practiseTime.seconds}s
-            </div>
-            <div className="text-sm text-muted-foreground">Practice Time</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center justify-center size-12 rounded-lg bg-chart-3/20">
-            <Sparkles className="size-6 text-chart-3" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-foreground">--</div>
-            <div className="text-sm text-muted-foreground">Average Score</div>
-          </div>
-        </div>
-      </motion.div> */}
-
       {/* Personalized Analytics */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

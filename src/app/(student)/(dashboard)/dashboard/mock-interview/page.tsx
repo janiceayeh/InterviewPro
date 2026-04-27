@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import {
   ArrowRight,
-  Clock,
   Briefcase,
   Code,
   Users,

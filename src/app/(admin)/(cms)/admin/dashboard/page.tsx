@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Users,
   Activity,
@@ -17,9 +15,6 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -261,68 +256,6 @@ export default function AdminDashboard() {
             )}
           </ResponsiveContainer>
         </Card>
-
-        {/* Forum Activity */}
-        {/* <Card className="p-6 border-border/50">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-foreground mb-1">
-              Forum Activity
-            </h2>
-            <p className="text-sm text-muted-foreground">Last 4 weeks</p>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={forumActivityData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="week" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                }}
-              />
-              <Legend />
-              <Bar dataKey="posts" fill="#0ea5e9" name="New Posts" />
-              <Bar dataKey="answers" fill="#10b981" name="Answers" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card> */}
-
-        {/* Completion Rate */}
-        {/* <Card className="p-6 border-border/50">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-foreground mb-1">
-              Interview Completion Status
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              User progress breakdown
-            </p>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={completionRateData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name} ${value}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {completionRateData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card> */}
       </div>
     </div>
   );

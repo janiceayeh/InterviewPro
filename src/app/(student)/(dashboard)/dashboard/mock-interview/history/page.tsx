@@ -191,11 +191,6 @@ export default function InterviewHistoryPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Summary */}
-                    {/* <p className="text-sm text-muted-foreground line-clamp-2">
-                      {interviewSession.summary}
-                    </p> */}
-
                     {/* View Results Button */}
                     <Link
                       href={routes.mockInterviewResults({

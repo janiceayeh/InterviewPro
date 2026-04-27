@@ -48,12 +48,6 @@ const menuItems = [
     href: routes.adminForumModeration(),
     permission: "manage_forum",
   },
-  // {
-  //   label: "Settings",
-  //   icon: Settings,
-  //   href: routes.adminSettings(),
-  //   permission: "manage_admins",
-  // },
 ];
 
 export function AdminSidebar() {
